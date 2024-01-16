@@ -1,4 +1,4 @@
-import { useGame } from "@empirica/core/player/classic/react";
+import { useGame, useRound } from "@empirica/core/player/classic/react";
 
 import React from "react";
 import { Chat } from "./components/Chat"
@@ -7,6 +7,8 @@ import { World } from "./components/World";
 
 export function Game() {
   const game = useGame();
+  const round = useRound ();
+
   const { playerCount } = game.get("treatment");
 
   return (

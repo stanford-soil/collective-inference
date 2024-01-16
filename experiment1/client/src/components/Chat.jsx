@@ -21,13 +21,15 @@ export function Chat({ scope, attribute, loading}) {
     const round = useRound();
     const stage = useStage();
 
+   
+
     if (!scope || !player) {
         return <LoadingComp />;
     }
     const handleNewMessage = (text) => {
+
         scope.append(attribute, {
             text,
-            likes : {},
             round: round.get('idx'),
             recipient: player.get("recipient"),
             sender: {
@@ -55,6 +57,12 @@ export function Chat({ scope, attribute, loading}) {
         }
         </div>
     );
+     useEffect(() => {
+        return () => {
+            const playerStageData = scope.getAttribute(attribute)?.items || [];
+            player.stage.set("messages", playerStageData);
+        };
+    }, [scope, attribute]);
 }
 
 
@@ -68,6 +76,7 @@ function MessagesPanel(props) {
         msgs.filter((msg) => msg.value.recipient === player.id)
     ).filter(msg => msg.value.round == round.get('idx'));
 
+ 
     useEffect(() => {
         if (!scroller.current) {
             return;

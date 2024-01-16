@@ -42,10 +42,15 @@ Empirica.onGameStart(({ game }) => {
       name: "Round " + i + " / 6",
       task: "Chat",
     });
-    round.addStage({ name: "send", duration: 30 });
-    round.addStage({ name: "observe", duration: 30});
+    round.addStage({ name: "send", duration: 10 });
+    round.addStage({ name: "observe", duration: 10});
   });
+  
 });
+
+
+
+
 
 Empirica.onRoundStart(({ round }) => {
   const players = round.currentGame.players;
@@ -66,7 +71,19 @@ Empirica.onRoundStart(({ round }) => {
 
 Empirica.onStageStart(({ stage }) => {});
 
-Empirica.onStageEnded(({ stage }) => {});
+Empirica.onStageEnded(({ stage, game }) => {
+
+
+  const scopeArray = game.get("scope");
+
+  // Save 'scope.value.text' to player's stage
+  stage.players.forEach((player) => {
+    player.stage.set("scopeText", scopeArray.value.text);
+  });
+
+
+});
+
 
 Empirica.onRoundEnded(({ round }) => {});
 

@@ -12,20 +12,23 @@ export function Opinion({ scope, attribute}){
     const toggle = game.get("treatment")["opinion"] === "slider" ? 1 : 0 ;
 
     //method for input box sends data of user's opinion to Empirica's mongoDB
-    const handleNewMessage = (text) => {
-        scope.append(attribute, {
-            opinion: text,
-            round: round.get('idx'),
-            sender: {
-                id: player.id,
-                name: player.get("name") || player.id,
-                avatar: player.get("avatar"),
-            },
-        });
-    };
+const handleNewMessage = (event, text) => {
+    scope.append(attribute, {
+        opinion: text,
+        round: round.get('idx'),
+        sender: {
+            id: player.id,
+            name: player.get("name") || player.id,
+            avatar: player.get("avatar"),
+        },
+    });
+
+    player.stage.append("text", text);
+};
+
 
     const handleSlider = (event, value) => {
-        player.set("guess", value)
+        player.stage.set("guess", value)
     }
     
     //return opinion input based on treatment
