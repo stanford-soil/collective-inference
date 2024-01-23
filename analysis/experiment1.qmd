@@ -47,7 +47,7 @@ d.rounds <- read_csv(here('data/experiment1/rounds.csv')) %>%
 d.msgs <- read_csv(here('data/experiment1/games.csv')) %>% 
   mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
   select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>%
+  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
   mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
   unnest(messages) %>% unnest(messages)
 
@@ -67,10 +67,15 @@ d.guesses <- read_csv(here('data/experiment1/playerStages.csv')) %>%
 ```{r}
 confused <- d.guesses %>%
   filter(idx == 1) %>%
-  mutate(mleEstimate = 100 * nRabbits / (nRabbits + nSquirrels)) %>%
+  mutate(mleEstimate = ifelse(nRabbits > 0 & nSquirrels == 0, 100, 
+                   ifelse(nSquirrels > 0 & nRabbits == 0, 1, 
+                          ifelse(nRabbits + nSquirrels == 0, 0, 
+                                 floor((nRabbits / (nRabbits + nSquirrels)) * 100))))) %>%
+  filter(mleEstimate != 0) %>%
   mutate(discrepency = abs(guess - mleEstimate)) %>% 
   filter(discrepency > 70) %>% 
   pull(playerID)
+
 ```
 
 ## Result #1: Convergence
@@ -94,6 +99,149 @@ d.guesses %>%
 
 ## Result #2: Examine error (collapsing across treatment)
 
+## in-game treatment
+
+```{r}
+d.guesses <- d.guesses %>% 
+mutate(indvPercent = ifelse(nRabbits > 0 & nSquirrels == 0, 100, 
+                   ifelse(nSquirrels > 0 & nRabbits == 0, 1, 
+                          ifelse(nRabbits + nSquirrels == 0, 0, 
+                                 floor((nRabbits / (nRabbits + nSquirrels)) * 100)))))
+
+d.gameAvg <- d.guesses %>%
+  group_by(gameID) %>%
+  summarize(AvgPercent = floor(mean(indvPercent[indvPercent != 0])))
+  
+```
+
+```{r}
+numGameIDs3 <- d.guesses %>%
+  filter(treatmentName == "experiment1-0.3") %>%
+  summarize(numGameIDs3 = n_distinct(gameID))
+print(numGameIDs3)
+numGameIDs7 <- d.guesses %>%
+  filter(treatmentName == "experiment1-0.7") %>%
+  summarize(numGameIDs7 = n_distinct(gameID))
+print(numGameIDs7)
+```
+
+```{r}
+d.guesses <- left_join(d.guesses, d.gameAvg, by = "gameID",suffixes = c("", ""))
+d.guesses <- d.guesses %>%
+  mutate(error = abs(guess-AvgPercent))
+  mutate(treatmentPercent = ifelse(treatmentName == "experiment1-0.3", 30, 70))
+  mutate(treatmentError = abs(guess-treatmentPercent))
+```
+
+## per game error with game average percent
+
+```{r}
+unique_gameIDs <- unique(d.guesses$gameID)
+
+# Iterate through unique gameID values and create individual plots
+for (gameID in unique_gameIDs) {
+  # Subset data for the current gameID
+  subset_df <- d.guesses[d.guesses$gameID == gameID, ]
+  
+  # Create a ggplot for error over idx, faceted by playerID
+  plot <- ggplot(subset_df, aes(x = idx, y = error, color = as.factor(playerID))) +
+    geom_line() +
+    labs(title = paste("GameID:", gameID, "- Error Over idx by playerID"), x = "idx", y = "Error") +
+    theme_minimal()
+  
+  # Print the plot
+  print(plot)
+}
+```
+
+```{r}
+d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(error) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average error', x = 'round #') +
+    scale_color_colorblind()
+```
+
+## exclude people who got no sample
+
+```{r}
+sampleLess <- d.guesses %>%
+  filter(indvPercent == 0)
+print(sampleLess)
+```
+
 ```{r}
 
+d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  filter(!(playerID %in% sampleLess)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(error) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average error', x = 'round #') +
+    scale_color_colorblind()
+```
+
+## only people who got no sample
+
+```{r}
+sampleLess %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(error) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average error', x = 'round #') +
+    scale_color_colorblind()
+```
+
+## remove games with sampleless players 
+
+```{r}
+
+d.guesses %>%
+  filter(!(gameID %in% sampleLess)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(error) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average error', x = 'round #') +
+    scale_color_colorblind()
+```
+
+```{r}
+d.guesses %>%
+  filter(!(gameID %in% sampleLess)) %>%
+  filter(!(playerID %in% confused)) %>%
+  group_by(treatmentName, idx, gameID) %>%
+  summarize(guess = mean(guess)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(guess) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(30, 70), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average guess', x = 'round #') +
+    scale_color_colorblind()
 ```
