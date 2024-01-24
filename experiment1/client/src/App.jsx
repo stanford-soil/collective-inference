@@ -25,13 +25,9 @@ export default function App() {
 const toggle = game.get("treatment")["debug"] === "noIntro" ? 1 : 0 ;
 
 function introSteps({ game, player, toggle }) {
-    return (
-            {toggle === 1 ? (
+
                 [Browser, Introduction, Practice, Quiz, Consent]
-            ) : (
-                []
-            )}
-    );
+
 }
 
   function exitSteps({ game, player }) {
