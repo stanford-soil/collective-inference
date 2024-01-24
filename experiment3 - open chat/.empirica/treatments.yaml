@@ -1,0 +1,39 @@
+factors:
+    - name: playerCount
+      desc: playerCount determines the number of Players are in a Game.
+      values:
+        - value: 1
+        - value: 2
+        - value: 3
+        - value: 5
+        - value: 8
+        - value: 13
+        - value: 4
+    - name: opinion
+      values:
+        - value: text
+        - value: slider
+    - name: trueP
+      values:
+        - value: 0.7
+        - value: 0.3
+    - name: NoIntro
+      values:
+        - value: 1
+treatments:
+    - name: experiment1-0.7
+      factors:
+        opinion: slider
+        playerCount: 4
+        trueP: 0.7
+    - name: experiment1-0.3
+      factors:
+        opinion: slider
+        playerCount: 4
+        trueP: 0.3
+    - name: "2"
+      factors:
+        NoIntro: 1
+        opinion: slider
+        playerCount: 2
+        trueP: 0.7

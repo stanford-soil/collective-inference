@@ -22,17 +22,10 @@ export default function App() {
   const { protocol, host } = window.location;
   const url = `${protocol}//${host}/query`;
   
-const toggle = game.get("treatment")["debug"] === "noIntro" ? 1 : 0 ;
 
-function introSteps({ game, player, toggle }) {
-    return (
-            {toggle === 1 ? (
-                [Browser, Introduction, Practice, Quiz, Consent]
-            ) : (
-                []
-            )}
-    );
-}
+function introSteps({ game, player }) {
+    return [Browser, Introduction, Practice, Quiz, Consent]
+    }
 
   function exitSteps({ game, player }) {
     return [ExitSurvey, Last];
