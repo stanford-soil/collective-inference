@@ -1,6 +1,6 @@
-import { usePlayer, useStage, useRound, useGame } from "@empirica/core/player/classic/react";
+import {usePlayer, useStage, useRound, useGame } from "@empirica/core/player/classic/react";
 import { Loading } from "@empirica/core/player/react";
-import React, { useState, useRef, useEffect } from "react";
+import React, {useState, useRef, useEffect } from "react";
 import { Opinion } from "./Opinion";
 import { InputBox } from "./InputBox";
 import a from '/avatar1.png';
@@ -13,20 +13,22 @@ import g from '/avatar7.png';
 import h from '/avatar8.png';
 import { useSpring, animated } from 'react-spring';
 
-export function Chat({ scope, attribute, loading }) {
+//import RangeSlider from 'react-range-slider-input';
+//import 'react-range-slider-input/dist/style.css';
+
+export function Chat({ scope, attribute, loading}) {
     const player = usePlayer();
     const round = useRound();
     const stage = useStage();
     const game = useGame();
 
     if (!scope || !player) {
-        return <Loading />;
+        return <LoadingComp />;
     }
-
     const handleNewMessage = (text) => {
         scope.append(attribute, {
             text,
-            likes: {},
+            likes : {},
             time: Date.now(),
             round: round.get('idx'),
             recipient: player.get("recipient"),
@@ -38,26 +40,25 @@ export function Chat({ scope, attribute, loading }) {
         });
         const playerStageData = scope.getAttribute(attribute)?.items || [];
         console.log(playerStageData);
-        game.set("messages", playerStageData.map((msg) => msg.val._value));
+        game.set("messages", playerStageData.map((msg, i) => msg.val._value));
     };
 
     let msgs = scope.getAttribute(attribute)?.items || [];
-
     return (
         <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">
-            {stage.get('name') === 'send' ?
-                <h2 className="align-left"> Messages <b>sent</b>:</h2> :
-                <h2>Messages <b>received</b>: </h2>
-            }
-            <MessagesPanel scope={scope} msgs={msgs} stage={stage} round={round} player={player} />
-            {
-                // If the stage is in send state, show the input box, else show slider/text feedback
-                stage.get("name") === 'send' ?
-                    <InputBox onNewMessage={handleNewMessage} buttonStyles='w-9 h-9 p-2 text-sm' /> :
-                    player.stage && player.stage.get("submit") ?
-                        <div> Thank you for your answer. The next stage will start when all the other players have submitted their answer. </div> :
-                        <Opinion toggle={1} scope={scope} attribute={attribute} />
-            }
+        {
+            stage.get('name') == 'send' ?
+            <h2 className="align-left"> Messages <b>sent</b>:</h2> :
+            <h2>Messages <b>received</b>: </h2>
+        }
+            <MessagesPanel scope={scope} msgs={msgs} stage={stage}
+                           round={round} player={player}/>
+        {
+            // If the stage is in send state, show the input box, else show slider/text feedback
+            stage.get("name") == 'send' ?
+             <InputBox onNewMessage={handleNewMessage} buttonStyles='w-9 h-9 p-2 text-sm'/> : player.stage && player.stage.get("submit") ? <div> Thank you for your answer. The next stage will start when all the other 
+             players have submitted their answer. </div> : <Opinion toggle={1} scope = {scope} attribute = {attribute}/>
+        }
         </div>
     );
 }
@@ -85,7 +86,7 @@ function MessagesPanel(props) {
             setMsgCount(msgs.length);
             scroller.current.scrollTop = scroller.current.scrollHeight;
         }
-    }, [scroller, msgs, msgCount]);
+    }, [scroller, props, msgCount]);
 
     // Handle case before any messages are sent this round
     if (msgs.length === 0) {
@@ -124,14 +125,28 @@ function MessagesPanel(props) {
     );
 }
 
+//*
+// MessageComp is the component showing an individual message
+//*
+const hashString = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+};
+
 function MessageComp(props) {
-    let { player, scope, attribute, index } = props;
+    let {player, scope, attribute, index} = props;
     const msg = attribute.value;
     const ts = attribute.createdAt;
     const numericId = hashString(msg.sender.id);
     const avatarImages = [a, b, c, d, e, f, g, h];
     const avatarIndex = numericId % avatarImages.length; // Ensure index is within bounds
     const selectedAvatar = avatarImages[avatarIndex]; // Corrected variable name
+
+    let item = scope.get("chat")[index];
 
     return (
         <div className="flex items-start my-2 shadow p-8">
@@ -155,19 +170,29 @@ function MessageComp(props) {
     );
 }
 
+
+
+//*
+// relTime is a function that formats the time since the given post (e.g. 2 min ago)
+//*
 function relTime(date) {
     const difference = (new Date().getTime() - date.getTime()) / 1000;
     if (difference < 60) {
         return `now`;
-    } else if (difference < 3600) {
+    }
+    else if (difference < 3600) {
         return `${Math.floor(difference / 60)}m`;
-    } else if (difference < 86400) {
+    }
+    else if (difference < 86400) {
         return `${Math.floor(difference / 3600)}h`;
-    } else if (difference < 2620800) {
+    }
+    else if (difference < 2620800) {
         return `${Math.floor(difference / 86400)} days ago`;
-    } else if (difference < 31449600) {
+    }
+    else if (difference < 31449600) {
         return `${Math.floor(difference / 2620800)} months ago`;
-    } else {
+    }
+    else {
         return `${Math.floor(difference / 31449600)} years ago`;
     }
 }
