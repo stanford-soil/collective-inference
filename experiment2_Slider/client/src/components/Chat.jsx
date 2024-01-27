@@ -12,6 +12,7 @@ import f from '/avatar6.png';
 import g from '/avatar7.png';
 import h from '/avatar8.png';
 import { useSpring, animated } from 'react-spring';
+import { Slider } from '@mui/material';
 
 //import RangeSlider from 'react-range-slider-input';
 //import 'react-range-slider-input/dist/style.css';
@@ -21,6 +22,8 @@ export function Chat({ scope, attribute, loading}) {
     const round = useRound();
     const stage = useStage();
     const game = useGame();
+    const [sliderValue, setSliderValue] = useState(50);
+    const [isSliderChanged, setIsSliderChanged] = useState(false);
 
     if (!scope || !player) {
         return <LoadingComp />;
@@ -44,6 +47,18 @@ export function Chat({ scope, attribute, loading}) {
     };
 
     let msgs = scope.getAttribute(attribute)?.items || [];
+
+    const handleSlider = (event, value) => {
+        setSliderValue(value);
+        setIsSliderChanged(true);
+    };
+
+    const handleSubmit = () => {
+        console.log("Submitting value: ", sliderValue);
+        //hardcode single message for recipent
+        handleNewMessage("Player" + player.id + " guessed " + sliderValue + "% rabbits");
+    };
+
     return (
         <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">
         {
@@ -54,12 +69,34 @@ export function Chat({ scope, attribute, loading}) {
             <MessagesPanel scope={scope} msgs={msgs} stage={stage}
                            round={round} player={player}/>
         {
-            // If the stage is in send state, show the input box, else show slider/text feedback
-            stage.get("name") == 'send' ?
-             <InputBox onNewMessage={handleNewMessage} buttonStyles='w-9 h-9 p-2 text-sm'/> : player.stage && player.stage.get("submit") ? <div> Thank you for your answer. The next stage will start when all the other 
+            <div>
+            <h2 className="text-center mb-5">What proportion of the population are rabbits?</h2><br/>
+            <p className="text-gray-600 text-sm text-center mb-2">
+            The stage will advance when all players click submit
+            </p>
+            <div className = "flex items-center space-x-4">
+            <Slider 
+                        defaultValue={50} 
+                        aria-label="Default" 
+                        valueLabelDisplay="auto" 
+                        onChange={handleSlider}
+                        value={sliderValue}
+                        className = "flex-grow"
+                    />
+                    <button 
+                        onClick={handleSubmit} 
+                        disabled={!isSliderChanged}
+                        className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline 
+                ${!isSliderChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
+                    >
+                         Submit
+                    </button>
+                    </div>
+           : player.stage && player.stage.get("submit") ? <div> Thank you for your answer. The next stage will start when all the other 
              players have submitted their answer. </div> : <Opinion toggle={1} scope = {scope} attribute = {attribute}/>
         }
         </div>
+        
     );
 }
 
