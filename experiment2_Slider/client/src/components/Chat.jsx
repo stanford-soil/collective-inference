@@ -69,30 +69,25 @@ export function Chat({ scope, attribute, loading}) {
             <MessagesPanel scope={scope} msgs={msgs} stage={stage}
                            round={round} player={player}/>
         {
-            <div>
-            <h2 className="text-center mb-5">What proportion of the population are rabbits?</h2><br/>
-            <p className="text-gray-600 text-sm text-center mb-2">
-            The stage will advance when all players click submit
-            </p>
-            <div className = "flex items-center space-x-4">
-            <Slider 
+            // If the stage is in send state, show the input box, else show slider/text feedback
+            stage.get("name") == 'send' ?
+            <div className="flex items-center space-x-4 mt-4">
+                    <Slider 
                         defaultValue={50} 
                         aria-label="Default" 
                         valueLabelDisplay="auto" 
                         onChange={handleSlider}
                         value={sliderValue}
-                        className = "flex-grow"
+                        className="flex-grow"
                     />
                     <button 
                         onClick={handleSubmit} 
                         disabled={!isSliderChanged}
-                        className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline 
-                ${!isSliderChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
+                        className="bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:bg-blue-700"
                     >
-                         Submit
+                        Submit
                     </button>
-                    </div>
-           : player.stage && player.stage.get("submit") ? <div> Thank you for your answer. The next stage will start when all the other 
+                </div> : player.stage && player.stage.get("submit") ? <div> Thank you for your answer. The next stage will start when all the other 
              players have submitted their answer. </div> : <Opinion toggle={1} scope = {scope} attribute = {attribute}/>
         }
         </div>
