@@ -12,12 +12,9 @@ import f from '/avatar6.png';
 import g from '/avatar7.png';
 import h from '/avatar8.png';
 import { useSpring, animated } from 'react-spring';
-import { Slider } from '@mui/material';
 
-//import RangeSlider from 'react-range-slider-input';
-//import 'react-range-slider-input/dist/style.css';
 
-export function Chat({ scope, attribute, loading}) {
+export function Chat({ scope, attribute, loading, guess}) {
     const player = usePlayer();
     const round = useRound();
     const stage = useStage();
@@ -35,6 +32,7 @@ export function Chat({ scope, attribute, loading}) {
             time: Date.now(),
             round: round.get('idx'),
             recipient: player.get("recipient"),
+            guess: player.stage.get("guess"),
             sender: {
                 id: player.id,
                 name: player.get("name") || player.id,
@@ -56,57 +54,31 @@ export function Chat({ scope, attribute, loading}) {
     const handleSubmit = () => {
         console.log("Submitting value: ", sliderValue);
         //hardcode single message for recipent
-        handleNewMessage("Player" + player.id + " guessed " + sliderValue + "% rabbits");
+        handleNewMessage("Guessed " + sliderValue + "% rabbits");
     };
 
-    return (
-        <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">
-        {
-            stage.get('name') == 'send' ?
-            <h2 className="align-left"> Messages <b>sent</b>:</h2> :
-            <h2>Messages <b>received</b>: </h2>
-        }
-            <MessagesPanel scope={scope} msgs={msgs} stage={stage}
-                           round={round} player={player}/>
-        {
-            // If the stage is in send state, show the input box, else show slider/text feedback
-            stage.get("name") == 'send' ?
-            <div className="flex items-center space-x-4 mt-4">
-                    <Slider 
-                        defaultValue={50} 
-                        aria-label="Default" 
-                        valueLabelDisplay="auto" 
-                        onChange={handleSlider}
-                        value={sliderValue}
-                        className="flex-grow"
-                    />
-                    <button 
-                        onClick={handleSubmit} 
-                        disabled={!isSliderChanged}
-                        className="bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hover:bg-blue-700"
-                    >
-                        Submit
-                    </button>
-                </div> : player.stage && player.stage.get("submit") ? <div> Thank you for your answer. The next stage will start when all the other 
-             players have submitted their answer. </div> : <Opinion toggle={1} scope = {scope} attribute = {attribute}/>
-        }
-        </div>
-        
-    );
+return (
+  <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">
+
+ 
+    {stage.get("name") === 'observe' ? player.stage && player.stage.get("submit") ? (
+      <div>
+        Thank you for your answer. The next stage will start when all the other players have submitted their answer.
+      </div>
+    ) : (
+      <Opinion toggle={1} scope={scope} attribute={attribute} />
+    ):(
+       <MessagesPanel scope={scope} msgs={msgs} stage={stage} round={round} player={player} guess={guess}/>
+    )}
+  </div>
+);
+
 }
 
-function Message(props) {
-    const animationProps = useSpring({ opacity: 1, from: { opacity: 0 } });
 
-    return (
-        <animated.div style={animationProps}>
-            <MessageComp {...props} />
-        </animated.div>
-    );
-}
 
 function MessagesPanel(props) {
-    let {player, stage, round, scope, msgs } = props;
+    let {player, stage, round, scope, msgs, guess } = props;
     const scroller = useRef(null);
     const [msgCount, setMsgCount] = useState(0);
     const msgsFiltered = (
@@ -135,29 +107,12 @@ function MessagesPanel(props) {
             </svg>
           </div>
 
-          <p className="text-gray-500 text-center">
-              {stage.get("name") == 'send' ?
-               "Please send a message to your new partner about the wildlife population!" :
-               "You haven't received any messages this round..."}
-          </p>
         </div>
     </div>);
     }
 
     // Filter messages based on stage
-    return (
-        <div className="h-full w-full items-center overflow-auto pl-2 pr-4 pb-2" ref={scroller}>
-            {msgsFiltered.map((msg, i) => (
-                <Message 
-                    key={msg.id} 
-                    index={i} 
-                    player={player} 
-                    scope={scope} 
-                    attribute={msg} 
-                />
-            ))}
-        </div>
-    );
+    
 }
 
 //*
@@ -199,7 +154,7 @@ function MessageComp(props) {
                     </span>
                     <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
                 </p>
-                <p className="text-gray-900 group-hover:text-gray-800">{msg.text}</p>
+                <p className="text-gray-900 group-hover:text-gray-800">{msg.guess}</p>
             </div>
         </div>
     );

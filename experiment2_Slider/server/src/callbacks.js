@@ -43,8 +43,9 @@ Empirica.onGameStart(({ game }) => {
       name: "Round " + i + " / 9",
       task: "Chat",
     });
-    round.addStage({ name: "send", duration: 30 });
     round.addStage({ name: "observe", duration: 30});
+    round.addStage({ name: "recieve", duration: 30});
+
   });
 });
 
