@@ -12,6 +12,7 @@ conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
 
 library(tidyverse)
+library(tidyboot)
 library(lme4)
 library(here)
 library(jsonlite)
@@ -53,7 +54,7 @@ d.msgs <- read_csv(here('data/experiment1/games.csv')) %>%
 
 # create long-form dataframe of all guesses made in each game
 d.guesses <- read_csv(here('data/experiment1/playerStages.csv')) %>% 
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>%
+  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% # experimenter practice game
   filter(!is.na(guess)) %>%
   select(gameID, roundID, playerID, guess) %>%
   left_join(d.rounds) %>%
@@ -95,5 +96,55 @@ d.guesses %>%
 ## Result #2: Examine error (collapsing across treatment)
 
 ```{r}
+d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  mutate(target = ifelse(treatmentName=='experiment1-0.3', 30, 70),
+         error = guess - target) %>%
+  group_by(treatmentName, idx, gameID) %>%
+  summarize(error = mean(error)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(abs(error))
+```
 
+```{r}
+library(lmerTest)
+d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  mutate(target = ifelse(treatmentName=='experiment1-0.3', 30, 70),
+         error = abs(guess - target)) %>%
+  lmer(error ~ poly(idx, 1) + treatmentName
+                + (1 + poly(idx, 1) | gameID) 
+                + (1 + poly(idx, 1) | playerID:gameID), 
+       data = .) %>% 
+  summary()
+```
+
+```{r}
+d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  mutate(mleEstimate = 100 * nRabbits / (nRabbits + nSquirrels),
+         distance = abs(guess - mleEstimate)) %>%
+  lmer(distance ~ poly(idx, 1) + treatmentName
+                + (1 + poly(idx, 1) | gameID) 
+                + (1 + poly(idx, 1) | playerID:gameID), 
+       data = .) %>% 
+  summary()
+```
+
+```{r}
+d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  mutate(mleEstimate = 100 * nRabbits / (nRabbits + nSquirrels),
+         distance = abs(guess - mleEstimate),
+         target = ifelse(treatmentName=='experiment1-0.3', 30, 70),
+         error = abs(guess - target)) %>%
+  pivot_longer(names_to = 'measure', values_to = 'value', cols = c('distance', 'error')) %>%
+  group_by(gameID, idx, measure) %>%
+  summarize(value = mean(value, na.rm = T)) %>%
+  group_by(idx, measure) %>%
+  tidyboot_mean(value) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = measure)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) +
+    theme_few()
 ```
