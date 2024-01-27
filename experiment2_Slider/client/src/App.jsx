@@ -24,7 +24,7 @@ export default function App() {
   
 
 function introSteps({ game, player }) {
-    return [Browser, Introduction, Practice, Quiz, Consent]
+    return [Browser, Introduction, Quiz, Consent]
     }
 
   function exitSteps({ game, player }) {

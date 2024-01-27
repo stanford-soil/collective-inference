@@ -154,7 +154,7 @@ function MessageComp(props) {
                     </span>
                     <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
                 </p>
-                <p className="text-gray-900 group-hover:text-gray-800">{msg.guess}</p>
+                <p className="text-gray-900 group-hover:text-gray-800">{guess}</p>
             </div>
         </div>
     );

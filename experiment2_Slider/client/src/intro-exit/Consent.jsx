@@ -31,7 +31,7 @@ export function Consent({ next }) {
             <strong>Risks:</strong> There are no anticipated risks associated with participating in this study. The effects should be comparable to viewing a computer monitor and using a mouse for the duration of the experiment.
           </p><br/>
           <p>
-            <strong>Compensation:</strong> You will receive x for completing the experiment and a performance bonus of up to x.
+            <strong>Compensation:</strong> You will receive 15$/hr for completing the experiment and a performance bonus of up to 2$.
           </p><br/>
           <p>
             <strong>Confidentiality:</strong> Your participation in this study will remain confidential. No personally identifiable information will be collected. Your anonymous data may be shared with other researchers and used in future projects.
