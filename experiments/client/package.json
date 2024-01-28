@@ -11,7 +11,8 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-spring": "^9.7.3",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "vite": "^5.0.12"
   },
   "devDependencies": {
     "@types/react": "18.0.14",
@@ -21,7 +22,6 @@
     "autoprefixer": "10.4.7",
     "path": "0.12.7",
     "unocss": "^0.51.4",
-    "vite": "2.9.15",
     "vite-plugin-restart": "0.1.1"
   },
   "name": "react",

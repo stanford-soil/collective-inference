@@ -51,30 +51,32 @@ export function Opinion({ scope, attribute}){
     //return opinion input based on treatment
     return(
         <div> {game.get("treatment")["opinion"] === "slider" ? (
-            <div>
-                <h2 className="text-center mb-5">What proportion of the population are rabbits?</h2><br/>
-                <p className="text-gray-600 text-sm text-center mb-2">
-                    The stage will advance when all players click submit
-                </p>
-                <div className = "flex items-center space-x-4">
-                    <Slider
-                        defaultValue={50}
-                        aria-label="Default"
-                        valueLabelDisplay="auto"
-                        onChange={handleSlider}
-                        value={sliderValue}
-                        className = "flex-grow"
-                    />
-                    <button
-                        onClick={handleSubmit}
-                        disabled={!isSliderChanged}
-                        className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
-                                   ${!isSliderChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
-                    >
-                        Submit
-                    </button>
-                </div>
-            </div>
+ <div>
+      <h2 className="text-center">What proportion of the population are rabbits?</h2><br/>
+      
+      <div className="flex items-center flex-col space-y-4"> 
+        <div className="flex items-center space-x-4">
+          <h2 className="text-gray-600 text-sm text-center mb-2">All Squirrels<br/>🐿️</h2>
+          <Slider 
+            defaultValue={50} 
+            aria-label="Default" 
+            valueLabelDisplay="auto" 
+            onChange={handleSlider}
+            value={sliderValue}
+            style={{ width: '300px' }} 
+          />
+          <h2 className="text-gray-600 text-sm text-center mb-2">All Rabbits <br/>🐇</h2>
+        </div>
+        <button 
+          onClick={handleSubmit} 
+          disabled={!isSliderChanged}
+          className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline 
+            ${!isSliderChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
+        >
+          Submit
+        </button>
+      </div>
+    </div>
         ) : (
             <div>
                 <h2 className="align-center text-gray-500 text-center" style={{ marginBottom: '20px' }}>What proportion of the population are rabbits? Please enter your opinion and what convinced you to make this choice.</h2>

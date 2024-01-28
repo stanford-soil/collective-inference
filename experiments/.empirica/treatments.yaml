@@ -23,12 +23,6 @@ factors:
         - value: interactive
         - value: unidirectional
 treatments:
-    - name: experiment2-slider
-      factors:
-        condition: slider
-        opinion: slider
-        playerCount: 4
-        trueP: 0.7
     - name: experiment2-interactive
       factors:
         condition: interactive
@@ -64,4 +58,10 @@ treatments:
         condition: interactive
         opinion: slider
         playerCount: 2
+        trueP: 0.7
+    - name: experiment2-slider
+      factors:
+        condition: slider
+        opinion: slider
+        playerCount: 4
         trueP: 0.7
