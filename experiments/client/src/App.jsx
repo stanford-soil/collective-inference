@@ -22,12 +22,24 @@ export default function App() {
   const { protocol, host } = window.location;
   const url = `${protocol}//${host}/query`;
 
-  function introSteps({ game, player }) {
-    return [] // [Browser, Introduction, Practice, Quiz, Consent,];
+function introSteps({ game, player }) {
+  const { debug } = game.get("debug");
+  const { condition } = game.get("treatment");
+
+  if (debug === "debug") {
+    return [];
+  } else {
+    if (condition === 'slider') {
+      return [Browser, Introduction, Quiz, Consent];
+    } else {
+      return [Browser, Introduction, Practice, Quiz, Consent];
+    }
   }
-  function exitSteps({ game, player }) {
-    return [ExitSurvey, Last];
-  }
+}
+
+function exitSteps({ game, player }) {
+  return [ExitSurvey, Last];
+}
 
   return (
     <EmpiricaParticipant url={url} ns={playerKey} modeFunc={EmpiricaClassic}>
