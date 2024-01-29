@@ -18,7 +18,6 @@ import { Last } from "./intro-exit/LastPage.jsx";
 export default function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const playerKey = urlParams.get("participantKey") || "";
-
   const { protocol, host } = window.location;
   const url = `${protocol}//${host}/query`;
 
