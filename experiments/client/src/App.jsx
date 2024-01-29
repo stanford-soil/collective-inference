@@ -8,8 +8,8 @@ import { Introduction } from "./intro-exit/Introduction";
 import { Browser } from "./intro-exit/BrowserAdBlock";
 
 
-import {Consent }from "./intro-exit/Consent.jsx";
-import {Practice} from "./intro-exit/Practice.jsx";
+import { Consent }from "./intro-exit/Consent.jsx";
+import { Practice } from "./intro-exit/Practice.jsx";
 import { Quiz } from "./intro-exit/IndividualQuiz.jsx";
 import { Last } from "./intro-exit/LastPage.jsx";
 
@@ -23,8 +23,7 @@ export default function App() {
   const url = `${protocol}//${host}/query`;
 
 function introSteps({ game, player }) {
-  const { debug } = game.get("debug");
-  const { condition } = game.get("treatment");
+  const { condition, debug } = game.get("treatment");
 
   if (debug === "debug") {
     return [];
