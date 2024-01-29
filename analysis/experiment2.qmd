@@ -4,4 +4,132 @@ format: html
 editor: visual
 ---
 
-## 
+## Import packages
+
+```{r}
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+
+library(tidyverse)
+library(tidyboot)
+library(lme4)
+library(here)
+library(jsonlite)
+library(ggthemes)
+
+theme_set(theme_few())
+```
+
+## Read in data
+
+```{r}
+ParseJSONColumn <- function(x) {
+  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
+    fromJSON(flatten = T) 
+}
+
+# map game IDs to their treatments
+d.treatments <- read_csv(here('data/experiment2/games.csv')) %>%
+  select(gameID = id, treatmentName) %>% 
+  distinct()
+
+# map game IDs to their treatments
+d.players <- read_csv(here('data/experiment2/players.csv')) %>%
+  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
+         nRabbits = str_count(emojiArray, '🐇')) %>%
+  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
+  distinct()
+
+# map round IDs to their indices
+d.rounds <- read_csv(here('data/experiment2/rounds.csv')) %>%
+  select(gameID, roundID = id, idx) %>%
+  distinct()
+
+# create long-form dataframe of all messages sent in each game
+d.msgs <- read_csv(here('data/experiment2/games.csv')) %>% 
+  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
+  select(gameID = id, treatmentName, messages) %>%
+  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
+  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
+  unnest(messages) %>% unnest(messages)
+
+# create long-form dataframe of all guesses made in each game
+d.guesses <- read_csv(here('data/experiment2/playerStages.csv')) %>% 
+  select(gameID, roundID, playerID, guess) %>%
+  left_join(d.rounds) %>%
+  left_join(d.treatments) %>%
+  left_join(d.players) %>% 
+  distinct() %>%
+  group_by(idx, gameID) %>%
+  mutate(nRabbitsGame = sum(nRabbits),
+         nSquirrelsGame = sum(nSquirrels)) %>%
+  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
+         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
+```
+
+## Implement exclusions
+
+```{r}
+confused <- d.guesses %>%
+  filter(idx == 1) %>%
+  mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
+  mutate(discrepency = abs(guess - mleEstimate)) %>% 
+  filter(discrepency > 50) %>% 
+  pull(playerID)
+
+noclick <- d.guesses %>%
+  filter(guess == 50) %>%
+  mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
+  group_by(playerID, mleEstimate) %>%
+  filter(mleEstimate != 50 & !is.na(mleEstimate)) %>%
+  tally() %>%
+  pull(playerID)
+```
+
+### Game-level distribution
+
+```{r}
+d.guesses %>%
+  group_by(gameID) %>%
+  summarize(mleEstimate = mean(mleEstimateGame)) %>%
+  ggplot(aes(x = mleEstimate)) +
+    geom_histogram(binwidth = 10)
+```
+
+## Result #1: Overall Convergence
+
+```{r}
+d.guesses %>%
+  group_by(treatmentName, idx, gameID) %>%
+  summarize(guess = mean(guess, na.rm= T)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(guess, na.rm = T) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 1), se = F) +
+    geom_hline(yintercept = c(70), linetype = 'dotted') +
+    theme_few() +
+    labs(y = 'average guess', x = 'round #') +
+    scale_color_colorblind()
+```
+
+## Result #2: Examine error (collapsing across treatment)
+
+```{r}
+d.guesses %>%
+  group_by(treatmentName, idx, gameID, mleEstimateGame) %>%
+  summarize(guess = mean(guess, na.rm= T)) %>%
+  group_by(treatmentName, idx) %>%
+  mutate(error = guess - mleEstimateGame) %>%
+  tidyboot::tidyboot_mean(error, na.rm = T) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 1), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    #geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average error', x = 'round #') +
+    scale_color_colorblind()
+```
