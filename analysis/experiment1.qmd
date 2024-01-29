@@ -181,11 +181,12 @@ d.guesses %>%
   filter(!(playerID %in% confused)) %>%
   mutate(target = ifelse(treatmentName=='experiment1-0.3', 30, 70),
          error = abs(guess - target)) %>%
-  lmer(error ~ poly(idx, 1) + treatmentName
+  lmerTest::lmer(error ~ poly(idx, 1) + treatmentName
                 + (1 + poly(idx, 1) | gameID) 
                 + (1 + poly(idx, 1) | playerID:gameID), 
        data = .) %>% 
   summary()
+
 ```
 
 ```{r}
@@ -193,7 +194,7 @@ d.guesses %>%
   filter(!(playerID %in% confused)) %>%
   mutate(mleEstimate = 100 * nRabbits / (nRabbits + nSquirrels),
          distance = abs(guess - mleEstimate)) %>%
-  lmer(distance ~ poly(idx, 1) + treatmentName
+  lmerTest::lmer(distance ~ poly(idx, 1) + treatmentName
                 + (1 + poly(idx, 1) | gameID) 
                 + (1 + poly(idx, 1) | playerID:gameID), 
        data = .) %>% 
@@ -410,7 +411,7 @@ print(plot_combined)
 
 ```
 
-# Result #4: Does individual data being an outlier create a consistent rate of error 
+# Result #4: Does individual data being an outlier create a consistent rate of error
 
 ```{r}
 d.MLE <- d.guesses %>%
@@ -428,7 +429,7 @@ slope_difference <- coef(model)[2] - coef(model)[1]
 ggplot(d.MLE, aes(x = outlierPercent, y = error, color = idx)) +
   geom_point() +
   labs(y = "Error", x = "Outlier Percent") +
-  ggtitle("Scatter Plot of Outlier Percent vs Error") +
+  ggtitle("error correction changes with individual p difference from game p") +
   geom_smooth(method = "lm", se = FALSE, aes(group = idx)) +
   theme_minimal() +
   coord_cartesian(clip = "off") +  
@@ -477,3 +478,10 @@ validity <- d.MLE %>%
   count(rounded_outlier)
 print(validity)
 ```
+
+gini coeffient\
+group accuracy vs total data (sum critters)
+
+group level analysis - group accuracy improval
+
+group acc vs heterogenetity

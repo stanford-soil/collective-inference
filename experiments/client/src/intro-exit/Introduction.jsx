@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "../components/Button";
 
 export function Introduction({ next }) {
+
   return (
      <div className="flex items-center justify-center w-screen"><div className="w-1/2">
     <div className="mt-3 sm:mt-5 p-20">

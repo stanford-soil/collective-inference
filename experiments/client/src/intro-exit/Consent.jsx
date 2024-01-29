@@ -31,7 +31,7 @@ export function Consent({ next }) {
             <strong>Risks:</strong> There are no anticipated risks associated with participating in this study. The effects should be comparable to viewing a computer monitor and using a mouse for the duration of the experiment.
           </p><br/>
           <p>
-            <strong>Compensation:</strong> You will receive x for completing the experiment and a performance bonus of up to x.
+            <strong>Compensation:</strong> You will receive 15$/hr for completing the experiment and a performance bonus of up to 2$.
           </p><br/>
           <p>
             <strong>Confidentiality:</strong> Your participation in this study will remain confidential. No personally identifiable information will be collected. Your anonymous data may be shared with other researchers and used in future projects.
@@ -40,7 +40,7 @@ export function Consent({ next }) {
             <strong>Participation and withdrawal:</strong> Your participation in this study is completely voluntary and you may refuse to participate or choose to withdraw at any time without penalty or loss of benefits to which you are otherwise entitled.
           </p><br/>
           <p>
-            <strong>How to contact the researcher:</strong> f you have questions or
+            <strong>How to contact the researcher:</strong> If you have questions or
         concerns about your participation or payment, or want to request a
         summary of research findings, please contact  <a href="mailto:yzubak@wisc.edu">yzubak@wisc.edu</a>.
           </p><br/>
