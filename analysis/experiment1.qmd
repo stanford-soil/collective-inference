@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## Import packages
+### Import packages
 
 ```{r}
 library(conflicted)  
@@ -19,7 +19,7 @@ library(jsonlite)
 library(ggthemes)
 ```
 
-## Read in data
+### Read in data
 
 ```{r}
 ParseJSONColumn <- function(x) {
@@ -96,64 +96,62 @@ d.guesses %>%
 
 ## Result #2: Examine error (collapsing across treatment)
 
-## in-game treatment average from the player's critters
-
 ```{r}
-d.guesses <- d.guesses %>% 
-mutate(indvPercent = ifelse(nRabbits > 0 & nSquirrels == 0, 100, 
+d.guesses <- d.guesses %>%
+  mutate(indvPercent = ifelse(nRabbits > 0 & nSquirrels == 0, 100, 
                    ifelse(nSquirrels > 0 & nRabbits == 0, 1, 
                           ifelse(nRabbits + nSquirrels == 0, 0, 
-                                 floor((nRabbits / (nRabbits + nSquirrels)) * 100)))))
+                                 floor((nRabbits / (nRabbits + nSquirrels)) * 100))))) %>%
+  group_by(idx, gameID) %>%
+  mutate(nRabbitsGame = sum(nRabbits),
+         nSquirrelsGame = sum(nSquirrels)) %>%
+  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
+         AvgPercent = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
 
-d.gameAvg <- d.guesses %>%
-  group_by(gameID) %>%
-  summarize(AvgPercent = floor(mean(indvPercent[indvPercent != 0])))
-  
+d.guesses %>%
+  group_by(gameID, treatmentName) %>%
+  summarize(mleEstimate = mean(mleEstimateIndiv)) %>%
+  ggplot(aes(x = mleEstimate)) +
+    geom_histogram(binwidth = 10) +
+    facet_wrap(~ treatmentName, scales = "free") +
+    labs(title = "Distribution of mleEstimate for each treatmentName")
 ```
 
 ```{r}
-d.guesses <- left_join(d.guesses, d.gameAvg, by = "gameID",suffixes = c("", ""))
+trueP <- d.guesses %>%
+  group_by(treatmentName) %>%
+  summarize(mean_AvgPercent = mean(mleEstimateIndiv, na.rm = TRUE))
+
+list <- as.list(as.numeric(trueP$mean_AvgPercent))
+d.guesses %>%
+ #filter(!(playerID %in% confused)) %>% 
+  #filter(!(playerID %in% persistentnoClick)) %>%
+  #filter(!(playerID %in% GamingTheSystem)) %>%
+  group_by(treatmentName, idx, gameID) %>%
+  summarize(guess = mean(guess, na.rm = TRUE)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(guess, na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+  geom_hline(yintercept = c(32,66), linetype = 'dotted')+
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average guess', x = 'round #') +
+    scale_color_colorblind()
 ```
 
 ## in-game player error (absolute)
 
 ```{r}
-d.guesses <- d.guesses %>%
-  mutate(error = abs(guess-AvgPercent))%>%
-  mutate(treatmentPercent = ifelse(.[[6]] == "experiment1-0.3", 30, 70))  %>%
-  mutate(treatmentError = abs(guess-treatmentPercent))
-```
-
-## per game abs error with game average percent
-
-```{r}
+#d.guesses <- d.guesses %>%
+ # mutate(error = abs(guess-AvgPercent))
 unique_gameIDs <- unique(d.guesses$gameID)
 
-#for (gameID in unique_gameIDs) {
-  #subset_df <- d.guesses[d.guesses$gameID == gameID, ]
-   #plot <- ggplot(subset_df, aes(x = idx, y = error, color = as.factor(playerID))) +
-    #geom_line() +
-    #labs(title = paste("GameID:", gameID, "- Error Over idx by playerID"), x = "idx", y = "Error") +
-    #theme_minimal()
-  #print(plot)
-#}
-```
-
-## average absolute error with game average percent
-
-```{r}
-d.guesses %>%
-  filter(!(playerID %in% confused)) %>%
-  group_by(treatmentName, idx) %>%
-  tidyboot::tidyboot_mean(error) %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
-    geom_point() +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
-    geom_hline(yintercept = c(0), linetype = 'dotted') +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
-    theme_few() +
-    labs(y = 'average error', x = 'round #') +
-    scale_color_colorblind()
+#%>%
+  #mutate(treatmentPercent = ifelse(.[[6]] == "experiment1-0.3", 30, 70))  %>%
+  #mutate(treatmentError = abs(guess-treatmentPercent))
 ```
 
 ## exclude people who got no sample
@@ -161,7 +159,7 @@ d.guesses %>%
 ```{r}
 sampleLess <- d.guesses %>%
   filter(indvPercent == 0)
-print(sampleLess)
+#print(sampleLess)
 ```
 
 ```{r}
@@ -219,25 +217,193 @@ d.guesses %>%
     theme_few()
 ```
 
+## 
+
+# Result #3: Wisdom of Crowds
+
+## participant error without absolute
+
+```{r}
+d.guesses <- d.guesses %>%
+  mutate(wisError = guess-AvgPercent)#%>%
+ # mutate(treatmentPercent = ifelse(.[[6]] == "experiment1-0.3", 30, 70))  %>%
+#  mutate(wisTreatmentError = guess-treatmentPercent)
+```
+
+## average error per player within-game ratios
+
 ```{r}
 d.guesses %>%
   filter(!(playerID %in% confused)) %>%
-  filter(!(playerID %in% sampleLess)) %>%
   group_by(treatmentName, idx) %>%
-  tidyboot::tidyboot_mean(error) %>%
+  tidyboot::tidyboot_mean(wisError) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
     geom_point() +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
     geom_hline(yintercept = c(0), linetype = 'dotted') +
     geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
     theme_few() +
-    labs(y = 'average error', x = 'round #') +
+    labs(y = 'average error', x = 'round', color="condition") +
+    scale_color_colorblind(labels=c("30%","70%"))
+```
+
+## within-game error per player and average
+
+```{r}
+d.gameError <- d.guesses %>%
+  group_by(gameID) %>%
+  summarize(gameError = mean(wisError))
+
+d.guesses <- left_join(d.guesses, d.gameError, by = "gameID",suffixes = c("", ""))
+```
+
+## crowd error
+
+```{r}
+# Filter the data frame outside the loop
+filtered_df <- d.guesses[!(d.guesses$playerID %in% confused), ]
+
+# Create a ggplot for error over idx for both treatment names
+plot_combined <- 
+  ggplot(filtered_df, aes(x = idx, y = wisError, color = treatmentName)) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = mean(filtered_df$wisError), linetype = 'dotted') +
+  theme_few() +
+  labs(y = 'average error per game', x = 'round #', color="game p") +
+  scale_color_colorblind(labels= c("30%","70%"))
+
+# Print the combined plot
+print(plot_combined)
+
+```
+
+# Result #4: Does individual data being an outlier create a consistent rate of error
+
+```{r}
+d.MLE <- d.guesses %>%
+  mutate(outlierPercent = abs(indvPercent-AvgPercent))
+```
+
+```{r}
+# Assuming you have a linear model fit earlier
+model <- lm(wisError ~ outlierPercent, data = d.MLE)
+
+# Calculate the slope difference
+slope_difference <- coef(model)[2] - coef(model)[1]
+
+# Now you can use it in the annotate function
+ggplot(d.MLE, aes(x = outlierPercent, y = wisError, color = idx)) +
+  geom_point() +
+  labs(y = "error", x = "individual p distance from game p", color= "round") +
+  geom_smooth(method = "lm", se = FALSE, aes(group = idx)) +
+  theme_minimal() +
+  coord_cartesian(clip = "off") +  
+  theme(legend.position = "right") #+ 
+ # annotate("text", x = max(d.MLE$outlierPercent), y = max(d.MLE$error), 
+   #        label = paste("decrease in slope", round(slope_difference, 2)),
+   #        hjust = 1, vjust = 1, color = "black", size = 3)
+
+```
+
+```{r}
+first <- d.MLE %>%   
+  distinct(playerID, .keep_all = TRUE) %>%
+  mutate(rounded_outlier = ceiling(outlierPercent/10)*10) %>%
+  select(playerID, rounded_outlier)
+
+second <- first %>% ungroup %>%
+  select(playerID, rounded_outlier)
+d.MLE <- d.MLE %>%
+  left_join(select(second, playerID, rounded_outlier), by = "playerID")
+```
+
+```{r}
+ggplot(d.MLE, aes(x = idx, y = wisError, color = as.factor(rounded_outlier))) +
+  geom_point() +
+  labs(y = "Error", x = "Time", color = "Outlier Group") +  # Specify legend title here
+  ggtitle("Scatter Plot of Error Over Time by Outlier Group") +
+  geom_smooth(method = "lm", se = FALSE, aes(group = rounded_outlier)) +
+  theme_minimal() +
+  coord_cartesian(clip = "off") +  
+  theme(legend.position = "bottom")
+```
+
+```{r}
+validity <- d.MLE %>%
+  distinct(playerID, rounded_outlier) %>%
+  count(rounded_outlier)
+print(validity)
+```
+
+## Individual MLE
+
+```{r}
+d.guesses$individualConsistency <- d.guesses$guess - d.guesses$indvPercent
+
+# Create a line plot
+ggplot(d.guesses, aes(x = idx, y = individualConsistency, group = playerID, )) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Player's Guess Difference from Personal Avg Over Time",
+       x = "idx",
+       y = "Difference (Guess - Truth)",
+       color = "Player") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(d.guesses, aes(x = individualConsistency, fill = factor(idx))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density of Player's Guess Difference from Individual Over Time",
+       x = "Difference (Guess - Personal p)",
+       y = "Density",
+       fill = "Round") +
+  theme_minimal()
+```
+
+```{r}
+spoilsport<- d.guesses %>%
+  filter(idx == 8) %>%
+  filter(individualConsistency == 0 ) %>% 
+  pull(playerID)
+```
+
+```{r}
+d.guesses %>%
+  filter(!(playerID %in% spoilsport)) %>%
+    filter(!(playerID %in% confused)) %>%
+  group_by(treatmentName, idx, gameID) %>%
+  summarize(guess = mean(guess, na.rm = TRUE)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(guess) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(30, 70), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average guess', x = 'round #') +
     scale_color_colorblind()
+```
+
+gini coeffient\
+group accuracy vs total data (sum critters)
+
+group level analysis - group accuracy improval
+
+group acc vs heterogenetity
+
+# Yonder
+
+```{r}
+crashMyReRun <-
 ```
 
 ## only people who got no sample
 
 ```{r}
+{r}
 sampleLess %>%
   filter(!(playerID %in% confused)) %>%
   group_by(treatmentName, idx) %>%
@@ -255,7 +421,6 @@ sampleLess %>%
 ## remove games with sampleless players
 
 ```{r}
-
 d.guesses %>%
   filter(!(gameID %in% sampleLess)) %>%
   filter(!(playerID %in% confused)) %>%
@@ -293,35 +458,56 @@ d.samplelessGames %>%
     scale_color_colorblind()
 ```
 
-# Result #3: Wisdom of Crowds
-
-## participant error without absolute
-
-```{r}
-d.guesses <- d.guesses %>%
-  mutate(wisError = guess-AvgPercent)%>%
-  mutate(treatmentPercent = ifelse(.[[6]] == "experiment1-0.3", 30, 70))  %>%
-  mutate(wisTreatmentError = guess-treatmentPercent)
-```
-
-## average error per player within-game ratios
+## absolute average error
 
 ```{r}
 d.guesses %>%
   filter(!(playerID %in% confused)) %>%
+  filter(!(playerID %in% sampleLess)) %>%
   group_by(treatmentName, idx) %>%
-  tidyboot::tidyboot_mean(wisError) %>%
+  tidyboot::tidyboot_mean(error) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
     geom_point() +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
     geom_hline(yintercept = c(0), linetype = 'dotted') +
     geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
     theme_few() +
-    labs(y = 'average error per player', x = 'round #') +
+    labs(y = 'average error', x = 'round #') +
     scale_color_colorblind()
 ```
 
-## average error per player with 70/30
+## per game abs error
+
+```{r}
+
+#for (gameID in unique_gameIDs) {
+  #subset_df <- d.guesses[d.guesses$gameID == gameID, ]
+   #plot <- ggplot(subset_df, aes(x = idx, y = error, color = as.factor(playerID))) +
+    #geom_line() +
+    #labs(title = paste("GameID:", gameID, "- Error Over idx by playerID"), x = "idx", y = "Error") +
+    #theme_minimal()
+  #print(plot)
+#}
+```
+
+## avg abs error
+
+```{r}
+d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(error) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average error', x = 'round #') +
+    scale_color_colorblind()
+```
+
+## avg error per player 70/30
 
 ```{r}
 d.guesses %>%
@@ -334,23 +520,14 @@ d.guesses %>%
     geom_hline(yintercept = c(0), linetype = 'dotted') +
     geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
     theme_few() +
-    labs(y = 'average error', x = 'round #') +
-    scale_color_colorblind()
-```
-
-## within-game error per player and average
-
-```{r}
-d.gameError <- d.guesses %>%
-  group_by(gameID) %>%
-  summarize(gameError = mean(wisError))
-
-d.guesses <- left_join(d.guesses, d.gameError, by = "gameID",suffixes = c("", ""))
+    labs(y = 'average error', x = 'round', color="game p") +
+    scale_color_colorblind(labels=c("30%","70%"))
 ```
 
 ## per game average error
 
 ```{r}
+
 
 filtered_df <- d.guesses[!(d.guesses$playerID %in% confused), ]
 
@@ -368,12 +545,12 @@ for (gameID in unique_gameIDs) {
   print(plot) 
 }
 
-
 ```
 
-## All games error
+## all games error
 
 ```{r}
+
 # Filter the data frame outside the loop
 filtered_df <- d.guesses[!(d.guesses$playerID %in% confused), ]
 
@@ -388,100 +565,17 @@ plot <-
   scale_color_colorblind()
 
 print(plot)
-
-
 ```
 
-```{r}
-# Filter the data frame outside the loop
-filtered_df <- d.guesses[!(d.guesses$playerID %in% confused), ]
-
-# Create a ggplot for error over idx for both treatment names
-plot_combined <- 
-  ggplot(filtered_df, aes(x = idx, y = wisError, color = treatmentName)) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
-  geom_hline(yintercept = mean(filtered_df$wisError), linetype = 'dotted') +
-  theme_few() +
-  labs(y = 'average error per game', x = 'round #') +
-  scale_color_colorblind()
-
-# Print the combined plot
-print(plot_combined)
-
-```
-
-# Result #4: Does individual data being an outlier create a consistent rate of error
-
-```{r}
-d.MLE <- d.guesses %>%
-  mutate(outlierPercent = abs(indvPercent-AvgPercent))
-```
-
-```{r}
-# Assuming you have a linear model fit earlier
-model <- lm(error ~ outlierPercent, data = d.MLE)
-
-# Calculate the slope difference
-slope_difference <- coef(model)[2] - coef(model)[1]
-
-# Now you can use it in the annotate function
-ggplot(d.MLE, aes(x = outlierPercent, y = error, color = idx)) +
-  geom_point() +
-  labs(y = "Error", x = "Outlier Percent") +
-  ggtitle("error correction changes with individual p difference from game p") +
-  geom_smooth(method = "lm", se = FALSE, aes(group = idx)) +
-  theme_minimal() +
-  coord_cartesian(clip = "off") +  
-  theme(legend.position = "bottom") + 
-  annotate("text", x = max(d.MLE$outlierPercent), y = max(d.MLE$error), 
-           label = paste("Change across rounds:", round(slope_difference, 3)),
-           hjust = 1, vjust = 1, color = "black", size = 3)
-
-```
-
-```{r}
-first <- d.MLE %>%
-  distinct(playerID, .keep_all = TRUE)%>%
-  mutate(rounded_outlier = ceiling(outlierPercent/10)*10)
-
-d.MLE <- d.MLE %>%
-  left_join(select(first, playerID, rounded_outlier), by = "playerID")
-
-```
+## indecisive
 
 ```{r}
 
-indecisive <- d.MLE %>%
-  group_by(playerID) %>%
-  filter(!(1 %in% idx)) %>%
-  pull(playerID) %>%
-  unique()
+#indecisive <- d.MLE %>%
+ # group_by(playerID) %>%
+  #filter(!(1 %in% idx)) %>%
+#  pull(playerID) %>%
+ # unique()
 
-print(indecisive)
+#print(indecisive)
 ```
-
-```{r}
-ggplot(d.MLE, aes(x = idx, y = error, color = as.factor(rounded_outlier))) +
-  geom_point() +
-  labs(y = "Error", x = "Time", color = "Outlier Group") +  # Specify legend title here
-  ggtitle("Scatter Plot of Error Over Time by Outlier Group") +
-  geom_smooth(method = "lm", se = FALSE, aes(group = rounded_outlier)) +
-  theme_minimal() +
-  coord_cartesian(clip = "off") +  
-  theme(legend.position = "bottom")
-```
-
-```{r}
-validity <- d.MLE %>%
-  distinct(playerID, rounded_outlier) %>%
-  count(rounded_outlier)
-print(validity)
-```
-
-gini coeffient\
-group accuracy vs total data (sum critters)
-
-group level analysis - group accuracy improval
-
-group acc vs heterogenetity
