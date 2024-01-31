@@ -33,3 +33,12 @@ def compute_list_self_weights(list_slider_rating, list_received_rating):
     assert len(list_self_weights) == T - 1, "Length of list_self_weights should be 1 less than length of list_slider_rating"
     
     return list_self_weights
+    print (list_self_weights)
+
+slider_ratings = [1.0, 2.0, 3.0, 4.0] 
+received_ratings = [0.5, 1.5, 2.5]      
+
+
+result = compute_list_self_weights(slider_ratings, received_ratings)
+print(result)
+

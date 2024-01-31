@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## Import packages
+### Import packages
 
 ```{r}
 library(conflicted)  
@@ -19,7 +19,7 @@ library(jsonlite)
 library(ggthemes)
 ```
 
-## Read in data
+### Read in data
 
 ```{r}
 ParseJSONColumn <- function(x) {
