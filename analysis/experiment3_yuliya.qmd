@@ -22,10 +22,6 @@ library(ggthemes)
 ## Read in data
 
 ```{r}
-
-```
-
-```{r}
 ParseJSONColumn <- function(x) {
   str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
     fromJSON(flatten = T) 
@@ -158,7 +154,8 @@ d.guesses.b4$treatmentName <- paste0(d.guesses.b4$treatmentName, "-0.3")
 
 ```{r}
 d.guesses <- rbind(d.guesses.b1, d.guesses.b2, d.guesses.b3, d.guesses.b4)
-
+rm(d.guesses.b1,d.guesses.b2,d.guesses.b3,d.guesses.b4,d.msgs.b1,d.msgs.b2,d.msgs.b3,d.msgs.b4,d.players.b1, d.players.b2,d.players.b3,d.players.b4,d.rounds.b1,
+   d.rounds.b2,d.rounds.b3,d.rounds.b4,d.treatments.b1,d.treatments.b2,d.treatments.b3,d.treatments.b4)
 ```
 
 ## Implement exclusions
@@ -487,6 +484,7 @@ d.samplelessGames %>%
 ```{r}
 d.guesses <- d.guesses %>%
   mutate(wisError = guess-AvgPercent)
+  mutate(newScore = (guess-AvgPercent)/AvgPercent)
 #  mutate(treatmentPercent = ifelse(.[[6]] == "experiment1-0.3", 30, 70))  %>%
  # mutate(wisTreatmentError = guess-treatmentPercent)
 ```
@@ -499,7 +497,7 @@ d.guesses %>%
   #filter(!(gameID %in% persistentnoClick)) %>%
   #filter(!(playerID %in% GamingTheSystem)) %>%
   group_by(treatmentName, idx) %>%
-  tidyboot::tidyboot_mean(wisError, na.rm = TRUE) %>%
+  tidyboot::tidyboot_mean(newScore, na.rm = TRUE) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
     geom_point() +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
