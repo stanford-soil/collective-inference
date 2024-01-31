@@ -3,24 +3,25 @@ import numpy as np
 def binomial(p, n):
     flips = np.random.rand(n) < p
     return np.sum(flips)
+
 true_p = 0.7
 beliefs = np.zeros((4, 9))
+#each row vector represents that agents influence from others
+influence_matrix = np.array([[0.5, 0.1, 0.2, 0.2],
+                             [0.1, 0.5, 0.2, 0.2], 
+                             [0.2, 0.2, 0.5, 0.1],  
+                             [0.2, 0.2, 0.1, 0.5]]) 
 
 for agent in range(4):
     n = 9  
     n_rabbits = binomial(true_p, n) 
     beliefs[agent, 0] = n_rabbits 
 
-def degroot_update(beliefs, t):
-    n_agents = beliefs.shape[0]
-    new_beliefs = np.copy(beliefs)
-    for i in range(n_agents):
-        #each agent updates their belief based on the average belief of all agents at time t
-        new_beliefs[i, t+1] = np.mean(beliefs[:, t])
-    return new_beliefs
+def degroot_update(beliefs, influence_matrix):
+    return np.dot(influence_matrix, beliefs)
 
 #apply the DeGroot model over 9 time steps
 for t in range(8):
-    beliefs = degroot_update(beliefs, t)
+    beliefs[:, t+1] = degroot_update(beliefs[:, t], influence_matrix)
 
 print(beliefs)
