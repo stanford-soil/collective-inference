@@ -1,27 +1,34 @@
 import numpy as np
 
 def binomial(p, n):
-    flips = np.random.rand(n) < p
-    return np.sum(flips)
+    return np.sum(np.random.rand(n) < p)
+
+def update_beliefs_for_pairs(beliefs, pairs):
+    new_beliefs = np.copy(beliefs)
+    for pair in pairs:
+        #each agent in the pair takes the average belief of themselves and their partner
+        avg_belief = np.mean(beliefs[pair])
+        new_beliefs[pair] = avg_belief
+    return new_beliefs
 
 true_p = 0.7
-beliefs = np.zeros((4, 9))
-#each row vector represents that agents influence from others
-influence_matrix = np.array([[0.5, 0.1, 0.2, 0.2],
-                             [0.1, 0.5, 0.2, 0.2], 
-                             [0.2, 0.2, 0.5, 0.1],  
-                             [0.2, 0.2, 0.1, 0.5]]) 
+n_agents = 4
+beliefs = np.zeros((n_agents, 9))
 
-for agent in range(4):
+for agent in range(n_agents):
     n = 9  
-    n_rabbits = binomial(true_p, n) 
+    n_rabbits = binomial(true_p, n)
     beliefs[agent, 0] = n_rabbits 
 
-def degroot_update(beliefs, influence_matrix):
-    return np.dot(influence_matrix, beliefs)
+#define pairings for each time step
+pairings = [([0, 1], [2, 3]), 
+            ([1, 2], [3, 0]),
+            ([2, 3], [0, 1]),  
+            ([3, 0], [1, 2])] 
 
-#apply the DeGroot model over 9 time steps
 for t in range(8):
-    beliefs[:, t+1] = degroot_update(beliefs[:, t], influence_matrix)
+    #use the pairing for the current step
+    current_pairing = pairings[t % len(pairings)]
+    beliefs[:, t+1] = update_beliefs_for_pairs(beliefs[:, t], current_pairing)
 
 print(beliefs)
