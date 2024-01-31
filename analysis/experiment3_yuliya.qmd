@@ -161,6 +161,14 @@ rm(d.guesses.b1,d.guesses.b2,d.guesses.b3,d.guesses.b4,d.msgs.b1,d.msgs.b2,d.msg
 ## Implement exclusions
 
 ```{r}
+playercount <- d.guesses %>%
+   filter(idx == 1) %>%
+   distinct(playerID, .keep_all = TRUE)
+nrow(playercount)
+
+```
+
+```{r}
 confused <- d.guesses %>%
   filter(idx == 1) %>%
   mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
@@ -168,9 +176,12 @@ confused <- d.guesses %>%
   filter(discrepency > 70) %>% 
   pull(playerID)
 
+```
+
+```{r}
 persistentnoClick <- c()  
-for (i in 1:6) {
-  idx_pair <- c(i, i+1, i+2)
+for (i in 1:7) {
+  idx_pair <- c(i, i+1)
   filtered_players <- d.guesses %>%
     group_by(playerID) %>%
     filter(all(is.na(guess[idx %in% idx_pair]))) %>%
@@ -180,23 +191,60 @@ for (i in 1:6) {
 }
 print(length(unique(persistentnoClick)))
 
+```
 
-playercount <- d.guesses %>%
-   filter(idx == 1) %>%
-   distinct(playerID, .keep_all = TRUE)
-nrow(playercount)
+```{r}
+squares <- c()  
+for (i in 1:7) {
+  idx_pair <- c(i, i+1)
+  filtered_players <- d.guesses %>%
+    group_by(playerID) %>%
+    filter(all(is.na(guess[idx %in% idx_pair]))) %>%
+    distinct(playerID, .keep_all = TRUE) %>%
+    pull(playerID)
+  squares <- c(squares, filtered_players)
+}
+print(length(unique(squares)))
+```
 
+```{r}
+square_games <- d.guesses %>%
+  filter(playerID %in% squares) %>%
+  group_by(gameID) %>%
+  summarize(distinct_playerIDs = n_distinct(playerID))%>%
+  filter(distinct_playerIDs != 1)
+
+
+```
+
+```{r}
+#on the issue of so many NAs
 hard_clean <- d.guesses %>%
   filter(is.na(guess)) 
-  
+
+playercount_na <- hard_clean %>%
+   distinct(playerID, .keep_all = TRUE)
+nrow(playercount_na)
 #GamingTheSystem is also an exclusion category caluculated in Error
+
+d.guesses %>%
+filter(!(playerID %in% unique(hard_clean$gameID))) %>%
+  group_by(treatmentName) %>%
+  summarize(count = n_distinct(playerID))
+d.guesses %>%
+   filter(!(gameID %in% unique(hard_clean$gameID))) %>%
+   group_by(treatmentName) %>%
+   summarize(count = n_distinct(gameID))
+fullGames <-d.guesses %>%
+   filter(!(gameID %in% unique(hard_clean$gameID)))
 ```
 
 ## Result #1: Convergence
 
 ```{r}
 d.guesses %>%
-  filter(!(gameID %in% hard_clean)) %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+   filter(!(gameID %in% square_games)) %>%
   group_by(treatmentName, idx, gameID) %>%
   summarize(guess = mean(guess, na.rm = TRUE)) %>%
   group_by(treatmentName, idx) %>%
@@ -244,14 +292,15 @@ trueP <- d.guesses %>%
   group_by(treatmentName) %>%
   summarize(mean_AvgPercent = mean(mleEstimateIndiv, na.rm = TRUE))
 
+d.guesses <- left_join(d.guesses, trueP, by = "treatmentName",suffixes = c("", ""))
 
 ```
 
 ```{r}
 list <- as.list(as.numeric(trueP$mean_AvgPercent)) 
 d.guesses %>%
- #filter(!(playerID %in% confused)) %>% 
-  #filter(!(playerID %in% persistentnoClick)) %>%
+  filter(!(playerID %in% confused)) %>% 
+  filter(!(playerID %in% persistentnoClick)) %>%
   #filter(!(playerID %in% GamingTheSystem)) %>%
   group_by(treatmentName, idx, gameID) %>%
   summarize(guess = mean(guess, na.rm = TRUE)) %>%
@@ -325,7 +374,7 @@ d.guesses %>%
 ```{r}
 d.guesses <- d.guesses %>%
   mutate(wisError = guess-AvgPercent) %>%
-  mutate(newScore = wisError/AvgPercent)
+  mutate(treatError = guess-mean_AvgPercent)
 
 ```
 
@@ -333,9 +382,9 @@ d.guesses <- d.guesses %>%
 
 ```{r}
 d.guesses %>%
-  # filter(!(gameID %in% hard_clean)) %>% 
-  #filter(!(gameID %in% persistentnoClick)) %>%
-  #filter(!(playerID %in% GamingTheSystem)) %>%
+  filter(!(playerID %in% confused)) %>% 
+  filter(!(playerID %in% persistentnoClick)) %>%
+  filter(!(gameID %in% square_games)) %>%
   group_by(treatmentName, idx) %>%
   tidyboot::tidyboot_mean(wisError, na.rm = TRUE) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
@@ -364,8 +413,8 @@ d.guesses <- left_join(d.guesses, d.gameError, by = "gameID",suffixes = c("", ""
 ```{r}
 # Filter the data frame outside the loop
 filtered_df <- d.guesses%>%  
-  filter(!(playerID %in% confused)) #%>% 
-  #filter(!(playerID %in% sampleLess))#%>%
+  filter(!(playerID %in% confused)) %>% 
+  filter(!(playerID %in% persistentnoClick))#%>%
   #filter(!(playerID %in% GamingTheSystem)) 
 # Create a ggplot for error over idx for both treatment names
 plot_combined <- 
@@ -391,13 +440,13 @@ d.MLE <- d.guesses %>%
 
 ```{r}
 # Assuming you have a linear model fit earlier
-model <- lm(wisError ~ outlierPercent, data = d.MLE)
+model <- lm(abs(wisError) ~ outlierPercent, data = d.MLE)
 
 # Calculate the slope difference
 slope_difference <- coef(model)[2] - coef(model)[1]
 
 # Now you can use it in the annotate function
-ggplot(d.MLE, aes(x = outlierPercent, y = wisError, color = idx)) +
+ggplot(d.MLE, aes(x = outlierPercent, y = abs(wisError), color = idx)) +
   geom_point() +
   labs(y = "Error", x = "Outlier Percent") +
   ggtitle("Scatter Plot of Outlier Percent vs Error") +
@@ -424,7 +473,7 @@ d.MLE <- d.MLE %>%
 ```
 
 ```{r}
-ggplot(d.MLE, aes(x = idx, y = wisError, color = as.factor(rounded_outlier))) +
+ggplot(d.MLE, aes(x = idx, y = abs(wisError), color = as.factor(rounded_outlier))) +
   geom_point() +
   labs(y = "Error", x = "Time", color = "Outlier Group") +  # Specify legend title here
   ggtitle("Scatter Plot of Error Over Time by Outlier Group") +
@@ -467,47 +516,7 @@ ggplot(d.guesses, aes(x = individualConsistency, fill = factor(idx))) +
   theme_minimal()
 ```
 
-```{r}
-spoilsport<- d.guesses %>%
-  filter(idx == 8) %>%
-  filter(individualConsistency == 0 ) %>% 
-  pull(playerID)
-```
-
-```{r}
-d.guesses %>%
-  filter(!(playerID %in% spoilsport)) %>%
-    filter(!(playerID %in% confused)) %>%
-  group_by(treatmentName, idx, gameID) %>%
-  summarize(guess = mean(guess, na.rm = TRUE)) %>%
-  group_by(treatmentName, idx) %>%
-  tidyboot::tidyboot_mean(guess,na.rm = TRUE) %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
-    geom_point() +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
-    geom_hline(yintercept = c(65,37,64,32), linetype = 'dotted') +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
-    theme_few() +
-    labs(y = 'average guess', x = 'round #') +
-    scale_color_colorblind()
-```
-
-```{r}
-d.guesses %>%
-  # filter(!(gameID %in% hard_clean)) %>% 
-  #filter(!(gameID %in% persistentnoClick)) %>%
-  filter(!(playerID %in% spoilsport)) %>%
-  group_by(treatmentName, idx) %>%
-  tidyboot::tidyboot_mean(wisError, na.rm = TRUE) %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
-    geom_point() +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
-    geom_hline(yintercept = c(0), linetype = 'dotted') +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
-    theme_few() +
-    labs(y = 'average error per player within game', x = 'round #') +
-    scale_color_colorblind()
-```
+## Control for game
 
 # Yonder
 
@@ -749,4 +758,51 @@ plot <-
 print(plot)
 
 
+```
+
+## the spoilsport analysis
+
+```{r}
+{r}
+spoilsport<- d.guesses %>%
+  filter(idx == 8) %>%
+  filter(individualConsistency == 0 ) %>% 
+  pull(playerID)
+```
+
+```{r}
+{r}
+d.guesses %>%
+  filter(!(playerID %in% spoilsport)) %>%
+    filter(!(playerID %in% confused)) %>%
+  group_by(treatmentName, idx, gameID) %>%
+  summarize(guess = mean(guess, na.rm = TRUE)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(guess,na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(65,37,64,32), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average guess', x = 'round #') +
+    scale_color_colorblind()
+```
+
+```{r}
+{r}
+d.guesses %>%
+  # filter(!(gameID %in% hard_clean)) %>% 
+  #filter(!(gameID %in% persistentnoClick)) %>%
+  filter(!(playerID %in% spoilsport)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(wisError, na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average error per player within game', x = 'round #') +
+    scale_color_colorblind()
 ```

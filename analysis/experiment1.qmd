@@ -287,13 +287,13 @@ d.MLE <- d.guesses %>%
 
 ```{r}
 # Assuming you have a linear model fit earlier
-model <- lm(wisError ~ outlierPercent, data = d.MLE)
+model <- lm(abs(wisError) ~ outlierPercent, data = d.MLE)
 
 # Calculate the slope difference
 slope_difference <- coef(model)[2] - coef(model)[1]
 
 # Now you can use it in the annotate function
-ggplot(d.MLE, aes(x = outlierPercent, y = wisError, color = idx)) +
+ggplot(d.MLE, aes(x = outlierPercent, y = abs(wisError), color = idx)) +
   geom_point() +
   labs(y = "error", x = "individual p distance from game p", color= "round") +
   geom_smooth(method = "lm", se = FALSE, aes(group = idx)) +
@@ -319,7 +319,7 @@ d.MLE <- d.MLE %>%
 ```
 
 ```{r}
-ggplot(d.MLE, aes(x = idx, y = wisError, color = as.factor(rounded_outlier))) +
+ggplot(d.MLE, aes(x = idx, y = abs(wisError), color = as.factor(rounded_outlier))) +
   geom_point() +
   labs(y = "Error", x = "Time", color = "Outlier Group") +  # Specify legend title here
   ggtitle("Scatter Plot of Error Over Time by Outlier Group") +
@@ -362,29 +362,30 @@ ggplot(d.guesses, aes(x = individualConsistency, fill = factor(idx))) +
   theme_minimal()
 ```
 
+## Justified
+
 ```{r}
-spoilsport<- d.guesses %>%
-  filter(idx == 8) %>%
-  filter(individualConsistency == 0 ) %>% 
-  pull(playerID)
+d.guesses <- d.guesses%>% 
+  mutate(groupConsistency = guess-AvgPercent)
+ggplot(d.guesses, aes(x = groupConsistency, fill = factor(idx))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density of Player's Guess Difference from Individual Over Time",
+       x = "Difference (Guess - p)",
+       y = "Density",
+       fill = "Round") +
+  theme_minimal()
 ```
 
 ```{r}
-d.guesses %>%
-  filter(!(playerID %in% spoilsport)) %>%
-    filter(!(playerID %in% confused)) %>%
-  group_by(treatmentName, idx, gameID) %>%
-  summarize(guess = mean(guess, na.rm = TRUE)) %>%
-  group_by(treatmentName, idx) %>%
-  tidyboot::tidyboot_mean(guess) %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
-    geom_point() +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
-    geom_hline(yintercept = c(30, 70), linetype = 'dotted') +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
-    theme_few() +
-    labs(y = 'average guess', x = 'round #') +
-    scale_color_colorblind()
+gameConsistency <- d.guesses %>% subset(groupConsistency != 0)
+
+ggplot(gameConsistency, aes(x = individualConsistency, fill = factor(idx))) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density of Player's Guess Difference from Individual Over Time",
+       x = "Difference (Guess - Personal p)",
+       y = "Density",
+       fill = "Round") +
+  theme_minimal()
 ```
 
 gini coeffient\
@@ -578,4 +579,33 @@ print(plot)
  # unique()
 
 #print(indecisive)
+```
+
+## the spoilsport analysis
+
+```{r}
+{r}
+spoilsport<- d.guesses %>%
+  filter(idx == 8) %>%
+  filter(individualConsistency == 0 ) %>% 
+  pull(playerID)
+```
+
+```{r}
+{r}
+d.guesses %>%
+  filter(!(playerID %in% spoilsport)) %>%
+    filter(!(playerID %in% confused)) %>%
+  group_by(treatmentName, idx, gameID) %>%
+  summarize(guess = mean(guess, na.rm = TRUE)) %>%
+  group_by(treatmentName, idx) %>%
+  tidyboot::tidyboot_mean(guess) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(30, 70), linetype = 'dotted') +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+    theme_few() +
+    labs(y = 'average guess', x = 'round #') +
+    scale_color_colorblind()
 ```
