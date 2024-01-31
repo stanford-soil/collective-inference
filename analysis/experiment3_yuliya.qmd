@@ -157,8 +157,8 @@ d.guesses.b4$treatmentName <- paste0(d.guesses.b4$treatmentName, "-0.3")
 ```
 
 ```{r}
-d.guesses <- rbind(d.guesses.b1, d.guesses.b2, d.guesses.b3, d.guesses.b4) %>%
-  filter(!is.na(guess)) 
+d.guesses <- rbind(d.guesses.b1, d.guesses.b2, d.guesses.b3, d.guesses.b4)
+
 ```
 
 ## Implement exclusions
@@ -189,16 +189,20 @@ playercount <- d.guesses %>%
    distinct(playerID, .keep_all = TRUE)
 nrow(playercount)
 
-
+hard_clean <- d.guesses %>%
+  filter(is.na(guess)) 
+  
 #GamingTheSystem is also an exclusion category caluculated in Error
+```
+
+```{}
 ```
 
 ## Result #1: Convergence
 
 ```{r}
 d.guesses %>%
- filter(!(playerID %in% confused)) %>% 
-  filter(!(gameID %in% persistentnoClick)) %>%
+  filter(!(gameID %in% hard_clean)) %>%
   group_by(treatmentName, idx, gameID) %>%
   summarize(guess = mean(guess, na.rm = TRUE)) %>%
   group_by(treatmentName, idx) %>%
@@ -231,20 +235,30 @@ d.guesses <- d.guesses %>%
          AvgPercent = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
          mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
 
+d.guesses %>%
+  group_by(gameID, treatmentName) %>%
+  summarize(mleEstimate = mean(mleEstimateIndiv)) %>%
+  ggplot(aes(x = mleEstimate)) +
+    geom_histogram(binwidth = 10) +
+    facet_wrap(~ treatmentName, scales = "free") +
+    labs(title = "Distribution of mleEstimate for each treatmentName")
 
 ```
 
 ```{r}
 trueP <- d.guesses %>%
   group_by(treatmentName) %>%
-  summarize(mean_AvgPercent = mean(AvgPercent, na.rm = TRUE))
+  summarize(mean_AvgPercent = mean(mleEstimateIndiv, na.rm = TRUE))
+
+
 ```
 
 ```{r}
+list <- as.list(as.numeric(trueP$mean_AvgPercent))
 d.guesses %>%
- filter(!(playerID %in% confused)) %>% 
-  filter(!(playerID %in% persistentnoClick)) %>%
-  filter(!(playerID %in% GamingTheSystem)) %>%
+ #filter(!(playerID %in% confused)) %>% 
+  #filter(!(playerID %in% persistentnoClick)) %>%
+  #filter(!(playerID %in% GamingTheSystem)) %>%
   group_by(treatmentName, idx, gameID) %>%
   summarize(guess = mean(guess, na.rm = TRUE)) %>%
   group_by(treatmentName, idx) %>%
@@ -252,8 +266,8 @@ d.guesses %>%
   ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
     geom_point() +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
-    geom_hline(yintercept = c(32,68), linetype = 'dotted') +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
+  geom_hline(yintercept = c(65,37,64,32), linetype = 'dotted')+
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
     theme_few() +
     labs(y = 'average guess', x = 'round #') +
     scale_color_colorblind()
@@ -472,7 +486,7 @@ d.samplelessGames %>%
 
 ```{r}
 d.guesses <- d.guesses %>%
-  mutate(wisError = guess-AvgPercent)#%>%
+  mutate(wisError = guess-AvgPercent)
 #  mutate(treatmentPercent = ifelse(.[[6]] == "experiment1-0.3", 30, 70))  %>%
  # mutate(wisTreatmentError = guess-treatmentPercent)
 ```
@@ -481,9 +495,9 @@ d.guesses <- d.guesses %>%
 
 ```{r}
 d.guesses %>%
-   filter(!(playerID %in% confused)) %>% 
-  filter(!(gameID %in% persistentnoClick)) %>%
-  filter(!(playerID %in% GamingTheSystem)) %>%
+  # filter(!(gameID %in% hard_clean)) %>% 
+  #filter(!(gameID %in% persistentnoClick)) %>%
+  #filter(!(playerID %in% GamingTheSystem)) %>%
   group_by(treatmentName, idx) %>%
   tidyboot::tidyboot_mean(wisError, na.rm = TRUE) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
@@ -574,9 +588,9 @@ print(plot)
 ```{r}
 # Filter the data frame outside the loop
 filtered_df <- d.guesses%>%  
-  filter(!(playerID %in% confused)) %>% 
+  filter(!(playerID %in% confused)) #%>% 
   #filter(!(playerID %in% sampleLess))#%>%
-  filter(!(playerID %in% GamingTheSystem)) 
+  #filter(!(playerID %in% GamingTheSystem)) 
 # Create a ggplot for error over idx for both treatment names
 plot_combined <- 
   ggplot(filtered_df, aes(x = idx, y = wisError, color = treatmentName)) +
