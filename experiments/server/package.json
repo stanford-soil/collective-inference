@@ -2,7 +2,6 @@
   "dependencies": {
     "@empirica/core": "1.9.3",
     "minimist": "1.2.6",
-    "vite": "^5.0.12",
     "ws": "^8.16.0"
   },
   "devDependencies": {
