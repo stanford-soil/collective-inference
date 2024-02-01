@@ -156,6 +156,22 @@ d.guesses.b4$treatmentName <- paste0(d.guesses.b4$treatmentName, "-0.3")
 d.guesses <- rbind(d.guesses.b1, d.guesses.b2, d.guesses.b3, d.guesses.b4)
 rm(d.guesses.b1,d.guesses.b2,d.guesses.b3,d.guesses.b4,d.msgs.b1,d.msgs.b2,d.msgs.b3,d.msgs.b4,d.players.b1, d.players.b2,d.players.b3,d.players.b4,d.rounds.b1,
    d.rounds.b2,d.rounds.b3,d.rounds.b4,d.treatments.b1,d.treatments.b2,d.treatments.b3,d.treatments.b4)
+
+```
+
+```{r}
+keeper <- d.guesses %>%
+  select(gameID, playerID, idx, guess) %>%
+  filter(!is.na(guess))
+
+d.guesses <-d.guesses %>% distinct(gameID, playerID, idx, .keep_all = TRUE)
+
+d.guesses <- d.guesses %>%
+  left_join(keeper, by = c("gameID", "playerID", "idx")) %>%
+  mutate(guess = coalesce(guess.x, guess.y)) %>%
+  select(-guess.x, -guess.y)  # Remove redundant columns
+
+d.guesses <- d.guesses %>%  distinct(.keep_all = TRUE)
 ```
 
 ## Implement exclusions

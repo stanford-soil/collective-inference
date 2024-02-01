@@ -388,13 +388,6 @@ ggplot(gameConsistency, aes(x = individualConsistency, fill = factor(idx))) +
   theme_minimal()
 ```
 
-gini coeffient\
-group accuracy vs total data (sum critters)
-
-group level analysis - group accuracy improval
-
-group acc vs heterogenetity
-
 # Yonder
 
 ```{r}
