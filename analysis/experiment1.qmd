@@ -367,9 +367,9 @@ ggplot(d.guesses, aes(x = individualConsistency, fill = factor(idx))) +
 ```{r}
 d.guesses <- d.guesses%>% 
   mutate(groupConsistency = guess-AvgPercent)
-ggplot(d.guesses, aes(x = groupConsistency, fill = factor(idx))) +
+ggplot(d.guesses, aes(x = groupConsistency, fill = factor(-idx))) +
   geom_density(alpha = 0.5) +
-  labs(title = "Density of Player's Guess Difference from Individual Over Time",
+  labs(title = "Density of Player's Guess Difference from Collective Over Time",
        x = "Difference (Guess - p)",
        y = "Density",
        fill = "Round") +
