@@ -2,7 +2,7 @@
   "dependencies": {
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
-    "@empirica/core": "1.8.10",
+    "@empirica/core": "1.9.3",
     "@mui/material": "^5.15.3",
     "@sentry/esbuild-plugin": "^2.10.2",
     "@sentry/react": "^7.92.0",
@@ -21,6 +21,7 @@
     "autoprefixer": "10.4.7",
     "path": "0.12.7",
     "unocss": "^0.51.4",
+    "vite": "^2.9.15",
     "vite-plugin-restart": "0.1.1"
   },
   "name": "react",
@@ -33,7 +34,7 @@
   },
   "version": "0.0.0",
   "volta": {
-    "node": "16.17.0",
+    "node": "20.10.0",
     "npm": "8.15.0"
   }
 }
