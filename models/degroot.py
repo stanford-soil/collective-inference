@@ -8,10 +8,10 @@ def binomial(p, n):
 true_p = 0.7
 beliefs = np.zeros((4, 9))
 #each row vector represents that agents influence from others
-influence_matrix = np.array([[0.5, 0.1, 0.2, 0.2],
-                             [0.1, 0.5, 0.2, 0.2], 
-                             [0.2, 0.2, 0.5, 0.1],  
-                             [0.2, 0.2, 0.1, 0.5]]) 
+influence_matrix = np.array([[.50, 0.50, 0.50, 0.50],
+                             [0.50, .500, 0.50, 0.50], 
+                             [0.50, 0.50, .500, 0.50],  
+                             [0.50, 0.50, 0.50, 0.50]]) 
 
 for agent in range(4):
     n = 9  

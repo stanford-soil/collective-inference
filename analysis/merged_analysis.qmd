@@ -850,6 +850,15 @@ plot <- ggplot(subset_data, aes(x = idx, y = abs(wisError), color = sum(diffPast
 
 ```
 
+## another attempt at weights
+
+```{r}
+#library(brms)
+#model <- brm(wisError ~ idx, data = d.guesses)
+#marginal_effects_plot <- marginal_effects(model)
+#plot(marginal_effects_plot)
+```
+
 group acc vs heterogenetity
 
 ```{r}
