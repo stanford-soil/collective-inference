@@ -3,6 +3,7 @@ import {InputBox} from "./InputBox";
 import {usePlayer, useRound, useGame } from "@empirica/core/player/classic/react";
 import { Slider } from '@mui/material';
 import { useState } from "react";
+
 export function Opinion({ scope, attribute}){
     const round = useRound();
     const player = usePlayer();
@@ -10,6 +11,8 @@ export function Opinion({ scope, attribute}){
 
     const [sliderValue, setSliderValue] = useState(50);
     const [isSliderChanged, setIsSliderChanged] = useState(false); //track if slider has changed for submit
+    const [confidenceValue, setConfidenceValue] = useState(50);
+    const [isConfidenceChanged, setIsConfidenceChanged] = useState(false);
 
     //method for input box sends data of user's opinion to Empirica's mongoDB
     const handleNewMessage = (text) => {
@@ -28,10 +31,16 @@ export function Opinion({ scope, attribute}){
     const handleSlider = (event, value) => {
         setSliderValue(value);
         setIsSliderChanged(true);
-    }
+    };
+
+      const handleConfidence = (event, value) => {
+        setConfidenceValue(value);
+        setIsConfidenceChanged(true);
+    };
     
     const handleSubmit = () => {
         player.stage.set("guess", sliderValue);
+        player.stage.set("confidence", confidenceValue);
         if(game.get("treatment")["condition"] === "slider") {
             scope.append(attribute, {
                 text: "I think the population is " + sliderValue + "% rabbits",
@@ -49,40 +58,60 @@ export function Opinion({ scope, attribute}){
     };
 
     //return opinion input based on treatment
-    return(
-        <div> {game.get("treatment")["opinion"] === "slider" ? (
- <div>
-      <h2 className="text-center">What proportion of the population are rabbits?</h2><br/>
-      
-      <div className="flex items-center flex-col space-y-4"> 
-        <div className="flex items-center space-x-4">
-          <h2 className="text-gray-600 text-sm text-center mb-2">All Squirrels<br/>🐿️</h2>
-          <Slider 
-            defaultValue={50} 
-            aria-label="Default" 
-            valueLabelDisplay="auto" 
-            onChange={handleSlider}
-            value={sliderValue}
-            style={{ width: '300px' }} 
-          />
-          <h2 className="text-gray-600 text-sm text-center mb-2">All Rabbits <br/>🐇</h2>
+return (
+        <div>
+            {game.get("treatment").opinion === "slider" ? (
+                <div>
+                    <h2 className="text-center">What proportion of the population are rabbits?</h2><br />
+                    <div className="flex items-center flex-col space-y-4">
+                        <div className="flex items-center space-x-4">
+                            <h2 className="text-gray-600 text-sm text-center mb-2">All Squirrels<br />🐿️</h2>
+                            <Slider
+                                defaultValue={50}
+                                aria-label="Default"
+                                valueLabelDisplay="off"
+                                onChange={handleSlider}
+                                value={sliderValue}
+                                style={{ width: '300px' }}
+                                track={false}
+                            />
+                            <h2 className="text-gray-600 text-sm text-center mb-2">All Rabbits <br />🐇</h2>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 className="text-center">How confident are you in your answer?</h2><br />
+                        <div className="flex items-center flex-col space-y-4">
+                            <div className="flex items-center space-x-4">
+                                <h2 className="text-gray-600 text-sm text-center mb-2">Very Uncertain</h2>
+                                <Slider
+                                    defaultValue={50}
+                                    aria-label="Default"
+                                    valueLabelDisplay="off"
+                                    onChange={handleConfidence}
+                                    value={confidenceValue}
+                                    style={{ width: '300px' }}
+
+                                />
+                                <h2 className="text-gray-600 text-sm text-center mb-2">Fully Certain</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={!isConfidenceChanged}
+                        className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                        ${!isConfidenceChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
+                    >
+                        Submit
+                    </button>
+                </div>
+            ) : (
+                <div>
+                    <h2 className="align-center text-gray-500 text-center" style={{ marginBottom: '20px' }}>What proportion of the population are rabbits? Please enter your opinion and what convinced you to make this choice.</h2>
+                    <InputBox onNewMessage={handleNewMessage} buttonPosition="below" buttonText="Submit" buttonStyles='w-auto h-auto py-2 px-4 text-base' />
+                </div>
+            )}
         </div>
-        <button 
-          onClick={handleSubmit} 
-          disabled={!isSliderChanged}
-          className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline 
-            ${!isSliderChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-        ) : (
-            <div>
-                <h2 className="align-center text-gray-500 text-center" style={{ marginBottom: '20px' }}>What proportion of the population are rabbits? Please enter your opinion and what convinced you to make this choice.</h2>
-                <InputBox onNewMessage ={handleNewMessage} buttonPosition="below" buttonText="Submit" buttonStyles='w-auto h-auto py-2 px-4 text-base'/>
-            </div>
-        )}
-        </div>
-    )
+    );
 }
