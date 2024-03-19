@@ -57,6 +57,33 @@ export function Opinion({ scope, attribute}){
         player.stage.set("submit", true);
     };
 
+    const renderIcons = () => {
+    const numberOfIcons = 100;
+    const rabbitCount = Math.round((sliderValue / 100) * numberOfIcons);
+    const icons = [];
+
+    for (let i = 0; i < numberOfIcons; i++) {
+        if (i < rabbitCount) {
+            icons.push(<span key={i}>🐇</span>);
+        } else {
+            icons.push(<span key={i}>🐿️</span>);
+        }
+    }
+
+    // Reorder icons based on Fibonacci sequence so that there's visual consistency :)
+    const reorderedIcons = [];
+    let fib1 = 1, fib2 = 1;
+    for (let i = icons.length - 1; i >= 0; i--) {
+        const index = (fib1 - 1) % icons.length;
+        reorderedIcons[index] = icons[i];
+        const temp = fib1 + fib2;
+        fib1 = fib2;
+        fib2 = temp;
+    }
+
+    return reorderedIcons;
+};
+
     //return opinion input based on treatment
 return (
         <div>
@@ -78,7 +105,9 @@ return (
                             <h2 className="text-gray-600 text-sm text-center mb-2">All Rabbits <br />🐇</h2>
                         </div>
                     </div>
-
+                         <div style={{ marginTop: '20px', textAlign: 'center', width: '300px', height: '300px', display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gridTemplateRows: 'repeat(10, 1fr)' }}>
+                {renderIcons()}
+            </div>
                     <div>
                         <h2 className="text-center">How confident are you in your answer?</h2><br />
                         <div className="flex items-center flex-col space-y-4">
