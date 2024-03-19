@@ -57,7 +57,7 @@ export function Opinion({ scope, attribute}){
         player.stage.set("submit", true);
     };
 
-const renderIcons = () => {
+    const renderIcons = () => {
     const numberOfIcons = 100;
     const rabbitCount = Math.round((sliderValue / 100) * numberOfIcons);
     const icons = [];
@@ -70,19 +70,18 @@ const renderIcons = () => {
         }
     }
 
-    // Reorder icons based on Fibonacci sequence so that there's visual consistency 
+    // Reorder icons based on Fibonacci sequence so that there's visual consistency. this results in ~60 icons
     const reorderedIcons = [];
     let fib1 = 1, fib2 = 1;
     for (let i = 0; i < icons.length; i++) {
-        const index = (fib1 - 1) % icons.length;
-        reorderedIcons[index] = icons[i];
-        const temp = fib1 + fib2;
-        fib1 = fib2;
-        fib2 = temp;
-        if (fib1 >= icons.length) break; // Exit the loop if the Fibonacci sequence exceeds the icons length
+    const index = (fib1 - 1) % icons.length;
+    reorderedIcons[index] = icons[i];
+    const temp = fib1 + fib2;
+    fib1 = fib2;
+    fib2 = temp;
     }
 
-    return <>{reorderedIcons}</>;
+    return reorderedIcons;
 };
 
     //return opinion input based on treatment
@@ -93,7 +92,7 @@ return (
                     <h2 className="text-center">What proportion of the population are rabbits?</h2>
                         <div className="flex items-center justify-center space-x-4">
                         
-                            <div className="flex items-center space-x-4">
+                            <div className="flex items-left space-x-4">
                             <h2 className="text-gray-600 text-sm text-center mb-2">All Squirrels<br />🐿️</h2>
                                 <Slider
                                 defaultValue={50}
@@ -111,8 +110,9 @@ return (
                              {renderIcons()}
                              </div>
                             </div> 
-                        <div>
+                        <div style={{marginTop: '50px', marginBottom:'70px'}}>
                         <h2 className="text-center">How confident are you in your answer?</h2><br />
+                       <div className="flex items-center justify-center space-x-4">
                         <div className="flex items-center flex-col space-y-4">
                             <div className="flex items-center space-x-4">
                                 <h2 className="text-gray-600 text-sm text-center mb-2">Very Uncertain</h2>
@@ -128,7 +128,7 @@ return (
                                 <h2 className="text-gray-600 text-sm text-center mb-2">Fully Certain</h2>
                             </div>
                         </div>
-                    </div>
+                    <div>
                     <button
                         onClick={handleSubmit}
                         disabled={!isConfidenceChanged}
@@ -137,6 +137,10 @@ return (
                     >
                         Submit
                     </button>
+                    </div>
+            </div>
+
+                    </div>
                 </div>
             ) : (
                 <div>
