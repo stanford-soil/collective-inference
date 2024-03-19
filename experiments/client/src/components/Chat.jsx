@@ -51,6 +51,7 @@ export function Chat({ scope, attribute, loading}) {
               <h2 className="align-left"> Messages <b>sent</b>:</h2>
               <MessagesPanel scope={scope} msgs={msgs} stage={stage}
                              round={round} player={player} condition={condition}/>
+
               {
                 condition == 'slider' ?
                   <Opinion toggle={1} scope = {scope} attribute = {attribute}/> :
@@ -67,7 +68,9 @@ export function Chat({ scope, attribute, loading}) {
               {
                 player.stage && player.stage.get("submit") ?
                 <div> Thank you for your answer. The next stage will start when all the other players have submitted their answer. </div> :
-                <Opinion toggle={1} scope = {scope} attribute = {attribute}/>
+                 <div className="h-1/4">
+        <Opinion toggle={1} scope={scope} attribute={attribute} />
+      </div>
               }
             </div>
         );
