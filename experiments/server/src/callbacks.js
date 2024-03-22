@@ -5,51 +5,61 @@ import _ from "lodash";
 Empirica.onGameStart(({ game }) => {
   const treatment = game.get("treatment");
   const { trueP, condition } = treatment;
+  const total = 20;
 
-  const binomial = (p, n) => {
-    const flips = _.range(n).map((i) => {
-      return Math.random() < p;
-    });
-    return _.sum(flips);
-  };
-
-  game.players.forEach((player, i) => {
-    const n = Math.floor(Math.random() * 9);
-    const nRabbits = binomial(trueP, n);
-    const nSquirrels = n - nRabbits;
-
-    console.log(
-      `Player ${i + 1}: nRabbits - ${nRabbits}, nSquirrels - ${nSquirrels}`
-    );
+  const generateCritters = (trueP) => {
+    const nRabbits = Math.round(trueP * total);
+    const nSquirrels = total - nRabbits;
 
     // Convert to emojis
-    const rabbits = _.repeat("🐇 ", nRabbits).split(" ");
-    const squirrels = _.repeat("🐿️ ", nSquirrels).split(" ");
+    const rabbits = _.split(_.repeat("🐇", nRabbits), "");
+    const squirrels = _.split(_.repeat("🐿️", nSquirrels), "");
+    const critters = _.shuffle(_.concat(rabbits, squirrels));
 
-    // Create spaces with roughly 50% probability
-    const nSpaces = (1 / 2) * (nRabbits + nSquirrels);
-    const spaces = _.repeat("\u00A0 \u00A0 \u00A0 \u00A0", nSpaces);
+    return critters;
+  };
+
+function partition(remaining, current, ...previous) {
+  const validPartitions = []; // Array to store valid partitions
+  const min = previous.length > 0 ? previous[0] : 1;
+  const max = Math.floor(remaining / 2);
+  
+  for (let i = min; i <= max; i++) { // Renamed 'n' to 'i' for clarity
+    validPartitions.push([...previous, i]); // Store the valid partition
+    if (i < game.players.length) {
+      partition(remaining - i, i, ...previous); // Fixed recursive call parameters
+    }
+  }
+
+  // Randomly select one partition from validPartitions array
+  if (validPartitions.length === game.players.length) {
+    const randomIndex = Math.floor(Math.random() * validPartitions.length);
+    console.log("Randomly selected partition:", validPartitions[randomIndex]);
+    return validPartitions[randomIndex];
+  }
+}
+
+console.log("partitionCritters:", partitionCritters);
+
+
+const critters = generateCritters(trueP);
+const partitionCritters = partition(total);
+
+console.log("Number of players:", game.players.length)
+
+game.players.forEach((player, i) => {
+    console.log("Current player index:", i);
+
+    const spaces = _.repeat("\u00A0 \u00A0 \u00A0 \u00A0", 5);
+
+    const selectCritters = critters.splice(0, partitionCritters[i]); // Adjust indexing
 
     // Scramble spaces and critters
-    const emojiArray = _.shuffle(_.concat(rabbits, squirrels, spaces));
+    const emojiArray = _.shuffle(_.concat(selectCritters, spaces));
 
     player.set("name", "player " + (i + 1));
     player.set("emojiArray", emojiArray);
-  });
-
-  [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => {
-    const round = game.addRound({
-      idx: i,
-      name: "Round " + i + " / 9",
-      task: "Chat",
-    });
-
-    if(condition != 'slider'){
-      round.addStage({ name: "send", duration: 30 });
-    }
-    round.addStage({ name: "observe", duration: 30});
-  });
-});
+}); });
 
 Empirica.onRoundStart(({ round }) => {
   const players = round.currentGame.players;
