@@ -2,42 +2,67 @@ import { ClassicListenersCollector } from "@empirica/core/admin/classic";
 export const Empirica = new ClassicListenersCollector();
 import _ from "lodash";
 
+
+
+
 Empirica.onGameStart(({ game }) => {
   const treatment = game.get("treatment");
   const { trueP, condition } = treatment;
+  const total = 20;
 
-  const binomial = (p, n) => {
-    const flips = _.range(n).map((i) => {
-      return Math.random() < p;
-    });
-    return _.sum(flips);
-  };
-
-  game.players.forEach((player, i) => {
-    const n = Math.floor(Math.random() * 9);
-    const nRabbits = binomial(trueP, n);
-    const nSquirrels = n - nRabbits;
-
-    console.log(
-      `Player ${i + 1}: nRabbits - ${nRabbits}, nSquirrels - ${nSquirrels}`
-    );
+  const generateCritters = (trueP) => {
+    const nRabbits = Math.round(trueP * total);
+    const nSquirrels = total - nRabbits;
 
     // Convert to emojis
-    const rabbits = _.repeat("🐇 ", nRabbits).split(" ");
-    const squirrels = _.repeat("🐿️ ", nSquirrels).split(" ");
+    const rabbits = _.split(_.repeat("🐇", nRabbits), "");
+    const squirrels = _.split(_.repeat("🐿️", nSquirrels), "");
+    const critters = _.shuffle(_.concat(rabbits, squirrels));
 
-    // Create spaces with roughly 50% probability
-    const nSpaces = (1 / 2) * (nRabbits + nSquirrels);
-    const spaces = _.repeat("\u00A0 \u00A0 \u00A0 \u00A0", nSpaces);
+    return critters;
+  };
+const critters = generateCritters(trueP);
 
-    // Scramble spaces and critters
-    const emojiArray = _.shuffle(_.concat(rabbits, squirrels, spaces));
+function partition(total, groups = game.players.length, current = []) {
+    const validPartitions = [];
+    if (groups === 1) {
+        if (current.concat(total).every(num => num > 1)) {
+            validPartitions.push(current.concat(total));
+        }
+    } else {
+        for (let i = 1; i < total; i++) {
+            const newPartition = partition(total - i, groups - 1, current.concat(i));
+            validPartitions.push(...newPartition);
+        }
+    }
+    return validPartitions;
+}
+const divisions = partition(total);
+const randomPartition = Math.floor(Math.random() * divisions.length)
+const chosenPartition = divisions[randomPartition]
+console.log(divisions);
+ console.log(divisions.length);
+console.log(randomPartition);
+console.log (chosenPartition);
+console.log("Number of players:", game.players.length);
+
+
+  game.players.forEach((player, i) => {
+    console.log("Current player index:", i);
+
+    const spaces = _.repeat("\u00A0 \u00A0 \u00A0 \u00A0", 5);
+
+    const selectCritters = critters.splice(0, chosenPartition[i]); 
+
+    const emojiArray = _.shuffle(_.concat(selectCritters, spaces));
 
     player.set("name", "player " + (i + 1));
     player.set("emojiArray", emojiArray);
+    console.log (emojiArray);
   });
 
-  [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => {
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => {
     const round = game.addRound({
       idx: i,
       name: "Round " + i + " / 9",
