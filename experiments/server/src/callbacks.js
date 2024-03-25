@@ -2,6 +2,9 @@ import { ClassicListenersCollector } from "@empirica/core/admin/classic";
 export const Empirica = new ClassicListenersCollector();
 import _ from "lodash";
 
+
+
+
 Empirica.onGameStart(({ game }) => {
   const treatment = game.get("treatment");
   const { trueP, condition } = treatment;
@@ -18,48 +21,60 @@ Empirica.onGameStart(({ game }) => {
 
     return critters;
   };
-
-function partition(remaining, current, ...previous) {
-  const validPartitions = []; // Array to store valid partitions
-  const min = previous.length > 0 ? previous[0] : 1;
-  const max = Math.floor(remaining / 2);
-  
-  for (let i = min; i <= max; i++) { // Renamed 'n' to 'i' for clarity
-    validPartitions.push([...previous, i]); // Store the valid partition
-    if (i < game.players.length) {
-      partition(remaining - i, i, ...previous); // Fixed recursive call parameters
-    }
-  }
-
-  // Randomly select one partition from validPartitions array
-  if (validPartitions.length === game.players.length) {
-    const randomIndex = Math.floor(Math.random() * validPartitions.length);
-    console.log("Randomly selected partition:", validPartitions[randomIndex]);
-    return validPartitions[randomIndex];
-  }
-}
-
-console.log("partitionCritters:", partitionCritters);
-
-
 const critters = generateCritters(trueP);
-const partitionCritters = partition(total);
 
-console.log("Number of players:", game.players.length)
+function partition(total, groups = game.players.length, current = []) {
+    const validPartitions = [];
+    if (groups === 1) {
+        if (current.concat(total).every(num => num > 1)) {
+            validPartitions.push(current.concat(total));
+        }
+    } else {
+        for (let i = 1; i < total; i++) {
+            const newPartition = partition(total - i, groups - 1, current.concat(i));
+            validPartitions.push(...newPartition);
+        }
+    }
+    return validPartitions;
+}
+const divisions = partition(total);
+const randomPartition = Math.floor(Math.random() * divisions.length)
+const chosenPartition = divisions[randomPartition]
+console.log(divisions);
+ console.log(divisions.length);
+console.log(randomPartition);
+console.log (chosenPartition);
+console.log("Number of players:", game.players.length);
 
-game.players.forEach((player, i) => {
+
+  game.players.forEach((player, i) => {
     console.log("Current player index:", i);
 
     const spaces = _.repeat("\u00A0 \u00A0 \u00A0 \u00A0", 5);
 
-    const selectCritters = critters.splice(0, partitionCritters[i]); // Adjust indexing
+    const selectCritters = critters.splice(0, chosenPartition[i]); 
 
-    // Scramble spaces and critters
     const emojiArray = _.shuffle(_.concat(selectCritters, spaces));
 
     player.set("name", "player " + (i + 1));
     player.set("emojiArray", emojiArray);
-}); });
+    console.log (emojiArray);
+  });
+
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => {
+    const round = game.addRound({
+      idx: i,
+      name: "Round " + i + " / 9",
+      task: "Chat",
+    });
+
+    if(condition != 'slider'){
+      round.addStage({ name: "send", duration: 30 });
+    }
+    round.addStage({ name: "observe", duration: 30});
+  });
+});
 
 Empirica.onRoundStart(({ round }) => {
   const players = round.currentGame.players;
