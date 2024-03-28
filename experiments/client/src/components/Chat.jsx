@@ -54,7 +54,7 @@ export function Chat({ scope, attribute, loading}) {
 
               {
                 condition == 'slider' ?
-                  <Opinion toggle={1} scope = {scope} attribute = {attribute}/> :
+                 null :
                   <InputBox onNewMessage={handleNewMessage} buttonStyles='w-9 h-9 p-2 text-sm'/>
               }
             </div>
@@ -69,7 +69,7 @@ export function Chat({ scope, attribute, loading}) {
                 player.stage && player.stage.get("submit") ?
                 <div> Thank you for your answer. The next stage will start when all the other players have submitted their answer. </div> :
                  <div className="h-1/4">
-        <Opinion toggle={1} scope={scope} attribute={attribute} />
+       
       </div>
               }
             </div>
