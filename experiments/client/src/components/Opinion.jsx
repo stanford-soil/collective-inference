@@ -32,16 +32,21 @@ export function Opinion({ scope, attribute}){
     const handleSlider = (event, value) => {
         setSliderValue(value);
         setIsSliderChanged(true);
+        console.log("changed");
     };
 
       const handleConfidence = (event, value) => {
         setConfidenceValue(value);
         setIsConfidenceChanged(true);
+        console.log("confidence changed");
     };
     
     const handleSubmit = () => {
+        console.log("handle submit triggered")
         player.stage.set("guess", sliderValue);
+        
         player.stage.set("confidence", confidenceValue);
+      
         if(game.get("treatment")["condition"] === "slider") {
             scope.append(attribute, {
                 text: "I think the population is " + sliderValue + "% rabbits",
@@ -87,6 +92,7 @@ export function Opinion({ scope, attribute}){
 
 
 if (stage.get('name') === 'observe') {
+     console.log("guess", sliderValue); console.log("confidence", confidenceValue);
     return game.get("treatment").opinion === "slider" ? (
 <div >
 <div className="flex">
@@ -138,13 +144,18 @@ if (stage.get('name') === 'observe') {
             <h2 className="text-gray-600 text-sm text-center mb-2">Fully Certain</h2>
             <div>
                 <button
-                    onClick={handleSubmit}
+                     onClick={(event) => {
+        console.log("Submit button clicked");
+        handleSubmit();
+    }}
                     disabled={!isConfidenceChanged}
                     className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
                         ${!isConfidenceChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
                 >
                     Submit
+
                 </button>
+
             </div>
         </div>
     </div>
