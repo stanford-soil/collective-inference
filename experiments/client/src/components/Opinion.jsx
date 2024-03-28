@@ -44,9 +44,9 @@ export function Opinion({ scope, attribute}){
     const handleSubmit = () => {
         console.log("handle submit triggered")
         player.stage.set("guess", sliderValue);
-       
+        
         player.stage.set("confidence", confidenceValue);
-     
+      
         if(game.get("treatment")["condition"] === "slider") {
             scope.append(attribute, {
                 text: "I think the population is " + sliderValue + "% rabbits",
