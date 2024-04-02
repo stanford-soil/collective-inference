@@ -62,7 +62,7 @@ console.log("Number of players:", game.players.length);
   });
 
 
-[1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((i) => {
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].forEach((i) => {
     const round = game.addRound({
       idx: i,
       name: "Round " + i + " / 9",
