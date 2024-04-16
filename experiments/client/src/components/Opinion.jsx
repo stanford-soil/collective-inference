@@ -47,20 +47,39 @@ export function Opinion({ scope, attribute}){
         
         player.stage.set("confidence", confidenceValue);
       
-        if(game.get("treatment")["condition"] === "slider") {
-            scope.append(attribute, {
-                text: "I think the population is " + sliderValue + "% rabbits",
-                time: Date.now(),
-                recipient: player.get('recipient'),
-                round: round.get('idx') + 1,
-                sender: {
-                    id: player.id,
-                    name: player.get("name") || player.id,
-                    avatar: player.get("avatar"),
-                },
-            });
-        }
+
         player.stage.set("submit", true);
+    };
+
+    const handleSliderSubmit = () => {
+        console.log("handle submit triggered");
+        player.stage.set("guess", sliderValue);
+        
+        player.stage.set("confidence", confidenceValue);
+
+         scope.append(attribute, {
+        text: "I think the population is " + sliderValue + "% rabbits",
+        time: Date.now(),
+        recipient: player.get('recipient'),
+        round: round.get('idx') + 1,
+        sender: {
+            id: player.id,
+            name: player.get("name") || player.id,
+            avatar: player.get("avatar"),
+        }
+    });
+
+    console.log("scope append", sliderValue);
+
+    player.stage.set("submit", true);
+};
+
+    const handleButtonClick = () => {
+        if (game.get("treatment").condition === "slider") {
+            handleSliderSubmit();
+        } else {
+            handleSubmit();
+        }
     };
 
     const renderIcons = () => {
@@ -143,16 +162,13 @@ if (stage.get('name') === 'observe') {
             />
             <h2 className="text-gray-600 text-sm text-center mb-2">Fully Certain</h2>
             <div>
+
                 <button
-                     onClick={(event) => {
-        console.log("Submit button clicked");
-        handleSubmit();
-    }}
-                    disabled={!isConfidenceChanged}
-                    className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
-                        ${!isConfidenceChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
-                >
-                    Submit
+                                    onClick={handleButtonClick}
+                                    disabled={!isConfidenceChanged}
+                                    className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                                        ${!isConfidenceChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
+                                >Submit
 
                 </button>
 
