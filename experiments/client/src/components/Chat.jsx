@@ -28,6 +28,7 @@ export function Chat({ scope, attribute, loading}) {
     }
 
     const handleNewMessage = (text) => {
+        console.log("scope", scope)
         scope.append(attribute, {
             text,
             likes : {},
@@ -45,6 +46,7 @@ export function Chat({ scope, attribute, loading}) {
     };
 
     let msgs = scope.getAttribute(attribute)?.items || [];
+    console.log("msg", msgs)
     if(stage.get('name') == 'send') {
         return (
             <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">

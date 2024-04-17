@@ -9,6 +9,8 @@ export function Opinion({ scope, attribute}){
     const player = usePlayer();
     const game = useGame();
     const stage = useStage();
+    const { condition } = game.get("treatment");
+
 
     const [sliderValue, setSliderValue] = useState(50);
     const [isSliderChanged, setIsSliderChanged] = useState(false); //track if slider has changed for submit
@@ -17,6 +19,7 @@ export function Opinion({ scope, attribute}){
 
     //method for input box sends data of user's opinion to Empirica's mongoDB
     const handleNewMessage = (text) => {
+        console.log("handle opinion triggered with ", sliderValue,scope.opinion, scope.append)
         scope.append(attribute, {
             opinion: text,
             round: round.get('idx'),
@@ -51,32 +54,39 @@ export function Opinion({ scope, attribute}){
         player.stage.set("submit", true);
     };
 
-    const handleSliderSubmit = () => {
-        console.log("handle submit triggered");
-        player.stage.set("guess", sliderValue);
         
-        player.stage.set("confidence", confidenceValue);
 
-         scope.append(attribute, {
-        text: "I think the population is " + sliderValue + "% rabbits",
-        time: Date.now(),
-        recipient: player.get('recipient'),
-        round: round.get('idx') + 1,
-        sender: {
-            id: player.id,
-            name: player.get("name") || player.id,
-            avatar: player.get("avatar"),
-        }
+    const handleSliderSubmit = (sliderValue) => {
+        console.log("handle slidersubmit triggered with ", sliderValue,scope, scope.append);
+        player.stage.set("guess", sliderValue);
+        const text = "I think the population is " + sliderValue + "% rabbits";
+        console.log(text);
+        player.stage.set("confidence", confidenceValue);
+        scope.append(attribute, {
+        text,
+            likes : {},
+            time: Date.now(),
+            round: round.get('idx'),
+            recipient: player.get("recipient"),
+            sender: {
+                id: player.id,
+                name: player.get("name") || player.id,
+                avatar: player.get("avatar"),
+            },
+
     });
 
-    console.log("scope append", sliderValue);
+    const playerStageData = scope.getAttribute(attribute)?.items || [];
+    game.set("messages", playerStageData.map((msg, i) => msg.val._value));
 
     player.stage.set("submit", true);
 };
 
     const handleButtonClick = () => {
+                console.log("handle button triggered")
+
         if (game.get("treatment").condition === "slider") {
-            handleSliderSubmit();
+            handleSliderSubmit(sliderValue);
         } else {
             handleSubmit();
         }

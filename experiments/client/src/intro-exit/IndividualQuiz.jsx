@@ -36,7 +36,7 @@ export function Quiz({next}) {
       correctAnswer: "(A) 20%",
     },
     {
-      question: "What happens if everyone agrees on the ratio?",
+      question: "What happens if everyone agrees on the correct underlying ratio?",
       choices: [
         "(A) We receive a bonus.",
         "(B) Nothing but cozy feelings of success and community effort.",

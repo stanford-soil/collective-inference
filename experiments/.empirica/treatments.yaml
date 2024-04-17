@@ -65,3 +65,9 @@ treatments:
         opinion: slider
         playerCount: 4
         trueP: 0.7
+    - name: opinon
+      factors:
+        condition: slider
+        opinion: text
+        playerCount: 2
+        trueP: 0.7
