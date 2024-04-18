@@ -75,3 +75,24 @@ treatments:
         opinion: slider
         playerCount: 2
         trueP: 0.3
+    - name: debug interactive test run
+      factors:
+        condition: interactive
+        debug: debug
+        opinion: slider
+        playerCount: 4
+        trueP: 0.3
+    - name: debug slider test run
+      factors:
+        condition: slider
+        debug: debug
+        opinion: slider
+        playerCount: 4
+        trueP: 0.3
+    - name: debug unidirectional test run
+      factors:
+        condition: unidirectional
+        debug: debug
+        opinion: slider
+        playerCount: 4
+        trueP: 0.3
