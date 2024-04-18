@@ -26,45 +26,39 @@ factors:
       values:
         - value: debug
 treatments:
-    - name: experiment2-interactive
+    - name: rerun-interactive- 0.7
       factors:
         condition: interactive
         opinion: slider
         playerCount: 4
         trueP: 0.7
-    - name: demo-slider
+    - name: rerun-interactive-0.3
+      factors:
+        condition: interactive
+        opinion: slider
+        playerCount: 4
+        trueP: 0.3
+    - name: rerun-slider- 0.3
       factors:
         condition: slider
         opinion: slider
-        playerCount: 2
-        trueP: 0.7
-    - name: experiment1-0.7
+        playerCount: 4
+        trueP: 0.3
+    - name: rerun-slider- 0.7
       factors:
-        condition: unidirectional
+        condition: slider
         opinion: slider
         playerCount: 4
         trueP: 0.7
-    - name: experiment1-0.3
+    - name: rerun-unidirectional- 0.3
       factors:
         condition: unidirectional
         opinion: slider
         playerCount: 4
         trueP: 0.3
-    - name: demo-unidirectional
+    - name: rerun-unidirectional- 0.7
       factors:
         condition: unidirectional
-        opinion: slider
-        playerCount: 2
-        trueP: 0.7
-    - name: demo-interactive
-      factors:
-        condition: interactive
-        opinion: slider
-        playerCount: 2
-        trueP: 0.7
-    - name: experiment2-slider
-      factors:
-        condition: slider
         opinion: slider
         playerCount: 4
         trueP: 0.7
