@@ -218,7 +218,7 @@ function MessageComp(props) {
             <div className="ml-3 text-sm">
                 <p>
                     <span className="font-semibold text-gray-900 group-hover:text-gray-800">
-                        {('neighbor ' + avatarIndex)}
+                        {('neighbor')}
                     </span>
                     <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
                 </p>
