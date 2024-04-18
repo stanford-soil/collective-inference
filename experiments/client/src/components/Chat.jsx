@@ -28,7 +28,7 @@ export function Chat({ scope, attribute, loading}) {
     }
 
     const handleNewMessage = (text) => {
-        console.log("scope", scope)
+        console.log("scope", scope, scope.append)
         scope.append(attribute, {
             text,
             likes : {},
@@ -93,14 +93,36 @@ function MessagesPanel(props) {
     let {player, stage, round, scope, msgs, condition } = props;
     const scroller = useRef(null);
     const [msgCount, setMsgCount] = useState(0);
-    const msgsFiltered = (
-        condition == 'interactive' ?
-        msgs.filter((msg) => msg.value.sender.id === player.id
-                             || msg.value.recipient === player.id) :
-        (stage.get('name') === 'send' && condition == 'unidirectional' ?
-         msgs.filter((msg) => msg.value.sender.id === player.id) :
-         msgs.filter((msg) => msg.value.recipient === player.id))
-    ).filter(msg => msg.value.round == round.get('idx'));
+
+
+
+   const msgsFiltered = condition === 'interactive'
+  ? interactiveFilter()
+  : (stage.get('name') === 'send' && condition === 'unidirectional'
+    ? unidirectionalFilter()
+    : (stage.get('name')=== 'observe' && condition === 'slider')
+     ? sliderFilter()
+     : otherwiseFilter());
+
+function interactiveFilter() {
+  return msgs.filter(msg => msg.value.sender.id === player.id || msg.value.recipient === player.id)
+    .filter(msg => msg.value.round === round.get('idx'));
+}
+
+function unidirectionalFilter() {
+  return msgs.filter(msg => msg.value.sender.id === player.id)
+    .filter(msg => msg.value.round === round.get('idx'));
+}
+
+function sliderFilter() {
+  return msgs.filter(msg => msg.value.recipient === player.id)
+    .filter(msg => msg.value.round + 1 === round.get('idx'));
+}
+
+function otherwiseFilter() {
+  return msgs.filter(msg => msg.value.recipient === player.id)
+    .filter(msg => msg.value.round === round.get('idx'));
+}
 
     useEffect(() => {
         if (!scroller.current) {
@@ -125,7 +147,7 @@ function MessagesPanel(props) {
           <p className="text-gray-500 text-center">
               {stage.get("name") == 'send' ?
                "Please send a message to your new partner about the wildlife population!" :
-               "You haven't received any messages this round..."}
+               "You haven't received any messages this round yet..."}
           </p>
         </div>
     </div>);
@@ -164,8 +186,8 @@ function MessageComp(props) {
     const ts = attribute.createdAt;
     const numericId = hashString(msg.sender.id);
     const avatarImages = [a, b, c, d, e, f, g, h];
-    const avatarIndex = numericId % avatarImages.length; // Ensure index is within bounds
-    const selectedAvatar = avatarImages[avatarIndex]; // Corrected variable name
+    const avatarIndex = numericId % avatarImages.length; 
+    const selectedAvatar = avatarImages[avatarIndex]; 
 
     let item = scope.get("chat")[index];
 
@@ -181,7 +203,7 @@ function MessageComp(props) {
             <div className="ml-3 text-sm">
                 <p>
                     <span className="font-semibold text-gray-900 group-hover:text-gray-800">
-                        {('round ' + msg.round)}
+                        {('neighbor ' + avatarIndex)}
                     </span>
                     <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
                 </p>

@@ -22,6 +22,9 @@ factors:
         - value: slider
         - value: interactive
         - value: unidirectional
+    - name: debug
+      values:
+        - value: debug
 treatments:
     - name: experiment2-interactive
       factors:
@@ -71,3 +74,10 @@ treatments:
         opinion: text
         playerCount: 2
         trueP: 0.7
+    - name: fdv
+      factors:
+        condition: slider
+        debug: debug
+        opinion: slider
+        playerCount: 2
+        trueP: 0.3

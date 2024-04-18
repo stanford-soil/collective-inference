@@ -22,7 +22,7 @@ export function Game() {
         </div>
       </div>
       <div className="w-full flex justify-center">
-        <Opinion scope={game} attribute="opinion"/>
+        <Opinion scope={game} attribute="chat"/>
       </div>
     </div>
   );

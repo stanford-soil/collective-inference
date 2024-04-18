@@ -4,6 +4,7 @@ import {usePlayer, useStage, useRound, useGame } from "@empirica/core/player/cla
 import { Slider } from '@mui/material';
 import { useState } from "react";
 
+
 export function Opinion({ scope, attribute}){
     const round = useRound();
     const player = usePlayer();
@@ -19,8 +20,8 @@ export function Opinion({ scope, attribute}){
 
     //method for input box sends data of user's opinion to Empirica's mongoDB
     const handleNewMessage = (text) => {
-        console.log("handle opinion triggered with ", sliderValue,scope.opinion, scope.append)
-        scope.append(attribute, {
+        console.log("handle opinion triggered with ", sliderValue,scope, scope.append)
+        scope.append(opinion, {
             opinion: text,
             round: round.get('idx'),
             sender: {
@@ -57,7 +58,7 @@ export function Opinion({ scope, attribute}){
         
 
     const handleSliderSubmit = (sliderValue) => {
-        console.log("handle slidersubmit triggered with ", sliderValue,scope, scope.append);
+        console.log("handle slidersubmit triggered with ", sliderValue,scope, scope.getAttribute(attribute)?.items );
         player.stage.set("guess", sliderValue);
         const text = "I think the population is " + sliderValue + "% rabbits";
         console.log(text);
