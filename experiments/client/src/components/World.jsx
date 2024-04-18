@@ -35,7 +35,7 @@ return (
     }}></div>
 
     {[...Array(1)].map((_, index) => (
-      <span key={index} style={{ fontSize: '70px' }}>
+      <span key={index} style={{ fontSize: '5vw' }}>
         {critterDistribution}
       </span>
     ))}

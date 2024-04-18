@@ -33,8 +33,9 @@ export function Avatar({ player }) {
     <img
       className="h-full w-full rounded-md shadow bg-white p-1"
       src={selectedAvatar}
-      alt="Avatar"
+      alt={"Avatar" + avatarIndex}
     />
+
   );
 }
 

@@ -155,7 +155,8 @@ if (stage.get('name') === 'observe') {
         display: 'inline-block',
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
         borderRadius: '10px',
-        border: '1px solid #ccc'
+        border: '1px solid #ccc',
+        overflow: 'hidden' 
     }}>
         {renderIcons()}
     </div>

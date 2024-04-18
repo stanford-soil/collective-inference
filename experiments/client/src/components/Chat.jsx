@@ -198,6 +198,7 @@ function MessageComp(props) {
                     className="h-10 w-10 rounded-md shadow bg-white p-1"
                     src={selectedAvatar}
                     alt="Avatar"
+
                 />
             </div>
             <div className="ml-3 text-sm">

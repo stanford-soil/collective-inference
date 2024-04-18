@@ -34,6 +34,7 @@ export function Profile() {
         </div>
         <div className="h-11 w-11">
           <Avatar player={player} />
+          
         </div>
       </div>
     </div>
