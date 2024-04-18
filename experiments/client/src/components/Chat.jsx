@@ -13,8 +13,7 @@ import g from '/avatar7.png';
 import h from '/avatar8.png';
 import { useSpring, animated } from 'react-spring';
 
-//import RangeSlider from 'react-range-slider-input';
-//import 'react-range-slider-input/dist/style.css';
+
 
 export function Chat({ scope, attribute, loading}) {
     const player = usePlayer();
@@ -26,7 +25,9 @@ export function Chat({ scope, attribute, loading}) {
     if (!scope || !player) {
         return <LoadingComp />;
     }
-
+//*
+// Save messages to scope, for the players and the researchers
+//*
     const handleNewMessage = (text) => {
         console.log("scope", scope, scope.append)
         scope.append(attribute, {
@@ -44,6 +45,10 @@ export function Chat({ scope, attribute, loading}) {
         const playerStageData = scope.getAttribute(attribute)?.items || [];
         game.set("messages", playerStageData.map((msg, i) => msg.val._value));
     };
+
+//*
+// Give players access to the messages from scope using the functions further down
+//*
 
     let msgs = scope.getAttribute(attribute)?.items || [];
     console.log("msg", msgs)
@@ -89,14 +94,16 @@ function Message(props) {
     );
 }
 
+//*
+// MessagePanel shows the messages based on the following condition filters
+//*
+
+
 function MessagesPanel(props) {
     let {player, stage, round, scope, msgs, condition } = props;
     const scroller = useRef(null);
     const [msgCount, setMsgCount] = useState(0);
-
-
-
-   const msgsFiltered = condition === 'interactive'
+    const msgsFiltered = condition === 'interactive'
   ? interactiveFilter()
   : (stage.get('name') === 'send' && condition === 'unidirectional'
     ? unidirectionalFilter()
@@ -124,6 +131,10 @@ function otherwiseFilter() {
     .filter(msg => msg.value.round === round.get('idx'));
 }
 
+//*
+// Scrollbar for the message panel
+//*
+
     useEffect(() => {
         if (!scroller.current) {
             return;
@@ -134,7 +145,9 @@ function otherwiseFilter() {
         }
     }, [scroller, props, msgCount]);
 
-    // Handle case before any messages are sent this round
+//*
+// Before messages are sent the panel shows this
+//*
     if (msgsFiltered.length === 0) {
         return (<div className="h-full w-full flex justify-center items-center">
         <div className="flex flex-col justify-center items-center w-2/3 space-y-2">
@@ -169,7 +182,8 @@ function otherwiseFilter() {
 }
 
 //*
-// MessageComp is the component showing an individual message
+// MessageComp is the component showing an individual message. 
+// I generate the interlocutor avatar here, and the player avatar in Avatar.jsx. The code is the same.
 //*
 const hashString = (str) => {
   let hash = 0;
