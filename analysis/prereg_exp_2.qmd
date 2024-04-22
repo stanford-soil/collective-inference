@@ -1,0 +1,105 @@
+---
+title: "Experiment1"
+format: html
+editor: visual
+---
+
+# Import packages
+
+```{r}
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+
+library(tidyverse)
+library(tidyboot)
+library(lme4)
+library(here)
+library(jsonlite)
+library(ggthemes)
+```
+
+## Read in data
+
+```{r}
+ParseJSONColumn <- function(x) {
+  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
+    fromJSON(flatten = T) 
+}
+
+# map game IDs to their treatments
+d.treatments <- read_csv(here('data/prereg_exp_2/games.csv')) %>%
+  select(gameID = id, treatmentName) %>% 
+  distinct()
+
+# map game IDs to their treatments
+d.players <- read_csv(here('data/prereg_exp_2/players.csv')) %>%
+  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
+         nRabbits = str_count(emojiArray, '🐇')) %>%
+  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
+  distinct()
+
+# map round IDs to their indices
+d.rounds <- read_csv(here('data/prereg_exp_2/rounds.csv')) %>%
+  select(gameID, roundID = id, idx) %>%
+  distinct()
+
+# create long-form dataframe of all messages sent in each game
+d.msgs <- read_csv(here('data/prereg_exp_2/games.csv')) %>% 
+  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
+  select(gameID = id, treatmentName, messages) %>%
+  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
+  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
+  unnest(messages) %>% unnest(messages)
+
+# create long-form dataframe of all guesses made in each game
+d.guesses <- read_csv(here('data/prereg_exp_2/playerStages.csv')) %>% 
+
+  filter(!is.na(guess)) %>%
+  select(gameID, roundID, playerID, guess) %>%
+  left_join(d.rounds) %>%
+  left_join(d.treatments) %>%
+  left_join(d.players) %>% 
+  distinct() %>%
+  group_by(idx, gameID) %>%
+  mutate(nRabbitsGame = sum(nRabbits),
+         nSquirrelsGame = sum(nSquirrels)) %>%
+  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
+         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
+
+```
+
+```{r}
+persistentnoClick <- c()  
+for (i in 1:7) {
+  idx_pair <- c(i, i+1
+                )
+  filtered_players <- d.guesses %>%
+    group_by(playerID) %>%
+    filter(all(is.na(guess[idx %in% idx_pair]))) %>%
+    distinct(playerID, .keep_all = TRUE) %>%
+    pull(playerID)
+  persistentnoClick <- c(persistentnoClick, filtered_players)
+}
+```
+
+```{r}
+games_with_4_players_2 <- d.guesses %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+  group_by(gameID) %>%
+  summarise(unique_players = n_distinct(playerID)) %>% 
+  filter(unique_players == 4)
+
+games_with_4_players_2 <- games_with_4_players_2 %>%
+  left_join(d.guesses, by = "gameID") %>%
+  select(gameID, treatmentName) %>%
+  distinct()
+
+
+```
+
+```{r}
+numgames <- length(unique(d.guesses$gameID))
+
+```
