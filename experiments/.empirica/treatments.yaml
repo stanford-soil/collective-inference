@@ -96,3 +96,10 @@ treatments:
         opinion: slider
         playerCount: 4
         trueP: 0.3
+    - name: dvw
+      factors:
+        condition: interactive
+        debug: debug
+        opinion: slider
+        playerCount: 2
+        trueP: 0.3
