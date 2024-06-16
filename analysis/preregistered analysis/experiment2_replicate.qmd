@@ -55,16 +55,18 @@ confused <- d.guesses %>%
   pull(playerID)
 
 persistentnoClick <- c()  
-for (i in 1:7) {
+for (i in 1:11) {
   idx_pair <- c(i+1, i+2)
   filtered_players <- d.guesses %>%
     group_by(playerID) %>%
     filter(all(is.na(guess[idx %in% idx_pair]))) %>%
+      filter(idx != 1) %>%  # Filter out idx == 1
     distinct(playerID, .keep_all = TRUE) %>%
     pull(playerID)
   persistentnoClick <- c(persistentnoClick, filtered_players)
 }
 persistentnoClick <- unique(persistentnoClick)
+
 
 games_with_4_players <- d.guesses %>%
     filter(!(playerID %in% persistentnoClick)) %>%
@@ -113,7 +115,6 @@ d.guesses <- d.guesses %>%
     treatmentName =="rerun-slider- 0.7" ~ 'slider-0.7'
   )) %>%
   separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
-  filter(!is.na(guess)) %>%
   left_join(gameCounts) %>%
   mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100), 
          nCrittersGame = nRabbitsGame+nSquirrelsGame,
