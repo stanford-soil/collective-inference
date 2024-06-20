@@ -34,7 +34,6 @@ d.guesses <- d.guesses %>%
   group_by(playerID) %>%
   filter(any(!is.na(treatmentName))) %>%
   ungroup()
-
 unique_rows <- d.guesses %>%
   filter(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")) %>%
   distinct(playerID, gameID, guess, roundID, .keep_all = TRUE)
