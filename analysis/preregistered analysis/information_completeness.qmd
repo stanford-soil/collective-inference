@@ -68,7 +68,8 @@ for (i in 1:11) {
 }
 persistentnoClick <- unique(persistentnoClick)
 
-
+d.guesses <- d.guesses %>%  
+  filter(idx != 1) 
 ```
 
 ### Game-level distribution
@@ -106,8 +107,6 @@ d.guesses <- d.guesses %>%
 
 
 ```
-
-## Information Entropy
 
 ### games with incomplete information
 
@@ -347,6 +346,7 @@ ggplot(filtered_summary, aes(x = idx, y = mean_error, color = as.factor(num_play
 
 ```{r}
 d.guesses %>%
+    separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
   group_by(gameID, treatment, condition) %>%
   summarize(mleEstimate = mean(mleEstimateIndiv)) %>%
   ggplot(aes(x = mleEstimate)) +
@@ -356,34 +356,84 @@ d.guesses %>%
   theme_few()
 ```
 
-```{r}
-d.guesses_entropy <- d.guesses %>%
-   filter((treatment == 0.3 & mleEstimateIndiv == 30) | (treatment == 0.7 & mleEstimateIndiv == 70))
+## In-game entropy
 
-d.guesses_entropy %>%
-  group_by(gameID, treatment, condition) %>%
-  summarize(mleEstimate = mean(mleEstimateIndiv)) %>%
-  ggplot(aes(x = mleEstimate)) +
-    geom_histogram(binwidth = 10) +
-    #xlim(0,100) +
-    labs(title = "Distribution of mleEstimate for each treatmentName") +
-  theme_few()
+```{r}
+df_entropy <- d.guesses %>%
+  group_by(gameID) %>%
+  summarise(entropy_score = max(mleEstimateIndiv) - min(mleEstimateIndiv)) %>%
+  ungroup()
+
+d.guesses <- d.guesses %>%
+    left_join(df_entropy, by = "gameID")
 ```
 
 ```{r}
 
-d.guesses_filtered <- d.guesses %>%
-  filter(((treatment == 0.3 & between(mleEstimateIndiv, 25, 35)) |
-           (treatment == 0.7 & between(mleEstimateIndiv, 65, 75))))
+d.entropy <- d.guesses %>%
+    filter(!(playerID %in% confused)) %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+  filter(!(gameID %in% reducedPlayers)) 
 
+ggplot(d.entropy, aes(x = entropy_score, y = error)) +
+  geom_point() +
+  labs(title = "Entropy Score vs Error",
+       x = "Entropy Score",
+       y = "Error") +
+  theme_minimal()
+```
 
-d.guesses %>%
-  filter (gameID %in% d.guesses_entropy) %>%
-  group_by(gameID, treatment, condition) %>%
-  summarize(mleEstimate = mean(mleEstimateIndiv)) %>%
-  ggplot(aes(x = mleEstimate)) +
-    geom_histogram(binwidth = 10) +
-    #xlim(0,100) +
-    labs(title = "Distribution of mleEstimate for each treatmentName") +
-  theme_few()
+```{r}
+df_entropy_sd <- d.guesses %>%
+  group_by(gameID) %>%
+  summarise(entropy_score_sd = sd(mleEstimateIndiv, na.rm = TRUE)) %>%
+  ungroup()
+
+d.guesses <- d.guesses %>%
+  left_join(df_entropy_sd, by = "gameID")
+```
+
+```{r}
+
+d.entropy_sd <- d.guesses %>%
+    filter(!(playerID %in% confused)) %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+  filter(!(gameID %in% reducedPlayers)) 
+
+ggplot(d.entropy_sd, aes(x = entropy_score_sd, y = error)) +
+  geom_point() +
+  labs(title = "Entropy Score (Standard Deviation) vs Error",
+       x = "Entropy Score (Standard Deviation)",
+       y = "Error") +
+  theme_minimal()
+
+```
+
+```{r}
+shannon_entropy <- function(x) {
+  p <- x / sum(x)
+  -sum(p * log(p + 1e-9))  # Adding a small constant to avoid log(0)
+}
+
+df_entropy_se <- d.guesses %>%
+  group_by(gameID) %>%
+  summarise(entropy_score_se = shannon_entropy(mleEstimateIndiv)) %>%
+  ungroup()
+
+# Merge the entropy score back into the original dataframe
+d.guesses <- d.guesses %>%
+  left_join(df_entropy_se, by = "gameID")
+
+d.entropy_se <- d.guesses %>%
+    filter(!(playerID %in% confused)) %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+  filter(!(gameID %in% reducedPlayers)) 
+
+# Create the scatter plot of entropy_score against error
+ggplot(d.entropy_se, aes(x = entropy_score_se, y = error)) +
+  geom_point() +
+  labs(title = "Entropy Score (Shannon Entropy) vs Error",
+       x = "Entropy Score (Shannon Entropy)",
+       y = "Error") +
+  theme_minimal()
 ```

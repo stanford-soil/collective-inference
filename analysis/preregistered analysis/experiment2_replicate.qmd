@@ -42,6 +42,8 @@ d.guesses <- d.guesses %>%
   filter(!(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")))
 
 d.guesses <- bind_rows(d.guesses, unique_rows)  
+d.guesses <- d.guesses %>%  
+  filter(idx != 1) 
 ```
 
 ## Implement exclusions
