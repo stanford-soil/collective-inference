@@ -281,13 +281,15 @@ ggplot(d.guesses, aes(x = MeanErrorTotal, y = GiniCoefficient)) +
 ```
 
 ```{r}
-d.gini <- d.guesses 
+d.gini <- d.guesses %>%
+  filter (idx == c(11,12))
 
-ggplot(d.gini, aes(x = MeanErrorGameIdx, y = GiniCoefficient, group = as.factor(idx), color = idx)) +
+ggplot(d.gini, aes(x = GiniCoefficient, y = error, group = as.factor(idx), color = idx)) +
+  geom_point()+
   geom_smooth(method = "lm", se = FALSE, ) +  # Using loess method for smooth lines
   labs(title = "Gini Coefficient per game per round",
-       x = "Mean Error",
-       y = "Gini Coefficient",
+       x = "Gini Coefficent",
+       y = "MeanErrorGameIdx",
        color = "idx") +
   theme_minimal()
 ```
