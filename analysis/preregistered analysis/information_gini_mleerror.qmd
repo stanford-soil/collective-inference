@@ -389,4 +389,71 @@ ggplot(d.guesses, aes(x = error, y = abs(MLE_percent), color = interaction(treat
 
 ```{r}
 
+
+# Calculate absolute inequality score for each game
+absolute_inequality <- d.guesses %>%
+  group_by(gameID) %>%
+  summarise(AbsoluteInequality = sum(abs(mleEstimateGame - mleEstimateIndiv)))
+
+# Join the absolute inequality score back to the main dataframe
+d.guesses <- d.guesses %>%
+  left_join(absolute_inequality, by = "gameID")
+
+# Create the plot
+ggplot(d.guesses, aes(x = AbsoluteInequality, y = GiniCoefficient)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Gini Coefficient vs Absolute Inequality Score",
+       x = "Absolute Inequality Score",
+       y = "Gini Coefficient") +
+  theme_minimal()
+
+# Calculate correlation
+correlation <- cor(d.guesses$AbsoluteInequality, d.guesses$GiniCoefficient)
+print(paste("Correlation between Absolute Inequality and Gini Coefficient:", round(correlation, 3)))
+```
+
+```{r}
+# Filter out confused and persistent non-clickers
+reducedPlayers <- d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+  group_by(gameID) %>%
+  filter(n_distinct(playerID) != 4) %>%
+  ungroup()
+
+d.numbers <- d.guesses %>%
+  filter(!(playerID %in% confused)) %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+  filter(!(gameID %in% reducedPlayers$gameID)) %>% 
+  mutate(nCritters = nRabbits + nSquirrels)
+
+# Calculate average error for each condition
+avg_error_by_condition <- d.numbers %>%
+  group_by(gameID, condition, nCritters) %>%
+  summarise(avg_error = mean(error, na.rm = TRUE), .groups = 'drop')
+
+# Create the plot
+ggplot(avg_error_by_condition, aes(x = factor(nCritters), y = avg_error, color = condition, group = condition)) +
+
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Average Error by Number of Observations and Condition",
+       x = "Number of Critters",
+       y = "Average Error",
+       color = "Condition") +
+  theme_minimal() +
+  scale_x_discrete(labels = function(x) x, limits = unique(d.numbers$nCritters)) +
+  scale_color_brewer(palette = "Set1")
+
+# Calculate overall correlation
+correlation <- cor(as.numeric(avg_error_by_condition$nCritters), avg_error_by_condition$avg_error)
+print(paste("Overall correlation between Number of Critters and Average Error:", round(correlation, 3)))
+
+# Calculate correlation for each condition
+correlations_by_condition <- avg_error_by_condition %>%
+  group_by(condition) %>%
+  summarise(correlation = cor(as.numeric(nCritters), avg_error))
+
+print("Correlations by condition:")
+print(correlations_by_condition)
 ```
