@@ -133,6 +133,31 @@ reducedInfo %>%
     theme(aspect.ratio = 1, legend.position = 'top')
 ```
 
+## Statistics on group sample size
+
+```{r}
+reducedInfo %>%
+  select(-`...1`) %>%
+  distinct() %>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 10 & nCrittersGame <= 20 ~ 20,
+    nCrittersGame >= 21 & nCrittersGame <= 30 ~ 30,
+    nCrittersGame >= 31 & nCrittersGame <= 60 ~ 60,
+    TRUE ~ NA_real_
+  )) %>%
+  filter(!is.na(nCrittersGroup)) %>%
+#  group_by(treatment, condition, idx, playerID, mleEstimateGame, nCrittersGroup) %>%
+  mutate(error = abs(guess - mleEstimateGame),
+         nCrittersGame = scale(nCrittersGame),
+         idx = scale(idx, scale = F)) %>%
+  glmer(error ~ nCrittersGame * condition * idx + (1 + idx | gameID),
+       family = 'poisson',
+       data = .) %>%
+  summary() 
+```
+
+## Visualization broken out by group sample size
+
 ```{r}
 reducedInfo %>%
   mutate(nCrittersGroup = case_when(
