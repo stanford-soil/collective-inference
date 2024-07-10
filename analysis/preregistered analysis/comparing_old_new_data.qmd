@@ -167,6 +167,7 @@ d.guesses <- d.guesses %>%
 
 ```{r}
 d.guesses %>%
+  filter (idx ==6) %>%
   ggplot(aes(x = idx, y = abs(error), color = condition, linetype = condition == 'interactive')) +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
     theme_few() +
