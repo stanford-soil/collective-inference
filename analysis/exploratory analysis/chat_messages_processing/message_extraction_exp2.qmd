@@ -34,59 +34,30 @@ ParseJSONColumn <- function(x) {
 
 
 # Read the CSV file
-d.chat.raw1 <- read_csv(here('data/prereg_1/games.csv'), show_col_types = FALSE) %>%
+d.chat.raw1 <- read_csv(here('data/experiment2/batch1/games.csv'), show_col_types = FALSE) %>%
   mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
   mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
   unnest(messages) 
-d.chat.raw2 <- read_csv(here('data/prereg_2/games.csv'), show_col_types = FALSE) %>%
+d.chat.raw2 <- read_csv(here('data/experiment2/batch2/games.csv'), show_col_types = FALSE) %>%
   mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
   mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
   unnest(messages) 
-d.chat.raw3 <- read_csv(here('data/prereg_3/games.csv'), show_col_types = FALSE) %>%
+d.chat.raw3 <- read_csv(here('data/experiment2/batch3/games.csv'), show_col_types = FALSE) %>%
   mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
   mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
   unnest(messages) 
-d.chat.raw4 <- read_csv(here('data/prereg_4/games.csv'), show_col_types = FALSE) %>%
+d.chat.raw4 <- read_csv(here('data/experiment2/batch4/games.csv'), show_col_types = FALSE) %>%
   mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
   mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
   unnest(messages) 
-d.chat.raw5 <- read_csv(here('data/prereg_5/games.csv'), show_col_types = FALSE) %>%
-  mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) 
-d.chat.raw6 <- read_csv(here('data/prereg_6/games.csv'), show_col_types = FALSE) %>%
-  mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) 
-d.chat.raw7 <- read_csv(here('data/prereg_7/games.csv'), show_col_types = FALSE) %>%
-  mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) 
-d.chat.raw8 <- read_csv(here('data/prereg_8/games.csv'), show_col_types = FALSE) %>%
-  mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) 
-d.chat.raw9 <- read_csv(here('data/prereg_9/games.csv'), show_col_types = FALSE) %>%
-  mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) 
-d.chat.raw10 <- read_csv(here('data/prereg_10/games.csv'), show_col_types = FALSE) %>%
-  mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) 
-d.chat.raw11 <- read_csv(here('data/prereg_11/games.csv'), show_col_types = FALSE) %>%
-  mutate(messages = ifelse(is.na(messages), '[]', messages)) %>%
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) 
+
 ```
 
 ```{r}
 
-d.chat.raw <- bind_rows(d.chat.raw1, d.chat.raw2, d.chat.raw3, d.chat.raw4, d.chat.raw5,
-                        d.chat.raw6, d.chat.raw7, d.chat.raw8, d.chat.raw9, d.chat.raw10,
-                        d.chat.raw11, .id = "data_frame_id")
+d.chat.raw <- bind_rows(d.chat.raw1, d.chat.raw2, d.chat.raw3, d.chat.raw4, .id = "data_frame_id")
 
-rm(d.chat.raw1, d.chat.raw2, d.chat.raw3, d.chat.raw4, d.chat.raw5, d.chat.raw6, d.chat.raw7, d.chat.raw8, d.chat.raw9, d.chat.raw10, d.chat.raw11)
+rm(d.chat.raw1, d.chat.raw2, d.chat.raw3, d.chat.raw4)
 ```
 
 ```{r}
@@ -151,5 +122,5 @@ print(combined_data)
 ```
 
 ```{r}
-write.csv(combined_data, "extracted_messages.csv", row.names = TRUE)
+write.csv(combined_data, "extracted_messages_exp2.csv", row.names = TRUE)
 ```

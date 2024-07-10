@@ -16,6 +16,7 @@ library(tidyboot)
 library(lme4)
 library(here)
 library(jsonlite)
+library(emmeans)
 library(ggthemes)
 
 theme_set(theme_few())
@@ -77,7 +78,7 @@ games_with_4_players <- d.guesses %>%
   filter(unique_players == 4)
 
 d.guesses <- left_join(d.guesses, games_with_4_players, by = "gameID")
-d.guesses <- d.guesses %>% filter(!is.na(unique_players))
+
 
 games_with_4_players <- games_with_4_players %>%
       #filter(!(gameID %in% confused)) %>%
@@ -209,7 +210,7 @@ d.guesses %>%
 ```
 
 ```{r}
-d.guesses %>%
+d.guesses %>%  
   group_by(treatment, condition, idx, gameID, mleEstimateGame) %>%
   summarize(error = mean(abs(guess - mleEstimateGame), na.rm= T)) %>%
   group_by(condition, idx) %>%
@@ -225,7 +226,38 @@ d.guesses %>%
     labs(y = 'average error', x = 'round #', color = '')  +
     theme(aspect.ratio = 1, legend.position = 'top')
 
-ggsave(here('exp2_prereg_allerror.pdf'), height=3, width = 3.5)
+
+```
+
+```{r}
+library(pbkrtest)
+emm_options(lmerTest.limit = 7826)
+emm_options(pbkrtest.limit = 7826)
+
+error_data <- d.guesses %>%  
+  group_by(treatment, condition, idx, gameID, mleEstimateGame,playerID) %>%
+  summarize(error = mean(abs(guess - mleEstimateGame), na.rm = TRUE)) %>%
+  ungroup()
+
+model <- lmer(error ~ condition * idx + (1 | gameID/playerID), data = error_data, control = lmerControl(optCtrl = list(maxfun = 100000)))
+#summary(model)
+
+model2 <- lmer(error ~ idx + (1 | gameID/playerID), data = error_data)
+#summary(model2)
+
+model3 <- lmer(error ~ condition  + (1 | idx) + (1 | gameID/playerID), data = error_data)
+#summary(model3)
+
+model4 <- lmer(error ~ idx + condition + (1 | gameID/playerID), data = error_data)
+#summary(model4)
+
+#bonferroni adjusts for multiple comparisons
+pairwise_results <- model %>%
+  emmeans(pairwise ~ condition, adjust = "bonferroni") %>%
+  pluck("contrasts")
+
+# View the pairwise comparisons
+print(pairwise_results)
 ```
 
 # Result #3: Relationship to total information
@@ -272,25 +304,27 @@ summary(m2)
 # Results #4: Self-weighing
 
 ```{r}
-d.guesses %>% 
+d.guesses %>%
+  arrange(playerID, idx) %>% 
   group_by(playerID) %>%
-  mutate(prevGuess = lag(guess)) %>% 
-  arrange(playerID, idx) %>%
+  mutate(prevGuess = lag(guess)) %>%
   mutate(distToSelf = abs(guess - prevGuess)) %>%
-  group_by(idx, condition) %>% 
-  filter(idx>1) %>%
+  filter(idx > 2) %>%
+  group_by(idx, condition) %>%
   tidyboot_mean(distToSelf, na.rm = TRUE) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = condition)) +
     geom_point() +
-    geom_smooth(method = 'lm', formula = y~ poly(x, 1), se = F) +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 1), se = FALSE) +
     scale_color_brewer(palette = 'Accent') +
     guides(linetype = 'none') +
-    scale_x_continuous(breaks = c(2,4,6,8)) +
+    scale_x_continuous(breaks = c(2, 4, 6, 8, 10, 12)) +
     labs(y = 'change from previous guess', x = 'reference point (round #)', color = '') +
     theme_few() +
     theme(aspect.ratio = 1, legend.position = 'top')
 
-ggsave(here('exp2_prereg_delta.pdf'), height=3, width = 3.5)
+
+
+
 ```
 
 ```{r}

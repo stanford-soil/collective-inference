@@ -167,15 +167,14 @@ d.guesses <- d.guesses %>%
 
 ```{r}
 d.guesses %>%
-  filter (idx ==6) %>%
-  ggplot(aes(x = idx, y = abs(error), color = condition, linetype = condition == 'interactive')) +
+  ggplot(aes(x = idx, y = abs(error), color = interaction(condition, data), linetype = condition == 'interactive')) +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
     theme_few() +
     scale_color_brewer(palette = 'Accent') +
     guides(linetype = 'none') +
-    labs(y = 'average error', x = 'round #', color = '') +
+    labs(y = 'average error', x = 'round #', color = 'Condition/Data') +
     theme(aspect.ratio = 1, legend.position = 'top') +
-    facet_wrap(~ data + treatment)
+  facet_wrap(~treatment)
 
 d.guesses %>%
   group_by(data) %>%

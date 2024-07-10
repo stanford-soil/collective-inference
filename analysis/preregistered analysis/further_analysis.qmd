@@ -243,17 +243,17 @@ d.guesses %>%
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
   geom_hline(yintercept = 0, linetype = 'dotted') +
-  theme_few() +  # Using theme_few for a similar look
-  scale_color_brewer(palette = 'Accent') +  # Using Accent palette for similar colors
+  theme_few() +  
+  scale_color_brewer(palette = 'Accent') + 
   guides(linetype = 'none') +
   scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
-  labs(y = 'Confidence', x = 'Index', color = 'Treatment Name') +  # Adjusting labels
+  labs(y = 'confidence', x = 'time', color = 'Treatment Name') +  # Adjusting labels
   theme(aspect.ratio = 1, legend.position = 'top')
 
 ```
 
 ```{r}
-
+conflicts_prefer(lmerTest::lmer)
 model <- lmer(error ~ confidence + (1 | gameID/playerID), data = d.guesses)
 
 
@@ -280,6 +280,18 @@ ggplot(summary_data, aes(x = confidence, y = abs(empirical_stat), color = condit
   theme_few() +
   scale_color_colorblind() +
   labs(y = 'error', x = 'confidence')
+```
+
+```{r}
+ggplot(d.guesses, aes(x = idx, y = confidence, color = condition)) +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = 0, linetype = 'dotted') +
+  theme_few() +
+  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
+  scale_color_colorblind() +
+  labs(y = 'confidence', x = 'round') +
+  ylim(50, NA)
+
 ```
 
 ```{r}

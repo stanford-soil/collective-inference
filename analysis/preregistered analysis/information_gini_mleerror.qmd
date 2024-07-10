@@ -425,7 +425,6 @@ reducedPlayers <- d.guesses %>%
 d.numbers <- d.guesses %>%
   filter(!(playerID %in% confused)) %>%
   filter(!(playerID %in% persistentnoClick)) %>%
-  filter(!(gameID %in% reducedPlayers$gameID)) %>% 
   mutate(nCritters = nRabbits + nSquirrels)
 
 # Calculate average error for each condition
