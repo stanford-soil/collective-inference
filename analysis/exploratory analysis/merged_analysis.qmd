@@ -307,6 +307,10 @@ d.guesses %>%
     scale_color_colorblind()
 ```
 
+```{r}
+
+```
+
 ## Result #2: Examine error (collapsing across treatment)
 
 ## in-game treatment average from the player's critters
@@ -505,6 +509,24 @@ plot + scale_color_manual(
   labels = c("message", "slider", "interactive"),
   values = c("blue","black", "red")
 )
+```
+
+```{r}
+plot <- d.guesses %>%
+  filter(!(playerID %in% confused)) %>% 
+  filter(!(playerID %in% persistentnoClick)) %>%
+  filter(idx != 1) %>%  # Exclude all idx = 1
+  # filter(!(gameID %in% square_games)) %>%
+  group_by(collapsedTreatment, idx) %>%
+  tidyboot::tidyboot_mean(abs(wisError), na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat)) +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    theme_few() +
+    scale_x_continuous(breaks = 2:8, limits = c(2, 8)) +
+    labs(y = 'average error per player within game', x = 'Round') 
+
+print(plot)
 ```
 
 ## within-game error per player and average
@@ -770,7 +792,7 @@ for (gameID in unique_gameIDs) {
     theme_few() +
     labs(y = 'average error per game', x = 'round #') +
     scale_color_colorblind()
-  print(plot) 
+  #print(plot) 
 }
 
 ```
@@ -879,5 +901,149 @@ plot <- ggplot(subset_data, aes(x = idx, y = abs(wisError), color = sum(diffPast
 group acc vs heterogenetity
 
 ```{r}
-crashMyRerun <-
+d.guesses <- d.guesses %>% 
+  filter(!is.na(guess)) %>%
+  mutate(nCrittersGame = nSquirrelsGame+nRabbitsGame) %>% 
+  separate(treatmentName, into = c('condition', 'treatment'), sep = '-') 
+```
+
+```{r}
+
+
+d.guesses %>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 10 & nCrittersGame <= 20 ~ 20,
+    nCrittersGame >= 21 & nCrittersGame <= 30 ~ 30,
+    nCrittersGame >= 31 & nCrittersGame <= 40 ~ 40,
+    nCrittersGame >= 41 & nCrittersGame <= 50 ~ 50,
+    nCrittersGame >= 51 & nCrittersGame <= 60 ~ 60,
+    nCrittersGame >= 61 & nCrittersGame <= 70 ~ 70,
+    nCrittersGame >= 71 & nCrittersGame <= 80 ~ 80,
+    nCrittersGame >= 81 & nCrittersGame <= 90 ~ 90,
+    nCrittersGame >= 91 & nCrittersGame <= 100 ~ 100,
+    TRUE ~ NA_real_
+  )) %>%
+  filter(!is.na(nCrittersGroup)) %>%
+  filter(treatment == 'interactive') %>%
+  group_by(nCrittersGroup) %>%
+  summarise(unique_games = n_distinct(gameID)) %>%
+  print()
+
+d.guesses <- d.guesses%>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 0 & nCrittersGame <= 12 ~ "12",
+    nCrittersGame >= 13 & nCrittersGame <= 24 ~ "24",
+    nCrittersGame >= 25 & nCrittersGame <= 60 ~ "36",
+  )) %>%
+    filter(!is.na(nCrittersGroup)) 
+
+custom_colors <- c("lightgreen", "forestgreen",  "seagreen")
+
+d.guesses%>% 
+  group_by(treatment, idx, gameID, AvgPercent, nCrittersGroup) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm = TRUE), .groups = 'drop') %>%
+  group_by(treatment, idx, nCrittersGroup) %>%
+  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
+  filter(treatment == 'interactive')%>%
+ ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup)) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = 0, linetype = 'dotted') +
+  theme_few() +
+  scale_color_manual(values = custom_colors) +
+  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
+  labs(y = 'average error', x = 'round #', color = 'Free Chat Condition') +
+  theme(aspect.ratio = 1, legend.position = 'top')
+```
+
+```{r}
+d.guesses %>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 10 & nCrittersGame <= 20 ~ 20,
+    nCrittersGame >= 21 & nCrittersGame <= 30 ~ 30,
+    nCrittersGame >= 31 & nCrittersGame <= 40 ~ 40,
+    nCrittersGame >= 41 & nCrittersGame <= 50 ~ 50,
+    nCrittersGame >= 51 & nCrittersGame <= 60 ~ 60,
+    nCrittersGame >= 61 & nCrittersGame <= 70 ~ 70,
+    nCrittersGame >= 71 & nCrittersGame <= 80 ~ 80,
+    nCrittersGame >= 81 & nCrittersGame <= 90 ~ 90,
+    nCrittersGame >= 91 & nCrittersGame <= 100 ~ 100,
+    TRUE ~ NA_real_
+  )) %>%
+  filter(!is.na(nCrittersGroup)) %>%
+  filter(condition == 'slider') %>%
+  group_by(nCrittersGroup) %>%
+  summarise(unique_games = n_distinct(gameID)) %>%
+  print()
+d.guesses <- d.guesses%>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 0 & nCrittersGame <= 12 ~ "12",
+    nCrittersGame >= 13 & nCrittersGame <= 24 ~ "24",
+    nCrittersGame >= 25 & nCrittersGame <= 60 ~ "36",
+  )) %>%
+    filter(!is.na(nCrittersGroup)) 
+
+custom_colors <-c("#e0bbff", "#b874ff", "#7e30ff")
+
+d.guesses%>% 
+  group_by(treatment, idx, gameID, AvgPercent, nCrittersGroup) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm = TRUE), .groups = 'drop') %>%
+  group_by(treatment, idx, nCrittersGroup) %>%
+  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
+  filter(treatment == 'slider')%>%
+ ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup)) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = 0, linetype = 'dotted') +
+  theme_few() +
+  scale_color_manual(values = custom_colors) +
+  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
+  labs(y = 'average error', x = 'round #', color = 'Scalar Condition') +
+  theme(aspect.ratio = 1, legend.position = 'top')
+```
+
+```{r}
+reducedInfo %>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 10 & nCrittersGame <= 20 ~ 20,
+    nCrittersGame >= 21 & nCrittersGame <= 30 ~ 30,
+    nCrittersGame >= 31 & nCrittersGame <= 40 ~ 40,
+    nCrittersGame >= 41 & nCrittersGame <= 50 ~ 50,
+    nCrittersGame >= 51 & nCrittersGame <= 60 ~ 60,
+    nCrittersGame >= 61 & nCrittersGame <= 70 ~ 70,
+    nCrittersGame >= 71 & nCrittersGame <= 80 ~ 80,
+    nCrittersGame >= 81 & nCrittersGame <= 90 ~ 90,
+    nCrittersGame >= 91 & nCrittersGame <= 100 ~ 100,
+    TRUE ~ NA_real_
+  )) %>%
+  filter(!is.na(nCrittersGroup)) %>%
+  filter(condition == 'unidirectional') %>%
+  group_by(nCrittersGroup) %>%
+  summarise(unique_games = n_distinct(gameID)) %>%
+  print()
+d.guesses <- d.guesses%>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 0 & nCrittersGame <= 12 ~ "12",
+    nCrittersGame >= 13 & nCrittersGame <= 24 ~ "24",
+    nCrittersGame >= 25 & nCrittersGame <= 60 ~ "36",
+  )) %>%
+    filter(!is.na(nCrittersGroup)) 
+
+custom_colors <- c("#ffe0b3", "#ff9933", "#cc5200")
+
+
+d.guesses%>% 
+  group_by(treatment, idx, gameID, AvgPercent, nCrittersGroup) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm = TRUE), .groups = 'drop') %>%
+  group_by(treatment, idx, nCrittersGroup) %>%
+  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
+filter(treatment %in% c('0.3')) %>% ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup)) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = 0, linetype = 'dotted') +
+  theme_few() +
+  scale_color_manual(values = custom_colors) +
+  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
+  labs(y = 'average error', x = 'round #', color = 'Unidirectional Condition') +
+  theme(aspect.ratio = 1, legend.position = 'top')
 ```

@@ -230,14 +230,15 @@ d.guesses %>%
 ```
 
 ```{r}
-library(pbkrtest)
+#library(pbkrtest)
 emm_options(lmerTest.limit = 7826)
-emm_options(pbkrtest.limit = 7826)
+#emm_options(pbkrtest.limit = 7826)
 
 error_data <- d.guesses %>%  
   group_by(treatment, condition, idx, gameID, mleEstimateGame,playerID) %>%
   summarize(error = mean(abs(guess - mleEstimateGame), na.rm = TRUE)) %>%
-  ungroup()
+  ungroup() %>%
+  mutate(idx = scale(idx, scale= FALSE)) #center idx
 
 model <- lmer(error ~ condition * idx + (1 | gameID/playerID), data = error_data, control = lmerControl(optCtrl = list(maxfun = 100000)))
 #summary(model)
@@ -259,6 +260,27 @@ pairwise_results <- model %>%
 # View the pairwise comparisons
 print(pairwise_results)
 ```
+
+```{r}
+print(error_data)
+```
+
+```{r}
+model_without_condition <- glmer(error ~ idx + (1 + idx | gameID/playerID), family= "poisson", data = error_data) #"fit an intercept for every gameID and every player in the game" but +idx is because we have repeated measures you can get a slope for every game
+model_with_condition <- glmer(error ~ condition + idx + (1 + idx | gameID/playerID), family= "poisson", data = error_data)
+model_with_interaction <-glmer(error ~ condition*idx + (1 + idx | gameID/playerID), family= "poisson", data = error_data)
+anova(model_without_condition, model_with_condition, model_with_interaction)
+
+#keep it maximal = as many random effects as you can hold (game, player, slope)
+```
+
+```{r}
+summary(model_with_condition)
+```
+
+\#
+
+\
 
 # Result #3: Relationship to total information
 

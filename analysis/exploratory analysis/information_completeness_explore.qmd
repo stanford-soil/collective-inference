@@ -282,7 +282,7 @@ reducedInfo %>%
   group_by(condition, idx, nCrittersGroup) %>%
   tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
   filter(condition == 'unidirectional') %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup, group = nCrittersGroup, linetype = 'unidirectional')) +
+  ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup, group = nCrittersGroup, linetype = c('0.7', '0.3'))) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
   geom_hline(yintercept = 0, linetype = 'dotted') +

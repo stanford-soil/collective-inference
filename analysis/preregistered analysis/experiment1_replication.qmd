@@ -390,7 +390,7 @@ d.MLE <- d.guesses %>%
 
 ```{r}
 # Assuming you have a linear model fit earlier
-ggplot(d.MLE, aes(x = outlierPercent, y = abs(error), color = idx)) +
+ggplot(d.MLE, aes(x = outlierPercent, y = (error), color = idx)) +
   geom_jitter(alpha = 0.1) +
   labs(y = "average error", x = "outlier degree", color= "round") +
   geom_smooth(aes(group = idx), method = "lm", se = FALSE, alpha = 0.3) +
