@@ -283,6 +283,7 @@ d.guesses.collapsed <- d.guesses %>%
 
 ```{r}
 d.guesses.collapsed %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
   filter(idx != 1) %>%  # Exclude all idx = 1
   group_by(treatment, idx) %>%
   tidyboot::tidyboot_mean(abs(wisError), na.rm = TRUE) %>%
@@ -299,10 +300,11 @@ d.guesses.collapsed %>%
 
 ```{r}
 d.guesses.collapsed %>%
+  filter(idx != 1) %>%
   mutate(nCrittersGroup = case_when(
     nCrittersGame >= 0 & nCrittersGame <= 17 ~ "< 18",
     nCrittersGame >= 18 & nCrittersGame <= 22 ~ "18-22",
-    nCrittersGame >= 23 & nCrittersGame <= 60 ~ "> 22",
+    nCrittersGame >= 23 & nCrittersGame <= 60 ~ "> 36",
   )) %>%
   filter(!is.na(nCrittersGroup)) %>%
   group_by(treatment, idx, gameID, AvgPercent, nCrittersGroup) %>%
@@ -366,7 +368,7 @@ d.MLE.joined <- d.MLE %>%
 ```
 
 ```{r}
-d.guesses  %>% 
+d.guesses.collapsed  %>% 
   mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
   group_by(treatment, condition, idx, gameID, AvgPercent) %>%
   summarize(error = mean(abs(guess - AvgPercent), na.rm= T)) %>%
@@ -385,7 +387,7 @@ d.guesses  %>%
 ```
 
 ```{r}
-d.guesses %>%
+d.guesses.collapsed %>%
     mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
   ungroup() %>%
   group_by(treatment, gameID, idx) %>%
@@ -403,7 +405,7 @@ d.guesses %>%
 ```
 
 ```{r}
-d.guesses %>% 
+d.guesses.collapsed %>% 
       mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
   group_by(playerID) %>%
   mutate(prevGuess = lag(guess)) %>% 
@@ -424,7 +426,7 @@ d.guesses %>%
 ```
 
 ```{r}
-d.guesses %>%
+d.guesses.collapsed %>%
         mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
   mutate(nCrittersGroup = case_when(
     nCrittersGame >= 10 & nCrittersGame <= 20 ~ 20,
@@ -444,7 +446,7 @@ d.guesses %>%
   summarise(unique_games = n_distinct(gameID)) %>%
   print()
 
-d.guesses %>%
+d.guesses.collapsed %>%
   mutate(nCrittersGroup = case_when(
     nCrittersGame >= 0 & nCrittersGame <= 10 ~ "0-10",
     nCrittersGame > 10 & nCrittersGame <= 20 ~ "11-20",
@@ -453,8 +455,8 @@ d.guesses %>%
     TRUE ~ NA_character_
   )) %>%
   filter(!is.na(nCrittersGroup)) %>% 
-  group_by(treatment, treatment, idx, gameID, mleEstimateGame, nCrittersGroup) %>%
-  summarize(error = mean(abs(guess - mleEstimateGame), na.rm = TRUE), .groups = 'drop') %>%
+  group_by(treatment, idx, gameID, AvgPercent, nCrittersGroup) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm = TRUE), .groups = 'drop') %>%
   group_by(treatment, idx, nCrittersGroup) %>%
   tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup, group = nCrittersGroup, linetype = 'interactive')) +
@@ -469,4 +471,42 @@ d.guesses %>%
   theme(aspect.ratio = 1, legend.position = 'top')
 
 
+```
+
+```{r}
+gameIDs <- unique(d.guesses.collapsed$gameID) 
+
+for (gameID in gameIDs) {
+  game_data <- d.guesses.collapsed %>%
+    filter(gameID == !!gameID)
+
+  # Create the plot
+  p <- ggplot(game_data, aes(x = idx, y = wisError, color = treatment)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+    scale_x_continuous(breaks = 2:8, limits = c(2, 8)) +
+    scale_color_brewer(palette = 'Accent') +
+    labs(y = 'average error per player within game', x = 'Round') +
+    theme(aspect.ratio = 1)
+  
+  
+  print(p)  
+}
+```
+
+```{r}
+d.guesses.collapsed %>%
+  filter(idx != 1) %>%  # Exclude all idx = 1
+  group_by(idx) %>%
+  tidyboot::tidyboot_mean(abs(wisError), na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    theme_few() +
+    scale_x_continuous(breaks = 2:8, limits = c(2, 8)) +
+    scale_y_continuous(limits = c(10, 20)) +  # Set the lower limit of the y-axis to 10
+    scale_color_brewer(palette = 'Accent') +
+    labs(y = 'average error per player within game', x = 'Round') +
+    theme(aspect.ratio = 1)
 ```
