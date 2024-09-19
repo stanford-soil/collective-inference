@@ -37,7 +37,7 @@ function introSteps({ game, player }) {
 }
 
 function exitSteps({ game, player }) {
-  return [ExitSurvey, Last];
+  return [Last];
 }
 
   return (

@@ -567,7 +567,7 @@ d.guesses <- d.guesses %>%
   )) %>%
   separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
   filter(!is.na(guess)) %>%
-  left_join(gameCounts) %>%
+ # left_join(gameCounts) %>%
   mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100), 
          nCrittersGame = nRabbitsGame+nSquirrelsGame,
          mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),

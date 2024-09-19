@@ -3,14 +3,7 @@ import { Loading } from "@empirica/core/player/react";
 import React, {useState, useRef, useEffect } from "react";
 import { Opinion } from "./Opinion";
 import { InputBox } from "./InputBox";
-import a from '/avatar1.png';
-import b from '/avatar2.png';
-import c from '/avatar3.png';
-import d from '/avatar4.png';
-import e from '/avatar5.png';
-import f from '/avatar6.png';
-import g from '/avatar7.png';
-import h from '/avatar8.png';
+import { Avatar } from "./Avatar";
 import { useSpring, animated } from 'react-spring';
 
 
@@ -183,37 +176,31 @@ function otherwiseFilter() {
 
 //*
 // MessageComp is the component showing an individual message. 
-// I generate the interlocutor avatar here, and the player avatar in Avatar.jsx. The code is the same.
-//*
-const hashString = (str) => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
-};
+
+
 
 function MessageComp(props) {
     let {player, scope, attribute, index} = props;
     const msg = attribute.value;
     const ts = attribute.createdAt;
-    const numericId = hashString(msg.sender.id);
-    const avatarImages = [a, b, c, d, e, f, g, h];
-    const avatarIndex = numericId % avatarImages.length; 
-    const selectedAvatar = avatarImages[avatarIndex]; 
 
+
+
+//likely redundant as senders avatar is set on new message
+    let avatar = msg.sender.avatar;
+    if (!avatar) {
+        avatar = `https://api.dicebear.com/9.x/personas/svg?seed=${msg.sender.id}`;
+    }
+console.log('Avatar URL:', avatar);
     let item = scope.get("chat")[index];
 
     return (
         <div className="flex items-start my-2 shadow p-8">
             <div className="flex-shrink-0">
-                <img
-                    className="h-10 w-10 rounded-md shadow bg-white p-1"
-                    src={selectedAvatar}
-                    alt="Avatar"
-
-                />
+                <Avatar
+            src={avatar}
+            className="inline-block h-9 w-9 rounded-full"
+        />
             </div>
             <div className="ml-3 text-sm">
                 <p>

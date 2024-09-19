@@ -55,7 +55,10 @@ console.log("Number of players:", game.players.length);
     const selectCritters = critters.splice(0, chosenPartition[i]); 
 
     const emojiArray = _.shuffle(_.concat(selectCritters, spaces));
-
+    player.set(
+      "avatar",
+      `https://api.dicebear.com/9.x/personas/svg?seed=${player.id}`
+    );
     player.set("name", "player " + (i + 1));
     player.set("emojiArray", emojiArray);
     console.log (emojiArray);

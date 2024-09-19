@@ -22,581 +22,75 @@ library(ggthemes)
 ## Read in data
 
 ```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
+# Load the necessary libraries
+library(dplyr)
+
+# Read the CSV files
+chat_1 <- read_csv(here('data/extracted_msgs_exp1_2/msgs_cleaned_exp1.csv'))
+chat_2 <- read_csv(here('data/extracted_msgs_exp1_2/messages_exp2.csv'))
+chat_3 <- read_csv(here('data/extracted_msgs_prereg/cleaned_messages.csv'))
+
+# Standardize column names to lowercase
+chat_1 <- chat_1 %>% rename_with(tolower)
+chat_2 <- chat_2 %>% rename_with(tolower)
+chat_3 <- chat_3 %>% rename_with(tolower)
+
+# Find the union of all column names
+all_columns <- union(union(names(chat_1), names(chat_2)), names(chat_3))
+
+# Function to add missing columns with NA values
+add_missing_columns <- function(df, all_cols) {
+  missing_cols <- setdiff(all_cols, names(df))
+  df[missing_cols] <- NA
+  return(df)
 }
 
-# map game IDs to their treatments
-d.treatments1 <- read_csv(here('data/prereg_1/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
+# Add missing columns to each dataframe
+chat_1 <- add_missing_columns(chat_1, all_columns)
+chat_2 <- add_missing_columns(chat_2, all_columns)
+chat_3 <- add_missing_columns(chat_3, all_columns)
 
-# map game IDs to their treatments
-d.players1 <- read_csv(here('data/prereg_1/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
+# Ensure columns are in the same order
+chat_1 <- chat_1 %>% select(all_of(all_columns))
+chat_2 <- chat_2 %>% select(all_of(all_columns))
+chat_3 <- chat_3 %>% select(all_of(all_columns))
 
-# map round IDs to their indices
-d.rounds1 <- read_csv(here('data/prereg_1/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
+# Merge the dataframes
+merged_chat <- bind_rows(chat_1, chat_2, chat_3) %>%
+  mutate(treatmentname = ifelse(treatmentname %in% c('experiment1-0.7', 'experiment1-0.3'),
+                                'experiment1-unidirectional', treatmentname)) %>%
+  separate(treatmentname, into = c('condition', 'treatment'), sep = '-') %>%
 
-# create long-form dataframe of all messages sent in each game
-d.msgs1 <- read_csv(here('data/prereg_1/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
+# Display the merged dataframe
+print(merged_chat)
 
-# create long-form dataframe of all guesses made in each game
-d.guesses1 <- read_csv(here('data/prereg_1/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds1) %>%
-  left_join(d.treatments1) %>%
-  left_join(d.players1) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
 
 ```
 
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments2 <- read_csv(here('data/prereg_2/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players2 <- read_csv(here('data/prereg_2/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds2 <- read_csv(here('data/prereg_2/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs2 <- read_csv(here('data/prereg_2/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses2 <- read_csv(here('data/prereg_2/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds2) %>%
-  left_join(d.treatments2) %>%
-  left_join(d.players2) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
+**'n' (number)** -\> instances like 'i can see 3 rabbits and 1 squirrel' or '2s4r'\
+**'t' (total)**-\> information including every other player "neighbours report 22 r to 10 s"\
+**'p' (percent/ratio)** -\> "I think 1/3 squirrels 2/3 rabbits" or "60/40"\
+**'d' (non-numeric description)** -\> "more rabbits than squirrels" or otherwise non-specific text (not like, "five")\
+**'c' (character)** -\> '4 rabbits!' '4 rabbitsss' '4 wabbit' (this is subjective but it'll be fun if it works :p)\
+**'m' (more chitchat)** -\> talking about game strategy, asking if someone is there, joking etc.
 
 ```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments3 <- read_csv(here('data/prereg_3/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players3 <- read_csv(here('data/prereg_3/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds3 <- read_csv(here('data/prereg_3/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs3 <- read_csv(here('data/prereg_3/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses3 <- read_csv(here('data/prereg_3/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds3) %>%
-  left_join(d.treatments3) %>%
-  left_join(d.players3) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments4 <- read_csv(here('data/prereg_4/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players4 <- read_csv(here('data/prereg_4/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds4 <- read_csv(here('data/prereg_4/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs4 <- read_csv(here('data/prereg_4/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses4 <- read_csv(here('data/prereg_4/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds4) %>%
-  left_join(d.treatments4) %>%
-  left_join(d.players4) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments5 <- read_csv(here('data/prereg_5/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players5 <- read_csv(here('data/prereg_5/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds5 <- read_csv(here('data/prereg_5/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs5 <- read_csv(here('data/prereg_5/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses5 <- read_csv(here('data/prereg_5/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds5) %>%
-  left_join(d.treatments5) %>%
-  left_join(d.players5) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments6 <- read_csv(here('data/prereg_6/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players6 <- read_csv(here('data/prereg_6/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds6 <- read_csv(here('data/prereg_6/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs6 <- read_csv(here('data/prereg_6/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses6 <- read_csv(here('data/prereg_6/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds6) %>%
-  left_join(d.treatments6) %>%
-  left_join(d.players6) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments7 <- read_csv(here('data/prereg_7/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players7 <- read_csv(here('data/prereg_7/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds7 <- read_csv(here('data/prereg_7/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs7 <- read_csv(here('data/prereg_7/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses7 <- read_csv(here('data/prereg_7/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds7) %>%
-  left_join(d.treatments7) %>%
-  left_join(d.players7) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments8 <- read_csv(here('data/prereg_8/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players8 <- read_csv(here('data/prereg_8/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds8 <- read_csv(here('data/prereg_8/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs8 <- read_csv(here('data/prereg_8/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses8 <- read_csv(here('data/prereg_8/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds8) %>%
-  left_join(d.treatments8) %>%
-  left_join(d.players8) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments9 <- read_csv(here('data/prereg_9/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players9 <- read_csv(here('data/prereg_9/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds9 <- read_csv(here('data/prereg_9/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs9 <- read_csv(here('data/prereg_9/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses9 <- read_csv(here('data/prereg_9/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds9) %>%
-  left_join(d.treatments9) %>%
-  left_join(d.players9) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments10 <- read_csv(here('data/prereg_10/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players10 <- read_csv(here('data/prereg_10/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds10 <- read_csv(here('data/prereg_10/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs10 <- read_csv(here('data/prereg_10/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses10 <- read_csv(here('data/prereg_10/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds10) %>%
-  left_join(d.treatments10) %>%
-  left_join(d.players10) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-```
-
-```{r}
-ParseJSONColumn <- function(x) {
-  str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
-    fromJSON(flatten = T) 
-}
-
-# map game IDs to their treatments
-d.treatments11 <- read_csv(here('data/prereg_11/games.csv')) %>%
-  select(gameID = id, treatmentName) %>% 
-  distinct()
-
-# map game IDs to their treatments
-d.players11 <- read_csv(here('data/prereg_11/players.csv')) %>%
-  mutate(nSquirrels = str_count(emojiArray, '🐿️'),
-         nRabbits = str_count(emojiArray, '🐇')) %>%
-  select(playerID = id, gameID, nSquirrels, nRabbits) %>%
-  distinct()
-
-# map round IDs to their indices
-d.rounds11 <- read_csv(here('data/prereg_11/rounds.csv')) %>%
-  select(gameID, roundID = id, idx) %>%
-  distinct()
-
-# create long-form dataframe of all messages sent in each game
-d.msgs11 <- read_csv(here('data/prereg_11/games.csv')) %>% 
-  mutate(messages = ifelse(is.na(messages), '[{}]', messages)) %>%
-  select(gameID = id, treatmentName, messages) %>%
-  filter(gameID != '01HMFD6NG3J7CA3Y2NKT362RRC') %>% #excluding experimenter test round
-  mutate(messages = map(messages, .f = ParseJSONColumn)) %>%
-  unnest(messages) %>% unnest(messages)
-
-# create long-form dataframe of all guesses made in each game
-d.guesses11 <- read_csv(here('data/prereg_11/playerStages.csv')) %>% 
-
-  filter(!is.na(guess)) %>%
-  select(gameID, roundID, playerID, guess, confidence) %>%
-  left_join(d.rounds11) %>%
-  left_join(d.treatments11) %>%
-  left_join(d.players11) %>% 
-  distinct() %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) %>%
-  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
-         mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
-         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
-```
-
-```{r}
-d.guesses <- rbind(d.guesses1, d.guesses2, d.guesses3, d.guesses4, d.guesses5, d.guesses6, d.guesses7, d.guesses8, d.guesses9, d.guesses10, d.guesses11)
-```
-
-```{r}
-
-write.csv(d.guesses, "mergedGuesses.csv", row.names = TRUE)
-
-```
-
-```{r}
-persistentnoClick <- c()  
-for (i in 1:7) {
-  idx_pair <- c(i+1, i+2)
-  filtered_players <- d.guesses %>%
-    group_by(playerID) %>%
-    filter(all(is.na(guess[idx %in% idx_pair]))) %>%
-    distinct(playerID, .keep_all = TRUE) %>%
-    pull(playerID)
-  persistentnoClick <- c(persistentnoClick, filtered_players)
-
-  
-  }
-```
-
-```{r}
-games_with_4_players <- d.guesses %>%
-   filter(!(playerID %in% persistentnoClick)) %>%
-  group_by(gameID) %>%
-  summarise(unique_players = n_distinct(playerID)) %>% 
-  filter(unique_players == 4)
-
-games_with_4_players <- games_with_4_players %>%
-  left_join(d.guesses, by = "gameID") %>%
-  select(gameID, treatmentName) %>%
-  distinct()
-```
-
-```{r}
-treatment_count <- as.data.frame(table(games_with_4_players$treatmentName))
-print(treatment_count)
+coding_counts <- merged_chat %>%
+  filter (round >1 & round <9) %>%
+  separate_rows(coding, sep = "") %>%
+  filter(coding %in% c("n", "p", "t")) %>%
+  group_by(round, coding, treatment) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Plot the occurrences over time
+ggplot(coding_counts, aes(x = round, y = count,  color = coding, linetype = treatment)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "",
+       x = "Round",
+       y = "Count",
+       color = "Coding") +
+  facet_grid(coding ~ ., scales = 'free_y') +
+  theme_few() +
+  theme(aspect.ratio = 1)
 ```

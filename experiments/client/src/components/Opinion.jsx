@@ -195,15 +195,14 @@ if (stage.get('name') === 'observe') {
             <h2 className="text-gray-600 text-sm text-center mb-2">Fully Certain</h2>
             <div>
 
-                <button
-                       onClick={handleButtonClick}
-                       disabled={!isConfidenceChanged}
-                       className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
-                           ${!isConfidenceChanged ? 'opacity-50 cursor-not-allowed hover:bg-blue-500' : 'hover:bg-blue-700'}`}
-                       >
-                       Submit
-
-                </button>
+               <button
+   onClick={handleButtonClick}
+   disabled={!isConfidenceChanged || !isSliderChanged}
+   className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+      ${(!isConfidenceChanged || !isSliderChanged) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+>
+   Submit
+</button>
 
             </div>
         </div>

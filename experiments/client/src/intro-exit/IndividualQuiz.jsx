@@ -13,9 +13,18 @@ export function Quiz({next}) {
       choices: [
         "(A) Learn to identify different species.",
         "(B) Figure out the ratio of squirrels to rabbits in the neighborhood.",
-        "(C) Gossip with your neighbors about each other",
+        "(C) Gossip with your neighbors about each other.",
       ],
       correctAnswer: "(B) Figure out the ratio of squirrels to rabbits in the neighborhood.",
+    },
+    {
+      question: "What should you be reporting in the slider?",
+      choices: [
+        "(A) My personal ratio.",
+        "(B) The total ratio of what my neighbor sees and what I see this round.",
+        "(C) What I think about all the data I have gathered so far, from both my and my neighbor's data.",
+      ],
+      correctAnswer: "(C) What I think about all the data I have gathered so far, from both my and my neighbor's data.",
     },
     {
       question: "How many people are reading your message?",

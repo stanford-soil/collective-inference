@@ -142,6 +142,7 @@ rm(d.guesses_combined)
 ```{r}
 confused <- d.guesses %>%
   filter(idx == 1) %>%
+  filter(nCrittersGame == 0) %>%
   mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
   mutate(discrepency = abs(guess - mleEstimate)) %>% 
   filter(discrepency > 70) %>% 
@@ -151,6 +152,8 @@ not_four_players <- d.guesses %>%
    group_by(gameID) %>%
        filter(n_distinct(playerID) != 4) %>%
   ungroup()
+
+
 ```
 
 # filter from here
@@ -158,11 +161,6 @@ not_four_players <- d.guesses %>%
 ```{r}
 d.guesses <- d.guesses %>%
   mutate(error = guess - mleEstimateGame)
-```
-
-```{r}
-
-
 ```
 
 ```{r}
@@ -183,3 +181,71 @@ d.guesses %>%
 ```
 
 \
+
+```{r}
+
+# Filter and calculate percentages
+df_filtered <- d.guesses %>%
+ filter(!(playerID %in% confused)) %>%
+  filter(!(idx == 1)) %>%
+  filter(!(playerID %in% persistentnoClick)) %>%
+  filter(!(gameID %in% not_four_players)) %>%
+  group_by(gameID, idx) %>%
+  mutate(
+    nCritters = nSquirrels + nRabbits,
+    totalCritters = sum(nCritters),
+    crittersPercentage = (nCritters / totalCritters) * 100,
+    gameMLE = 
+  ) %>%
+  ungroup()
+
+# Plot the critter percentages grouped together
+ggplot(df_filtered, aes(x = "", y = crittersPercentage)) +
+  geom_jitter(width = 0.2, alpha = 0.6, color = "blue") +
+  labs(title = "Critter Percentages Distribution Across All Players",
+       x = "",
+       y = "Critter Percentage (%)") +
+  theme_minimal()
+
+```
+
+```{r}
+df_filtered <- df_filtered %>%
+  mutate(mleError = abs(mleEstimateIndiv - mleEstimateGame))
+  
+```
+
+```{r}
+df_filtered <- df_filtered %>%
+  mutate(
+    absoluteError = abs(error)  # Calculate absolute error if not already present
+  )
+
+ggplot(df_filtered, aes(x = mleError, y = crittersPercentage, color = absoluteError)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_gradient(low = "yellow", high = "red") +
+  labs(
+    title = "Critter Percentages vs. MLE Error by idx",
+    x = "MLE Error",
+    y = "Critter Percentage (%)",
+    color = "Absolute Error"
+  ) +
+  facet_wrap(~ idx, scales = "free") +  # Facet by idx
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(df_filtered, aes(x = nCrittersGame, y = crittersPercentage, color = absoluteError)) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_color_gradient(low = "yellow", high = "red") +
+  labs(
+    title = "Critter Percentages vs. MLE Error by idx",
+    x = "nCrittersGame",
+    y = "Critter Percentage (%)",
+    color = "Absolute Error"
+  ) +
+  facet_wrap(~ idx, scales = "free") +  # Facet by idx
+  theme_minimal()
+
+```
