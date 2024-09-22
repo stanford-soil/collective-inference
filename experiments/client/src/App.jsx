@@ -13,6 +13,7 @@ import { Practice } from "./intro-exit/Practice.jsx";
 import { Quiz } from "./intro-exit/IndividualQuiz.jsx";
 import { Last } from "./intro-exit/LastPage.jsx";
 
+import { Lobby } from "./intro-exit/Lobby.jsx";
 
 
 export default function App() {
@@ -45,7 +46,7 @@ function exitSteps({ game, player }) {
       <div className="h-screen relative">
         <EmpiricaMenu position="bottom-left" />
         <div className="h-full overflow-auto">
-          <EmpiricaContext introSteps={introSteps} exitSteps={exitSteps}>
+          <EmpiricaContext lobby={Lobby} introSteps={introSteps} exitSteps={exitSteps}>
             <Game />
           </EmpiricaContext>
         </div>

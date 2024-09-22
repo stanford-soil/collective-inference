@@ -189,7 +189,7 @@ function MessageComp(props) {
 //likely redundant as senders avatar is set on new message
     let avatar = msg.sender.avatar;
     if (!avatar) {
-        avatar = `https://api.dicebear.com/9.x/personas/svg?seed=${msg.sender.id}`;
+        avatar = `https://api.dicebear.com/9.x/adventurer/svg?seed=${msg.sender.id}`;
     }
 console.log('Avatar URL:', avatar);
     let item = scope.get("chat")[index];
