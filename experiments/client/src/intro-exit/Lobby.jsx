@@ -1,20 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { usePlayer, useGame } from "@empirica/core/player/classic/react";
+import { usePlayer, useGame, usePlayers } from "@empirica/core/player/classic/react";
 
 export function Lobby() {
   const player = usePlayer();
+  const players = usePlayers() || [];
+
   const game = useGame();
   const [position, setPosition] = useState({ top: 50, left: 50 });
   const avatarUrl = `https://api.dicebear.com/9.x/adventurer/svg?seed=${player.id}`;
+  const readyPlayers = players.filter(
+ (p) => p.get("introDone") && !p.get("ended")
+   ).length;
 
-  // Debugging: Log the current players
-  useEffect(() => {
-    if (game && game.players) {
-      game.players.forEach((player, i) => {
-        console.log("Current player index:", i, "Player ID:", player.id);
-      });
-    }
-  }, [game]);
 
   const handleKeyDown = (event) => {
     setPosition((pos) => {
@@ -47,7 +44,6 @@ export function Lobby() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const playerCount = game && game.players ? game.players.length : 0;
 
   return (
     <div style={{ position: "relative", height: "100vh", textAlign: "center" }}>
@@ -66,7 +62,12 @@ export function Lobby() {
       >
         <h1>Thank you for waiting, the game will start soon.</h1>
            <p> This avatar is how the other players will see you! </p>
-        <p>{playerCount}/4 players ready</p>
+        <p className="mt-1 text-sm text-gray-500">
+         
+  {readyPlayers} / {players.length} ready.
+
+
+        </p>
       </div>
     </div>
   );

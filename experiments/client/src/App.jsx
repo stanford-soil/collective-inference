@@ -12,7 +12,7 @@ import { Consent }from "./intro-exit/Consent.jsx";
 import { Practice } from "./intro-exit/Practice.jsx";
 import { Quiz } from "./intro-exit/IndividualQuiz.jsx";
 import { Last } from "./intro-exit/LastPage.jsx";
-
+import { Sorry } from "./intro-exit/Sorry.jsx";
 import { Lobby } from "./intro-exit/Lobby.jsx";
 
 
@@ -38,8 +38,9 @@ function introSteps({ game, player }) {
 }
 
 function exitSteps({ game, player }) {
-  return [Last];
+  return player.get("ended") === "finished" ? [Last] : [Sorry];
 }
+
 
   return (
     <EmpiricaParticipant url={url} ns={playerKey} modeFunc={EmpiricaClassic}>

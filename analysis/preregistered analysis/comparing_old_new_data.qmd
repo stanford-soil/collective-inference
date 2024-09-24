@@ -233,15 +233,6 @@ ggplot(heatmap_data, aes(x = x_bin, y = y_bin)) +
 
 ```
 
-color = number of games/participants\
-representation = in quartiles - use forcats <https://forcats.tidyverse.org/>\
-cut interval - optimizes the bins <https://ggplot2.tidyverse.org/reference/cut_interval.html>\
-\
-entropy as a seperate cross set of graphs\
-y rep x entropy\
-make entropy across game\
-do entropy as a real entropy calc instead
-
 ```{r}
 colnames(d.guesses)
 
