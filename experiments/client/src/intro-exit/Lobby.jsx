@@ -62,12 +62,14 @@ export function Lobby() {
       >
         <h1>Thank you for waiting, the game will start soon.</h1>
            <p> This avatar is how the other players will see you! </p>
-        <p className="mt-1 text-sm text-gray-500">
+
+  {/*     <p className="mt-1 text-sm text-gray-500">
          
-  {readyPlayers} / {players.length} ready.
+ {readyPlayers} / {players.length} ready.
 
 
-        </p>
+        </p> */}
+
       </div>
     </div>
   );

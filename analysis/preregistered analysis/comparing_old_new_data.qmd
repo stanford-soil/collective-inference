@@ -109,7 +109,7 @@ persistentnoClick <- unique(persistentnoClick)
 persistentnoClick_old <- c()  
 for (i in 1:6) {
   idx_pair <- c(i+1, i+2)
-  filtered_players <- d.guesses %>%
+  filtered_players <- d.guesses_old %>%
     group_by(playerID) %>%
     filter(all(is.na(guess[idx_pair]))) %>%
     distinct(playerID, .keep_all = TRUE) %>%
@@ -124,6 +124,8 @@ d.guesses_combined <- bind_rows(d.guesses, d.guesses_old)
 rm(d.guesses, d.guesses_old)
 d.guesses <- d.guesses_combined
 rm(d.guesses_combined)
+
+#d.guesses <-d.guesses_old
 ```
 
 ## Implement exclusions
@@ -132,7 +134,7 @@ rm(d.guesses_combined)
 confused <- d.guesses %>%
   filter(idx == 1) %>%
   filter(nCrittersGame == 0) %>%
-  mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
+  mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)))) %>%
   mutate(discrepency = abs(guess - mleEstimate)) %>% 
   filter(discrepency > 70) %>% 
   pull(playerID)
@@ -235,5 +237,43 @@ ggplot(heatmap_data, aes(x = x_bin, y = y_bin)) +
 
 ```{r}
 colnames(d.guesses)
+
+heatmap_data <- df_filtered %>%
+  group_by(
+    x_bin = cut_interval(entropy, n = 5),
+    y_bin = cut_interval(abs(totalCritters), n = 5)
+  )
+
+
+# Create the heatmap
+
+ggplot(heatmap_data, aes(x = x_bin, y = y_bin)) +
+  geom_bin2d() +
+  scale_fill_gradient(name = "Number of Games", low = "lightblue", high = "darkblue") +
+  scale_alpha_continuous(name = "Avg Entropy", range = c(0.1, 1)) +
+  labs(
+    x = "Average Entropy",
+    y = "total Critters"
+  ) 
+```
+
+```{r}
+heatmap_data <- df_filtered %>%
+  group_by(
+    x_bin = cut_interval(abs(representation), n = 5),
+    y_bin = cut_interval(abs(totalCritters), n = 5)
+  )
+
+
+# Create the heatmap
+
+ggplot(heatmap_data, aes(x = x_bin, y = y_bin)) +
+  geom_bin2d() +
+  scale_fill_gradient(name = "Number of Games", low = "lightblue", high = "darkblue") +
+  scale_alpha_continuous(name = "Avg Entropy", range = c(0.1, 1)) +
+  labs(
+    x = "Representation",
+    y = "total Critters"
+  ) 
 
 ```
