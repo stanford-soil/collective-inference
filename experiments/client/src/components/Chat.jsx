@@ -184,33 +184,22 @@ function MessageComp(props) {
     const msg = attribute.value;
     const ts = attribute.createdAt;
 
+    console.log(player)
 
-
-//likely redundant as senders avatar is set on new message
-    let avatar = msg.sender.avatar;
-    if (!avatar) {
-        avatar = `https://api.dicebear.com/9.x/adventurer/svg?seed=${msg.sender.id}`;
-    }
-console.log('Avatar URL:', avatar);
     let item = scope.get("chat")[index];
-
+    console.log(item.sender.id)
     return (
-        <div className="flex items-start my-2 shadow p-8">
-            <div className="flex-shrink-0">
-                <Avatar
-            src={avatar}
-            className="inline-block h-9 w-9 rounded-full"
-        />
-            </div>
-            <div className="ml-3 text-sm">
-                <p>
-                    <span className="font-semibold text-gray-900 group-hover:text-gray-800">
-                        {('neighbor')}
-                    </span>
-                    <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
-                </p>
-                <p className="text-gray-900 group-hover:text-gray-800">{msg.text}</p>
-            </div>
+      <div className="flex items-start my-2 shadow p-8">
+        <Avatar player={player}/>
+        <div className="ml-3 text-sm">
+            <p>
+                <span className="font-semibold text-gray-900 group-hover:text-gray-800">
+                    {('neighbor')}
+                </span>
+                <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
+            </p>
+            <p className="text-gray-900 group-hover:text-gray-800">{msg.text}</p>
+        </div>
         </div>
     );
 }

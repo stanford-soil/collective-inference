@@ -1,18 +1,12 @@
 import React from "react";
 
 
-export function Avatar({ className, player, style }) {
-
-
-  const src = `https://api.dicebear.com/9.x/adventurer/svg?seed=${player.id}`;
-
+export function Avatar({ id }) {
   return (
     <img
-      className={`avatar ${className}`}
-      style={style}
-      src={src}
-      alt="Player Avatar"
+      className="h-full w-full rounded-md shadow bg-white p-1"
+      src={`https://api.dicebear.com/9.x/adventurer/svg?seed=${id}`}
+      alt="Avatar"
     />
   );
 }
-

@@ -62,7 +62,7 @@ Empirica.onGameStart(({ game }) => {
     });
 
     if (i === 1) {
-      round.addStage({ name: "special", duration: 30 });
+      round.addStage({ name: "looking at your yard", duration: 30 });
     }
 
     if (condition !== 'slider') {

@@ -24,15 +24,16 @@ export function World() {
   });
 
   // Check if the current stage is "special"
-  if (stage.get('name') === 'special') {
+  if (stage.get('name') ===  "looking at your yard") {
     return (
       // Full-screen mode when the stage is "special"
       <div style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
+        top: 100,
+        left: '15%',
+        right: '15%',
+        width: '70%',
+        height: '90%',
         borderRadius: '0',
         display: 'flex',
         flexDirection: 'row',
@@ -59,42 +60,49 @@ export function World() {
     );
   }
 
-  // Return a button to toggle visibility if the stage is not "special"
-  return (
-    <div>
-      <button onClick={() => setIsVisible(!isVisible)}>
-        {isVisible ? "Hide World" : "Show World"}
-      </button>
+return (
+  <div>
+    <button
+      onClick={() => setIsVisible(!isVisible)}
+      style={{
+        position: 'absolute',
+        top: '15%',
+        left: '20%',
+      }}
+    >
+      {isVisible ? "Hide World" : "Show World"}
+    </button>
 
-      {isVisible && (
+    {isVisible && (
+      <div style={{
+        position: 'fixed',
+        width: '90%',
+        height: '90%',
+        borderRadius: '20px',
+        display: 'flex',
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
         <div style={{
-          position: 'relative',
-          width: '90%',
-          height: '90%',
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          backgroundImage: 'url("/freepik.png")',
+          backgroundColor: '#268b07',
+          opacity: 0.7,
           borderRadius: '20px',
-          display: 'flex',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            backgroundImage: 'url("/freepik.png")',
-            backgroundColor: '#268b07',
-            opacity: 0.7,
-            borderRadius: '20px',
-            zIndex: -1,
-          }}></div>
+          zIndex: -1,
+        }}></div>
 
-          {critterDistribution}
-        </div>
-      )}
-    </div>
-  );
+        {critterDistribution}
+      </div>
+    )}
+  </div>
+);
+
 }
 

@@ -34,8 +34,10 @@ ParseJSONColumn <- function(x) {
 #d.random <- read_csv(here('analysis/random data generation/game_results.csv'))
 d.random <- read_csv(here('analysis/random data generation/game_results10k.csv'))
 
-
-
+d.random |> 
+  ggplot(aes(x = nRabbits)) +
+    geom_histogram()
+  
 ```
 
 ## Create all other columns
@@ -182,8 +184,6 @@ persistentnoClick_combined <- unique(c(persistentnoClick_old, persistentnoClick)
 #OR
 d.guesses <-d.guesses_old %>%
   filter(!playerID %in% persistentnoClick_old)
-
-
 
 d.guesses <- d.guesses %>%
   mutate(error = abs(guess - mleEstimateGame))

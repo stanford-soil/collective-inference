@@ -33,7 +33,7 @@ export function Profile() {
           
         </div>
         <div className="h-11 w-11">
-          <Avatar src={avatar} />
+          <Avatar id={player.id} />
         </div>
       </div>
     </div>

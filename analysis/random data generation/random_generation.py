@@ -1,6 +1,6 @@
 import random
 import pandas as pd
-
+from scipy.stats import binom
 
 def binomial(p, n):
     flips = list(range(n))  # Mimicking _.range(n)
@@ -17,7 +17,7 @@ for i in range(10000):
     playerID = i + 1
     trueP = 0.7 if i < 5000 else 0.3  # Treatment: 0.7 for first 500, 0.3 for second 500
     n = random.randint(0, 9)  # Random number of total animals
-    nRabbits = binomial(trueP, n)
+    nRabbits = binom.rvs(n, trueP, size=1)[0]
     nSquirrels = n - nRabbits
     
     # Append the result to the list
