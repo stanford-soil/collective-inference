@@ -1,0 +1,85 @@
+---
+title: "experiment 2"
+format: html
+editor: visual
+---
+
+## Import packages
+
+```{r}
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+
+library(tidyverse)
+library(tidyboot)
+library(here)
+library(jsonlite)
+library(ggthemes)
+
+theme_set(theme_few())
+```
+
+## Read in data
+
+```{r}
+d.guesses.raw <- here('analysis/simulations/random_values10k.csv') |>
+  read_csv(col_types = c('iiii'))
+```
+
+## Create all other columns
+
+```{r}
+d.guesses <- d.guesses.raw %>%
+  mutate(
+    mleEstimate = nRabbits / (nRabbits + nSquirrels),
+    nCritters = nRabbits + nSquirrels
+  ) %>%
+  replace_na(list(mleEstimate = .5)) %>%
+  group_by(gameID) %>%
+  mutate(
+    nRabbitsGame = sum(nRabbits),
+    nSquirrelsGame = sum(nSquirrels),
+    mleGame = nRabbitsGame / (nRabbitsGame + nSquirrelsGame),
+    totalCritters = sum(nCritters),
+    prob = nCritters / totalCritters,
+    entropy = -sum(ifelse(prob > 0, prob * log(prob), 0)),
+    representation = mean(abs(mleEstimate - mleGame))
+  ) %>%
+  ungroup()
+```
+
+```{r}
+# Plot the critter percentages grouped together
+ggplot(d.guesses, aes(x = entropy)) +
+  geom_histogram() +
+  labs(title = "entropy Distribution Across All Players",
+       x = "",
+       y = "entropy") +
+  theme_minimal()
+```
+
+fil
+
+```{r}
+heatmap_data <- d.guesses %>%
+  group_by(
+    x_bin = cut_interval(entropy, n = 5),
+    y_bin = cut_interval(abs(representation), n = 5)
+  )
+
+
+# Create the heatmap
+
+ggplot(heatmap_data, aes(x = x_bin, y = y_bin)) +
+  geom_bin2d() +
+  scale_fill_gradient(name = "Number of Games", low = "lightblue", high = "darkblue") +
+  scale_alpha_continuous(name = "Avg Entropy", range = c(0.1, 1)) +
+  labs(
+    x = "Average Entropy",
+    y = "Absolute Representation"
+  ) 
+
+```
+
+
