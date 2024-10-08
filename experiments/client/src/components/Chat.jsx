@@ -18,14 +18,12 @@ export function Chat({ scope, attribute, loading}) {
     if (!scope || !player) {
         return <LoadingComp />;
     }
-//*
-// Save messages to scope, for the players and the researchers
-//*
+    //*
+    // Save messages to scope, for the players and the researchers
+    //*
     const handleNewMessage = (text) => {
-        console.log("scope", scope, scope.append)
         scope.append(attribute, {
             text,
-            likes : {},
             time: Date.now(),
             round: round.get('idx'),
             recipient: player.get("recipient"),
@@ -39,9 +37,9 @@ export function Chat({ scope, attribute, loading}) {
         game.set("messages", playerStageData.map((msg, i) => msg.val._value));
     };
 
-//*
-// Give players access to the messages from scope using the functions further down
-//*
+    //*
+    // Give players access to the messages from scope using the functions further down
+    //*
 
     let msgs = scope.getAttribute(attribute)?.items || [];
     console.log("msg", msgs)
@@ -62,16 +60,16 @@ export function Chat({ scope, attribute, loading}) {
     } else {
         return (
             <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">
-              <h2>Messages <b>received</b>: </h2>
-              <MessagesPanel scope={scope} msgs={msgs} stage={stage}
-                             round={round} player={player} condition={condition}/>
-              {
-                player.stage && player.stage.get("submit") ?
-                <div> Thank you for your answer. The next stage will start when all the other players have submitted their answer. </div> :
-                 <div className="h-1/4">
-       
-      </div>
-              }
+		<h2>Messages <b>received</b>: </h2>
+		<MessagesPanel scope={scope} msgs={msgs} stage={stage}
+                               round={round} player={player} condition={condition}/>
+		{
+                    player.stage && player.stage.get("submit") ?
+			<div> Thank you for your answer. The next stage will start when all the other players have submitted their answer. </div> :
+			<div className="h-1/4">
+			    
+			</div>
+		}
             </div>
         );
     }
@@ -97,36 +95,36 @@ function MessagesPanel(props) {
     const scroller = useRef(null);
     const [msgCount, setMsgCount] = useState(0);
     const msgsFiltered = condition === 'interactive'
-  ? interactiveFilter()
-  : (stage.get('name') === 'send' && condition === 'unidirectional'
-    ? unidirectionalFilter()
-    : (stage.get('name')=== 'observe' && condition === 'slider')
-     ? sliderFilter()
-     : otherwiseFilter());
+	  ? interactiveFilter()
+	  : (stage.get('name') === 'send' && condition === 'unidirectional'
+	     ? unidirectionalFilter()
+	     : (stage.get('name')=== 'observe' && condition === 'slider')
+	     ? sliderFilter()
+	     : otherwiseFilter());
 
-function interactiveFilter() {
-  return msgs.filter(msg => msg.value.sender.id === player.id || msg.value.recipient === player.id)
-    .filter(msg => msg.value.round === round.get('idx'));
-}
+    function interactiveFilter() {
+	return msgs.filter(msg => msg.value.sender.id === player.id || msg.value.recipient === player.id)
+	    .filter(msg => msg.value.round === round.get('idx'));
+    }
 
-function unidirectionalFilter() {
-  return msgs.filter(msg => msg.value.sender.id === player.id)
-    .filter(msg => msg.value.round === round.get('idx'));
-}
+    function unidirectionalFilter() {
+	return msgs.filter(msg => msg.value.sender.id === player.id)
+	    .filter(msg => msg.value.round === round.get('idx'));
+    }
 
-function sliderFilter() {
-  return msgs.filter(msg => msg.value.recipient === player.id)
-    .filter(msg => msg.value.round + 1 === round.get('idx'));
-}
+    function sliderFilter() {
+	return msgs.filter(msg => msg.value.recipient === player.id)
+	    .filter(msg => msg.value.round + 1 === round.get('idx'));
+    }
 
-function otherwiseFilter() {
-  return msgs.filter(msg => msg.value.recipient === player.id)
-    .filter(msg => msg.value.round === round.get('idx'));
-}
+    function otherwiseFilter() {
+	return msgs.filter(msg => msg.value.recipient === player.id)
+	    .filter(msg => msg.value.round === round.get('idx'));
+    }
 
-//*
-// Scrollbar for the message panel
-//*
+    //*
+    // Scrollbar for the message panel
+    //*
 
     useEffect(() => {
         if (!scroller.current) {
@@ -138,9 +136,9 @@ function otherwiseFilter() {
         }
     }, [scroller, props, msgCount]);
 
-//*
-// Before messages are sent the panel shows this
-//*
+    //*
+    // Before messages are sent the panel shows this
+    //*
     if (msgsFiltered.length === 0) {
         return (<div className="h-full w-full flex justify-center items-center">
         <div className="flex flex-col justify-center items-center w-2/3 space-y-2">
@@ -186,28 +184,27 @@ function MessageComp(props) {
 
     console.log("sender", player.scope.id)
 
-let item = scope.get("chat")[index];
-console.log("sender", item);
-console.log("item sender id:", item.sender.id);
-console.log("player scope id:", player.scope.id);
+    console.log("sender", msg);
+    console.log("item sender id:", msg.sender.id);
+    console.log("player scope id:", player.scope.id);
 
-return (
-    <div className="flex items-start my-2 shadow p-8">
-        <div className="w-15 h-15">
-            <Avatar id={item.sender.id} />
-        </div>
-        <div className="ml-3 text-sm">
-            <p>
-                <span className="font-semibold text-gray-900 group-hover:text-gray-800">
+    return (
+	<div className="flex items-start my-2 shadow p-8">
+            <div className="w-15 h-15">
+		<Avatar id={msg.sender.id} />
+            </div>
+            <div className="ml-3 text-sm">
+		<p>
+                    <span className="font-semibold text-gray-900 group-hover:text-gray-800">
 
-                    {item.sender.id === player.scope.id ? 'you' : 'neighbor'}
-                </span>
-                <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
-            </p>
-            <p className="text-gray-900 group-hover:text-gray-800">{msg.text}</p>
-        </div>
-    </div>
-);
+			{msg.sender.id === player.scope.id ? 'you' : 'neighbor'}
+                    </span>
+                    <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
+		</p>
+		<p className="text-gray-900 group-hover:text-gray-800">{msg.text}</p>
+            </div>
+	</div>
+    );
 
 }
 
