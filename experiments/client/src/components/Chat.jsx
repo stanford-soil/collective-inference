@@ -180,31 +180,36 @@ function otherwiseFilter() {
 
 
 function MessageComp(props) {
-    let {player, scope, attribute, index} = props;
+    let { player, scope, attribute, index } = props;
     const msg = attribute.value;
     const ts = attribute.createdAt;
 
-    console.log(player)
+    console.log("sender", player.scope.id)
 
-    let item = scope.get("chat")[index];
-    console.log(item.sender.id)
-    return (
-      <div className="flex items-start my-2 shadow p-8">
-        <Avatar player={player}/>
+let item = scope.get("chat")[index];
+console.log("sender", item);
+console.log("item sender id:", item.sender.id);
+console.log("player scope id:", player.scope.id);
+
+return (
+    <div className="flex items-start my-2 shadow p-8">
+        <div className="w-15 h-15">
+            <Avatar id={item.sender.id} />
+        </div>
         <div className="ml-3 text-sm">
             <p>
                 <span className="font-semibold text-gray-900 group-hover:text-gray-800">
-                    {('neighbor')}
+
+                    {item.sender.id === player.scope.id ? 'you' : 'neighbor'}
                 </span>
                 <span className="pl-2 text-gray-400">{ts && relTime(ts)}</span>
             </p>
             <p className="text-gray-900 group-hover:text-gray-800">{msg.text}</p>
         </div>
-        </div>
-    );
+    </div>
+);
+
 }
-
-
 
 //*
 // relTime is a function that formats the time since the given post (e.g. 2 min ago)

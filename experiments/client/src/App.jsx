@@ -38,8 +38,10 @@ function introSteps({ game, player }) {
 }
 
 function exitSteps({ game, player }) {
-  return player.get("ended") === "finished" ? [Last] : [Sorry];
+console.log(player.get("ended"));
+  return player.get("ended") === "game ended" ? [Last] : [Sorry];
 }
+
 
 
   return (

@@ -143,3 +143,49 @@ ggplot(combined_heatmap, aes(x = x_bin, y = y_bin)) +
   facet_wrap(~dataset)
 ```
 
+```{r}
+nCritters_entropy_heatmap <- d.guesses %>%
+  mutate(
+    nCrittersGame_bin = cut(nCrittersGame, breaks = seq(0, 100, by = 5), include.lowest = TRUE),
+    entropy_bin = cut(entropy, breaks = seq(0, 1.5, .3), include.lowest = TRUE, dig.lab = 2)
+  ) %>%
+  group_by(nCrittersGame_bin, entropy_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+
+# Heatmap for nCrittersGame vs. Entropy
+ggplot(nCritters_entropy_heatmap, aes(x = entropy_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = prop), color = "white") +
+  scale_fill_gradient(name = "Proportion of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Entropy", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+```
+
+```{r}
+# Binned data for nCrittersGame vs. Representation
+nCritters_rep_heatmap <- d.guesses %>%
+  mutate(
+    nCrittersGame_bin = cut(nCrittersGame, breaks = seq(0, 100, by = 5), include.lowest = TRUE),
+    representation_bin = cut(representation, breaks = seq(0, 1, .1), include.lowest = TRUE, dig.lab = 2)
+  ) %>%
+  group_by(nCrittersGame_bin, representation_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+# Heatmap for nCrittersGame vs. Representation
+ggplot(nCritters_rep_heatmap, aes(x = representation_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = prop), color = "white") +
+  scale_fill_gradient(name = "Proportion of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Representation", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
