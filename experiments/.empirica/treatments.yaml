@@ -68,13 +68,6 @@ treatments:
         opinion: text
         playerCount: 2
         trueP: 0.7
-    - name: fdv
-      factors:
-        condition: slider
-        debug: debug
-        opinion: slider
-        playerCount: 2
-        trueP: 0.3
     - name: debug interactive test run
       factors:
         condition: interactive
@@ -97,6 +90,20 @@ treatments:
         playerCount: 4
         trueP: 0.3
     - name: dvw
+      factors:
+        condition: interactive
+        debug: debug
+        opinion: slider
+        playerCount: 2
+        trueP: 0.3
+    - name: slider-2player-minimal-tester
+      factors:
+        condition: slider
+        debug: debug
+        opinion: slider
+        playerCount: 2
+        trueP: 0.3
+    - name: text-2player-minimal-tester
       factors:
         condition: interactive
         debug: debug

@@ -12,7 +12,7 @@ def binomial(p, n):
 data = []
 
 # Generate data for 1000 players (4 players per game, 250 games)
-for i in range(10000):
+for i in range(100000):
     gameID = (i // 4) + 1  # Each 4 players have the same gameID
     playerID = i + 1
     trueP = 0.7 if i < 5000 else 0.3  # Treatment: 0.7 for first 500, 0.3 for second 500
@@ -32,5 +32,5 @@ for i in range(10000):
 df = pd.DataFrame(data)
 
 # Save DataFrame to CSV file
-df.to_csv('game_results10k.csv', index=False)
-
+df.to_csv('game_results100k.csv', index=False)
+50
