@@ -13,13 +13,11 @@ export function Game() {
       <div className="w-full flex">
         <Profile />
       </div>
-      <div className="h-full w-full flex flex-row">
-        <div className="h-full w-full flex items-center justify-center">
-          <World />
-        </div>
-        <div className="h-full w-full flex items-center justify-center relative"> 
-          <Chat scope={game} attribute="chat" />
-        </div>
+      <div className="h-18 w-full flex items-center justify-center">
+        <World />
+      </div>
+      <div className="h-full w-full flex items-center justify-center relative"> 
+        <Chat scope={game} attribute="chat" />
       </div>
       <div className="w-full flex justify-center">
         <Opinion scope={game} opinion="opinion" attribute="chat"/>

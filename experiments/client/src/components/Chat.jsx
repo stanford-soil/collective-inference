@@ -45,7 +45,7 @@ export function Chat({ scope, attribute, loading}) {
     console.log("msg", msgs)
     if(stage.get('name') == 'send') {
         return (
-            <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">
+            <div className="w-100 h-full pb-1/10  absolute justify-center items-center flex flex-col">
               <h2 className="align-left"> Messages <b>sent</b>:</h2>
               <MessagesPanel scope={scope} msgs={msgs} stage={stage}
                              round={round} player={player} condition={condition}/>
@@ -59,7 +59,7 @@ export function Chat({ scope, attribute, loading}) {
         );
     } else {
         return (
-            <div className="w-100 h-full pb-1/10 pt-1/10 absolute justify-center items-center flex flex-col">
+            <div className="w-100 h-full absolute justify-center items-center flex flex-col">
 		<h2>Messages <b>received</b>: </h2>
 		<MessagesPanel scope={scope} msgs={msgs} stage={stage}
                                round={round} player={player} condition={condition}/>

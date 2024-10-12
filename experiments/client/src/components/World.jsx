@@ -102,8 +102,7 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
       bottom: '3%',
       left: '3%',
       backgroundImage: 'url("/freepik.png")',
-      
-      opacity: 0.8, 
+      opacity: 0.5, 
       borderRadius: '20px',
       zIndex: 8, 
     }}>
@@ -127,10 +126,12 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
       flexWrap: 'wrap', 
       justifyContent: 'center',
       alignItems: 'center',
-      margin: '0 auto', 
-      maxWidth: '85%', 
+	     margin: '0 auto',
+	     top: '50%',
+      left: '25%',
+      right: '25%',
       zIndex: 9, // Critters zIndex higher than background
-      position: 'relative', // Ensure critters are positioned relative to the parent
+      position: 'absolute', // Ensure critters are positioned relative to the parent
     }}>
       {critterDistribution}
     </div>
