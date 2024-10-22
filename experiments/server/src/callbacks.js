@@ -1,17 +1,27 @@
 import { ClassicListenersCollector } from "@empirica/core/admin/classic";
 export const Empirica = new ClassicListenersCollector();
 import _ from "lodash";
+import fs from 'fs'; // Import fs to read JSON file
 
 Empirica.onGameStart(({ game }) => {
   const treatment = game.get("treatment");
-  const { trueP, condition } = treatment;
+  const gameRow = treatment.gameRow; // Assuming game_row is passed in treatment
   const total = 20;
 
-  const generateCritters = (trueP) => {
-    const nRabbits = Math.round(trueP * total);
-    const nSquirrels = total - nRabbits;
+  // Load pre-generated critters from games.json
+  const gamesData = JSON.parse(fs.readFileSync('games.json'));
+  const critterData = gamesData[gameRow];
 
-    // Convert to emojis
+  if (!critterData) {
+    console.error("Invalid game row data");
+    return;
+  }
+
+  // Extract nRabbits and nSquirrels from the arrays
+  const nRabbitsArray = critterData.nRabbits; // Array of rabbits for each player
+  const nSquirrelsArray = critterData.nSquirrels; // Array of squirrels for each player
+
+  const generateCritters = (nRabbits, nSquirrels) => {
     const rabbits = _.split(_.repeat("🐇", nRabbits), "");
     const squirrels = _.split(_.repeat("🐿️", nSquirrels), "");
     const critters = _.shuffle(_.concat(rabbits, squirrels));
@@ -19,33 +29,13 @@ Empirica.onGameStart(({ game }) => {
     return critters;
   };
 
-  const critters = generateCritters(trueP);
-
-  function partition(total, groups = game.players.length, current = []) {
-    const validPartitions = [];
-    if (groups === 1) {
-      if (current.concat(total).every(num => num > 1)) {
-        validPartitions.push(current.concat(total));
-      }
-    } else {
-      for (let i = 1; i < total; i++) {
-        const newPartition = partition(total - i, groups - 1, current.concat(i));
-        validPartitions.push(...newPartition);
-      }
-    }
-    return validPartitions;
-  }
-
-  const divisions = partition(total);
-  const randomPartition = Math.floor(Math.random() * divisions.length);
-  const chosenPartition = divisions[randomPartition];
+  // Generate critters for each player based on their order
+  const critters = game.players.map((player, i) => generateCritters(nRabbitsArray[i], nSquirrelsArray[i]));
 
   game.players.forEach((player, i) => {
     const spaces = _.repeat("\u00A0 \u00A0 \u00A0 \u00A0", 5);
-
-    const selectCritters = critters.splice(0, chosenPartition[i]);
-
-    const emojiArray = _.shuffle(_.concat(selectCritters, spaces));
+    
+    const emojiArray = _.shuffle(_.concat(critters[i], spaces));
     player.set(
       "avatar",
       `https://api.dicebear.com/9.x/personas/svg?seed=${player.id}`
@@ -65,7 +55,7 @@ Empirica.onGameStart(({ game }) => {
       round.addStage({ name: "looking at your yard", duration: 30 });
     }
 
-    if (condition !== 'slider') {
+    if (treatment.condition !== 'slider') {
       round.addStage({ name: "send", duration: 30 });
     }
 
@@ -76,7 +66,7 @@ Empirica.onGameStart(({ game }) => {
 Empirica.onRoundStart(({ round }) => {
   const players = round.currentGame.players;
   players.forEach((player, i) => {
-    const otherPlayers = players.filter((p) => p.id != player.id);
+    const otherPlayers = players.filter((p) => p.id !== player.id);
     player.set(
       "recipient",
       otherPlayers[(i + round.get("idx")) % otherPlayers.length].id

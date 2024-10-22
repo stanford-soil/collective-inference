@@ -43,13 +43,16 @@ export function Opinion({ scope, attribute }) {
         const icons = [];
 
         // Generate initial array of rabbit and squirrel icons
-        for (let i = 0; i < totalIcons; i++) {
-            icons.push(
-                <span key={i} style={{ fontSize: "12px", margin: "0px" }}> 
-                    {i < rabbitCount ? "🐇" : "🐿️"}
-                </span>
-            );
-        }
+const sliderDirection = game.get("treatment").sliderDirection === "RabbitsSquirrels";
+   console.log("sliderDirection value:", game.get("sliderDirection"));
+
+for (let i = 0; i < totalIcons; i++) {
+    icons.push(
+        <span key={i} style={{ fontSize: "12px", margin: "0px" }}> 
+            {sliderDirection ?  (i < rabbitCount ? "🐿️" : "🐇") :(i < rabbitCount ? "🐇" : "🐿️")}
+        </span>
+    );
+}
 
         const positionArray = icons.map((icon, index) => ({
             icon,
@@ -69,27 +72,31 @@ export function Opinion({ scope, attribute }) {
         player.stage.set("submit", true);
     };
 
-    if (stage.get('name') === 'observe') {
-        return game.get("treatment").opinion === "slider" ? (
-            <div>
-                <div className="flex">
-                    <div className="flex flex-col items-center space-y-4">
-                        <h2>What proportion of the population are rabbits?</h2>
-                        <div className="flex items-center space-x-4">
-                            <h2 className="text-gray-600 text-sm text-center mb-2">All Squirrels<br />🐿️</h2>
-                            <Slider
-                                defaultValue={50}
-                                aria-label="Default"
-                                valueLabelDisplay="on"
-                                onChange={handleSlider}
-                                value={sliderValue}
-                                style={{ width: '200px' }}
-                                track={false}
-                            />
-                            <h2 className="text-gray-600 text-sm text-center mb-2">All Rabbits <br />🐇</h2>
-                        </div>
+   if (stage.get('name') === 'observe') {
+    const sliderDirection = game.get("treatment").sliderDirection === "RabbitsSquirrels";
+    return game.get("treatment").opinion === "slider" ? (
+        <div>
+            <div className="flex">
+                <div className="flex flex-col items-center space-y-4">
+                    <h2>What proportion of the population are rabbits?</h2>
+                    <div className="flex items-center space-x-4">
+                        <h2 className="text-gray-600 text-sm text-center mb-2">
+                            {sliderDirection ? "All Rabbits 🐇" : "All Squirrels 🐿️"}
+                        </h2>
+                        <Slider
+                            defaultValue={50}
+                            aria-label="Default"
+                            valueLabelDisplay="auto"
+                            onChange={handleSlider}
+                            value={sliderValue}
+                            style={{ width: '200px' }}
+                            track={false}
+                        />
+                        <h2 className="text-gray-600 text-sm text-center mb-2">
+                            {sliderDirection ? "All Squirrels 🐿️" : "All Rabbits 🐇"}
+                        </h2>
                     </div>
-
+                </div>
                     <div style={{
                         marginLeft: '15px',
                         marginRight: '15px',

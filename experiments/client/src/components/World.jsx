@@ -87,10 +87,11 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
     style={{
         position: 'absolute',
         top: '12%',
-        left: '40%',
+       
+        transform: 'translateX(-50%)', 
     }}
 >
-    {isVisible ? "Close" : "Peek Outside"}
+    {isVisible ? "Close Outside" : "Peek Outside"}
 </button>
 {isVisible && (
   <div>
@@ -102,7 +103,7 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
       bottom: '3%',
       left: '3%',
       backgroundImage: 'url("/freepik.png")',
-      opacity: 0.5, 
+      opacity: 0.7, 
       borderRadius: '20px',
       zIndex: 8, 
     }}>
