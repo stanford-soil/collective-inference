@@ -3,15 +3,22 @@ export const Empirica = new ClassicListenersCollector();
 import _ from "lodash";
 import fs from 'fs'; // Import fs to read JSON file
 
+  const gamesData = JSON.parse(fs.readFileSync('games.json'));
+    console.log(gamesData)
+      // Load pre-generated critters from games.json
+
+    
 Empirica.onGameStart(({ game }) => {
   const treatment = game.get("treatment");
-  const gameRow = treatment.gameRow; // Assuming game_row is passed in treatment
-  const total = 20;
+  const gameRow = _.toInteger(treatment.gameRow);
+      console.log(gameRow)
+// Assuming game_row is passed in treatment
+  // const total = 20;
+ 
 
-  // Load pre-generated critters from games.json
-  const gamesData = JSON.parse(fs.readFileSync('games.json'));
+
   const critterData = gamesData[gameRow];
-
+  console.log(JSON.stringify(critterData, null, 2))
   if (!critterData) {
     console.error("Invalid game row data");
     return;

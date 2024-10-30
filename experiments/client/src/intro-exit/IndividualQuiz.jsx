@@ -22,9 +22,9 @@ export function Quiz({next}) {
       choices: [
         "(A) My personal ratio.",
         "(B) The total ratio of what my neighbor sees and what I see this round.",
-        "(C) What I think about all the data I have gathered so far, from both my and my neighbor's data.",
+        "(C) What I think about all the data I have gathered so far, from both my and my neighbors' data.",
       ],
-      correctAnswer: "(C) What I think about all the data I have gathered so far, from both my and my neighbor's data.",
+      correctAnswer: "(C) What I think about all the data I have gathered so far, from both my and my neighbors' data.",
     },
     {
       question: "How many people are reading your message?",
@@ -45,7 +45,7 @@ export function Quiz({next}) {
       correctAnswer: "(A) 20%",
     },
     {
-      question: "What happens if everyone agrees on the correct underlying ratio?",
+      question: "What happens if everyone in the group is correct about the underlying ratio?",
       choices: [
         "(A) We receive a bonus.",
         "(B) Nothing but cozy feelings of success and community effort.",
@@ -70,7 +70,7 @@ export function Quiz({next}) {
     );
 
     if (allCorrect) {
-      alert("Congratulations, you answered all questions correctly!");
+      alert("Congratulations, you answered all questions correctly! There is one more question on the following page.");
       next();
     } else {
       alert("Some answers are incorrect. Please try again.");

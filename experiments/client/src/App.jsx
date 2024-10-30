@@ -14,6 +14,7 @@ import { Quiz } from "./intro-exit/IndividualQuiz.jsx";
 import { Last } from "./intro-exit/LastPage.jsx";
 import { Sorry } from "./intro-exit/Sorry.jsx";
 import { Lobby } from "./intro-exit/Lobby.jsx";
+import { AttentionQuiz } from "./intro-exit/AttentionFilterQuiz.jsx";
 
 
 export default function App() {
@@ -30,9 +31,9 @@ function introSteps({ game, player }) {
     return [];
   } else {
     if (condition === 'slider') {
-      return [Browser, Introduction, Quiz, Consent];
+      return [Browser, Introduction, Quiz, AttentionQuiz, Consent];
     } else {
-      return [Browser, Introduction, Practice, Quiz, Consent];
+      return [Browser, Introduction, Quiz, AttentionQuiz, Consent];
     }
   }
 }

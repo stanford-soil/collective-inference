@@ -9,7 +9,7 @@ export function Consent({ next }) {
         <div className="instructions">
           <div className="smallimage">
             <center>
-              <img width="300px" src="./madison.png" alt="Madison" />
+              <img width="300px" src="./stanford.png" alt="Stanford" />
             </center>
           </div>
           <p>
@@ -42,13 +42,19 @@ export function Consent({ next }) {
           <p>
             <strong>How to contact the researcher:</strong> If you have questions or
         concerns about your participation or payment, or want to request a
-        summary of research findings, please contact  <a href="mailto:yzubak@wisc.edu">yzubak@wisc.edu</a>.
+        summary of research findings, please contact  <a href="mailto:yzubak@stanford.edu">yzubak@stanford.edu</a>.
           </p><br/>
           <p>
             <strong>Who to contact about your rights in this research:</strong> For
         questions, concerns, suggestions, or complaints that have not been or
         cannot be addressed by the researcher, or to report research-related
-        harm, please contact the University of Wisconsin-Madison Human Research Protection Program at 608-890-4399 or <a href="mailto:compliance@research.wisc.edu">compliance@research.wisc.edu</a>.
+        harm, please contact the Stanford University Human Research Protection Program at the <a
+  href="#"
+  onClick={() => window.open("https://report.stanford.edu/", "_blank", "width=600,height=400")}
+  style={{ color: 'red' }} // Adjust color as needed
+>
+  Stanford Ethics and Compliance Helpline.
+</a>
           </p><br/>
         </div>
         <Button handleClick={next} autoFocus>

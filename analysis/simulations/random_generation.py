@@ -1,36 +1,40 @@
 import random
 import pandas as pd
-from scipy.stats import binom
-
-def binomial(p, n):
-    flips = list(range(n))  # Mimicking _.range(n)
-    flips = [random.random() < p for _ in flips]
-    return sum(flips)  # Mimicking _.sum(flips)
-
 
 # List to store results
 data = []
 
-# Generate data for 1000 players (4 players per game, 250 games)
-for i in range(100000):
-    gameID = (i // 4) + 1  # Each 4 players have the same gameID
-    playerID = i + 1
-    trueP = 0.7 if i < 5000 else 0.3  # Treatment: 0.7 for first 500, 0.3 for second 500
-    n = random.randint(0, 9)  # Random number of total animals
-    nRabbits = binom.rvs(n, trueP, size=1)[0]
-    nSquirrels = n - nRabbits
-    
-    # Append the result to the list
-    data.append({
-        'gameID': gameID,
-        'playerID': playerID,
-        'nRabbits': nRabbits,
-        'nSquirrels': nSquirrels
-    })
+# Generate data for 100000 players (4 players per game, 25000 games)
+for game_id in range(1, 25001):
+    # Create a random-sized list of critters for the game (15-35 critters, 70% rabbits)
+    total_critters = random.randint(15, 40)
+    if total_critters < 15:  # Extra safeguard to skip cases with fewer than 15 critters
+        continue
+    n_rabbits = int(total_critters * 0.75)
+    critters = [1] * n_rabbits + [0] * (total_critters - n_rabbits)
+    random.shuffle(critters)  # Shuffle to randomize rabbit and squirrel positions
+
+    # Split critters list into 4 random, non-empty chunks
+    partitions = [0] + sorted(random.sample(range(1, total_critters), 3)) + [total_critters]
+    player_subsets = [critters[partitions[i]:partitions[i+1]] for i in range(4)]
+
+    # Convert each subset to nRabbits and nSquirrels for each player
+    for player_idx, subset in enumerate(player_subsets, start=1):
+        player_id = (game_id - 1) * 4 + player_idx
+        n_rabbits_player = sum(subset)
+        n_squirrels_player = len(subset) - n_rabbits_player
+
+        # Append the result to the list
+        data.append({
+            'gameID': game_id,
+            'playerID': player_id,
+            'nRabbits': n_rabbits_player,
+            'nSquirrels': n_squirrels_player
+        })
 
 # Create DataFrame
 df = pd.DataFrame(data)
 
 # Save DataFrame to CSV file
-df.to_csv('game_results100k.csv', index=False)
-50
+df.to_csv('game_results_fixed.csv', index=False)
+

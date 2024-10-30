@@ -33,8 +33,10 @@ factors:
         - value: 0.25
         - value: 0.75
     - name: gameRow
-      desc: 1 - 129
+      desc: |
+        0 - 115
       values:
+        - value: 0
         - value: 1
         - value: 2
         - value: 3
@@ -150,125 +152,24 @@ factors:
         - value: 113
         - value: 114
         - value: 115
-        - value: 116
-        - value: 117
-        - value: 118
-        - value: 119
-        - value: 120
-        - value: 121
-        - value: 122
-        - value: 123
-        - value: 124
-        - value: 125
-        - value: 126
-        - value: 127
-        - value: 128
-        - value: 129
 treatments:
-    - name: rerun-interactive-0.7
+    - name: test_nodebug_interactive_RS_0
       factors:
         condition: interactive
         opinion: slider
         playerCount: 4
-        trueP: 0.7
-    - name: rerun-interactive-0.3
-      factors:
-        condition: interactive
-        opinion: slider
-        playerCount: 4
-        trueP: 0.3
-    - name: rerun-slider-0.3
-      factors:
-        condition: slider
-        opinion: slider
-        playerCount: 4
-        trueP: 0.3
-    - name: rerun-slider-0.7
-      factors:
-        condition: slider
-        opinion: slider
-        playerCount: 4
-        trueP: 0.7
-    - name: rerun-unidirectional-0.3
-      factors:
-        condition: unidirectional
-        opinion: slider
-        playerCount: 4
-        trueP: 0.3
-    - name: rerun-unidirectional-0.7
-      factors:
-        condition: unidirectional
-        opinion: slider
-        playerCount: 4
-        trueP: 0.7
-    - name: opinion
-      factors:
-        condition: slider
-        opinion: text
-        playerCount: 2
-        trueP: 0.7
-    - name: debug interactive test run
-      factors:
-        condition: interactive
-        debug: debug
-        opinion: slider
-        playerCount: 4
-        trueP: 0.3
-    - name: debug slider test run
-      factors:
-        condition: slider
-        debug: debug
-        opinion: slider
-        playerCount: 4
-        trueP: 0.3
-    - name: debug unidirectional test run
-      factors:
-        condition: unidirectional
-        debug: debug
-        opinion: slider
-        playerCount: 4
-        trueP: 0.3
-    - name: dvw
-      factors:
-        condition: interactive
-        debug: debug
-        opinion: slider
-        playerCount: 2
-        trueP: 0.3
-    - name: slider-2player-minimal-tester
-      factors:
-        condition: slider
-        debug: debug
-        opinion: slider
-        playerCount: 2
-        trueP: 0.3
-    - name: text-2player-minimal-tester
-      factors:
-        condition: interactive
-        debug: debug
-        opinion: slider
-        playerCount: 2
-        trueP: 0.3
-    - name: text-2player-minimal-tester-reversed
-      factors:
-        condition: interactive
-        debug: debug
-        opinion: slider
-        playerCount: 2
         sliderDirection: RabbitsSquirrels
-        trueP: 0.3
-    - name: rerun-interactive
-      factors:
-        condition: interactive
-        gameRow: 1
-        opinion: slider
-        playerCount: 4
-        trueP: 0.7
-    - name: rerun-interactive-debug
+    - name: 0_debug
       factors:
         condition: interactive
         debug: debug
-        gameRow: 1
         opinion: slider
         playerCount: 4
-        trueP: 0.7
+        sliderDirection: RabbitsSquirrels
+        trueP: 0.75
+    - name: test_nodebug_slider_RS_0
+      factors:
+        condition: slider
+        opinion: slider
+        playerCount: 4
+        sliderDirection: RabbitsSquirrels

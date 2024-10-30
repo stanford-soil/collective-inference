@@ -18,11 +18,11 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
   const critterElement = [];
 
   if (critter === '🐇') {
-    critterElement.push(<img key={`critter-${index}`} src="/rabbit.svg" style={{ width: '3em', height: '3em' }} alt="rabbit" />);
+    critterElement.push(<img key={`critter-${index}`} src="/rabbit.svg" style={{ width: '5em', height: '5em' }} alt="rabbit" />);
   } else if (critter === '🐿️') {
-    critterElement.push(<img key={`critter-${index}`} src="/squirrel.png" style={{ width: '3em', height: '2.5em' }} alt="squirrel" />);
+    critterElement.push(<img key={`critter-${index}`} src="/squirrel.png" style={{ width: '4em', height: '3.5em' }} alt="squirrel" />);
   } else if (critter.trim() === "") {
-    critterElement.push(<span key={`critter-${index}`} style={{ display: 'inline-block', width: '30em' }}>&nbsp;&nbsp;&nbsp;&nbsp;</span>);
+    critterElement.push(<span key={`critter-${index}`} style={{ display: 'inline-block', width: '5em' }}>&nbsp;&nbsp;&nbsp;&nbsp;</span>);
   }
 
   // Add a block of different size based on index
@@ -128,9 +128,9 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
       justifyContent: 'center',
       alignItems: 'center',
 	     margin: '0 auto',
-	     top: '50%',
-      left: '25%',
-      right: '25%',
+	     top: '25%',
+      left: '15%',
+      right: '15%',
       zIndex: 9, // Critters zIndex higher than background
       position: 'absolute', // Ensure critters are positioned relative to the parent
     }}>

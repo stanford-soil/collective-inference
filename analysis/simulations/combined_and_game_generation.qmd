@@ -21,7 +21,7 @@ theme_set(theme_few())
 # Read in simulated data
 
 ```{r}
-d.random <- here('analysis/simulations/game_results100k.csv') %>%
+d.random <- here('analysis/simulations/game_results_fixed_075.csv') %>%
   read_csv(col_types = 'ccii') %>%
   mutate(
     mleEstimate = nRabbits / (nRabbits + nSquirrels),
@@ -39,7 +39,7 @@ d.random <- here('analysis/simulations/game_results100k.csv') %>%
     representation = mean(abs(mleEstimate - mleGame))
   ) %>%
   ungroup() %>%
-  filter(totalCritters >= 3)
+  filter(totalCritters >= 15)
 
 ```
 
@@ -158,8 +158,8 @@ ggplot(combined_heatmap, aes(x = x_bin, y = y_bin)) +
 ```{r}
 nCritters_entropy_heatmap <- d.random %>%
   mutate(
-    nCrittersGame_bin = cut(totalCritters,right = TRUE, breaks = seq(0, 100, by = 8), include.lowest = TRUE),
-    entropy_bin = cut(entropy, breaks = seq(0, 1.5, .30), include.lowest = TRUE, right = TRUE, dig.lab = 2)
+    nCrittersGame_bin = cut(totalCritters,right = TRUE, breaks = seq(15, 100, by = 5), include.lowest = TRUE),
+    entropy_bin = cut(entropy, breaks = seq(0, 2, .27), include.lowest = TRUE, right = TRUE, dig.lab = 2)
   ) %>%
   group_by(nCrittersGame_bin, entropy_bin) %>%
   summarise(count = n()) %>%
@@ -183,8 +183,8 @@ ggplot(nCritters_entropy_heatmap, aes(x = entropy_bin, y = nCrittersGame_bin)) +
 # Binned data for nCrittersGame vs. Representation
 nCritters_rep_heatmap <- d.random %>%
   mutate(
-    nCrittersGame_bin = cut(totalCritters,right = TRUE, breaks = seq(0, 100, by = 8), include.lowest = TRUE),
-    representation_bin = cut(representation,right = TRUE, breaks = seq(0, 1, .11), include.lowest = TRUE, dig.lab = 2)
+    nCrittersGame_bin = cut(totalCritters,right = TRUE, breaks = seq(15, 100, by = 5), include.lowest = TRUE),
+    representation_bin = cut(representation,right = TRUE, breaks = seq(0, 1, .12), include.lowest = TRUE, dig.lab = 2)
   ) %>%
   group_by(nCrittersGame_bin, representation_bin) %>%
   summarise(count = n()) %>%
@@ -205,10 +205,10 @@ ggplot(nCritters_rep_heatmap, aes(x = representation_bin, y = nCrittersGame_bin)
 ```{r}
 d.random <- d.random %>% 
     mutate(
-      entropy_bin = cut(abs(entropy), breaks = seq(0, 2, .34), right = TRUE, include.lowest = TRUE, dig.lab = 2), 
-      representation_bin = cut(abs(representation), breaks = seq(0, 1, .11), right = TRUE, include.lowest = TRUE, dig.lab = 2)) %>%
+      entropy_bin = cut(abs(entropy), breaks = seq(0, 2, .27), right = TRUE, include.lowest = TRUE, dig.lab = 2), 
+      representation_bin = cut(abs(representation), breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2)) %>%
     mutate(
-      nCrittersGame_bin = cut(totalCritters, breaks = seq(0, 100, by = 8), right = TRUE, include.lowest = TRUE)
+      nCrittersGame_bin = cut(totalCritters, breaks = seq(15, 100, by = 5), right = TRUE, include.lowest = TRUE)
     ) %>%
   filter(!is.na(entropy_bin))
 
@@ -221,7 +221,7 @@ print(possible_values_tC)
 ```
 
 ```{r}
-set.seed(3)
+set.seed(1)
 # Drop excess levels from all factor columns in the dataframe
 d.random <- d.random %>%
   mutate(across(where(is.factor), droplevels))
@@ -308,30 +308,20 @@ print(count_summary$nCritters_entropy)
 ```
 
 ```{r}
-valid_entropy_representation <- count_entropy_representation %>%
-  filter(count <= 4)
+#for random_generation_07 if entropy is binned by (0, 2, .25)
+#rows_to_drop <- c(1,2,6,13,14,21,24,74,77,79)
 
-valid_representation_nCritters <- count_representation_nCritters %>%
-  filter(count <= 4)
+#for random_generation_075
+rows_to_drop <- c(1,5,7,10,13,17,25,29,30,33,48,69,70)
 
-valid_nCritters_entropy <- count_nCritters_entropy %>%
-  filter(count <= 4)
-
-# Get rows where the combination doesn't exceed 4 in all three groupings
-valid_rows <- filtered_df %>%
-  semi_join(valid_entropy_representation, by = c("entropy_bin", "representation_bin")) %>%
-  semi_join(valid_representation_nCritters, by = c("representation_bin", "nCrittersGame_bin")) %>%
-  semi_join(valid_nCritters_entropy, by = c("nCrittersGame_bin", "entropy_bin"))
-
-# Print the valid rows
-print(valid_rows)
-
-# Optional: Check how many rows were selected
-print(nrow(valid_rows))
+balanced_df <- filtered_df[-rows_to_drop, ]
+#I went through the lines manually because for whatever reason it's hard to get R to clean the data combinatorally. Or at least I don't know how to do it. drop this line if you change the data or the seed
+#I am confident there is a way to do this that targets the most commonly occuring groups first, eg 0Rep/35nCrit. Maybe running the same script over the data backwards? maybe sorting by combination # and then dropping any where all combination numbers >4?
+#this was faster at this point but ^ will work if I have to redo the data  
 ```
 
 ```{r}
-heatmap_test <- filtered_df %>%
+heatmap_test <- balanced_df %>%
   group_by(nCrittersGame_bin, representation_bin) %>%
   summarise(count = n()) %>%
   mutate(prop = count / sum(count))
@@ -345,18 +335,19 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
+
 ```
 
 ```{r}
-heatmap_test <- filtered_df %>%
+heatmap_test <- balanced_df %>%
   group_by(entropy_bin, representation_bin) %>%
   summarise(count = n()) %>%
   mutate(prop = count / sum(count))
 
-ggplot(heatmap_test, aes(x = representation_bin, y = entropy_bin)) +
+ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
   geom_tile(aes(fill = count), color = "white") +
   scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
-  labs(x = "Representation", y = "nCrittersGame") +
+  labs(x = "entropy", y = "representation") +
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
@@ -367,7 +358,7 @@ ggplot(heatmap_test, aes(x = representation_bin, y = entropy_bin)) +
 \
 
 ```{r}
-nCritters_entropy_heatmap_new <-filtered_df %>%
+nCritters_entropy_heatmap_new <-balanced_df %>%
   group_by(nCrittersGame_bin, entropy_bin) %>%
   summarise(count = n()) %>%
   mutate(prop = count / sum(count))
@@ -387,95 +378,48 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
 
 ```{r}
 filtered_gameID_df <- d.random %>% 
-  filter(gameID %in% filtered_df$gameID)
+  filter(gameID %in% balanced_df$gameID)
 
-repeated_gameIDs <- filtered_df %>%
+repeated_gameIDs <- balanced_df %>%
   count(gameID) %>%
   filter(n > 1)
 
 print(repeated_gameIDs)
-
 ```
 
 ```{r}
-df_summary <- filtered_gameID_df %>%
-  group_by(gameID) %>%
-  summarise(players = list(playerID), 
-            nRabbits = list(nRabbits), 
-            nSquirrels = list(nSquirrels), 
-            mleEstimate = list(mleEstimate),
-            nCritters = list(nCritters), 
-            nRabbitsGame = first(nRabbitsGame),  
-            nSquirrelsGame = first(nSquirrelsGame),
-            mleGame = first(mleGame),
-            totalCritters = first(totalCritters),
-            prob = first(prob),
-            entropy = first(entropy),
-            representation = first(representation),
-            entropy_bin = first(entropy_bin),
-            representation_bin = first(representation_bin),
-            nCrittersGame_bin = first(nCrittersGame_bin))
+balanced_df2 <- left_join(d.random, balanced_df) %>%
+  filter(gameID %in% balanced_df$gameID)
 
-# Duplicate the specified gameIDs in the summarized data frame
-duplicates <- df_summary %>%
-  filter(gameID %in% c(11728, 13498, 14612, 21546, 24171, 24823, 9523)) %>%
+
+final_df <- balanced_df2 %>%
+  filter(gameID %in% balanced_df2$gameID) %>%
+  group_by(gameID) %>%
+  summarise(
+    players = list(playerID),
+    nRabbits = list(nRabbits),
+    nSquirrels = list(nSquirrels),
+    mleEstimate = list(mleEstimate),
+    nCritters = list(nCritters),
+    across(c(nRabbitsGame, nSquirrelsGame, mleGame, totalCritters,
+             prob, entropy, representation, entropy_bin,
+             representation_bin, nCrittersGame_bin), first))
+
+duplicates <- final_df %>%
+  filter(gameID %in% c(13549,15700,8531)) %>%
   bind_rows(.) %>%  # Duplicate these rows
-  bind_rows(df_summary %>%
-              filter(gameID %in% c(2838, 3411)) %>%
+  bind_rows(final_df %>%
+              filter(gameID %in% c(10023,10120,14614)) %>%
               bind_rows(., ., .))  # Duplicate these rows for a total of four 
 
 # Combine the original summary with duplicates
-final_df <- bind_rows(df_summary, duplicates)
+final_df2 <- bind_rows(final_df, duplicates) 
 
-# Convert to JSON
-df_json <- final_df %>% toJSON(pretty = TRUE)
-
-# Write to JSON file
-write(df_json, file = "games.json")
+# Convert to JSON and write to file
+final_df2 %>%
+  toJSON(pretty = TRUE) %>%
+  write(file = "games.json")
 ```
 
 ```{r}
-would_be_great_if_it_didnt_crash <- crash_me
-  library(dplyr)
-
-d.random_minimal <- d.random %>%
-    distinct(gameID, .keep_all = TRUE)
-            
-# Initialize empty result
-balanced_df <- data.frame()
-used_indices <- integer(0)
-
-# Process each pairing type
-# First: entropy x representation
-temp1 <- d.random_minimal %>%
-    distinct(gameID, .keep_all = TRUE) %>%
-  filter(!row_number() %in% used_indices) %>%
-  group_by(entropy_bin, representation_bin) %>%
-  group_modify(~slice_sample(.x, n = min(nrow(.x), 4))) %>%
-  ungroup()
-used_indices <- c(used_indices, match(interaction(temp1), interaction(d.random_minimal)))
-balanced_df <- bind_rows(balanced_df, temp1)
-
-# Second: representation x nCritters
-temp2 <- d.random_minimal %>%
-    distinct(gameID, .keep_all = TRUE)%>%
-  filter(!row_number() %in% used_indices) %>%
-  group_by(representation_bin, nCrittersGame_bin) %>%
-  group_modify(~slice_sample(.x, n = min(nrow(.x), 4))) %>%
-  ungroup()
-used_indices <- c(used_indices, match(interaction(temp2), interaction(d.random_minimal))
-balanced_df <- bind_rows(balanced_df, temp2)
-
-# Third: nCritters x entropy
-temp3 <- d.random_minimal %>%
-    distinct(gameID, .keep_all = TRUE)%>%
-  filter(!row_number() %in% used_indices) %>%
-  group_by(nCrittersGame_bin, entropy_bin) %>%
-  group_modify(~slice_sample(.x, n = min(nrow(.x), 4))) %>%
-  ungroup()
-used_indices <- c(used_indices, match(interaction(temp3), interaction(d.random_minimal)))
-balanced_df <- bind_rows(balanced_df, temp3)
-
-# Replace the original filtered_df with our balanced result
-filtered_df <- balanced_df
 ```
