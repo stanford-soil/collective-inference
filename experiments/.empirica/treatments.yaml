@@ -173,3 +173,19 @@ treatments:
         opinion: slider
         playerCount: 4
         sliderDirection: RabbitsSquirrels
+    - name: 2_debug_slider
+      factors:
+        condition: slider
+        debug: debug
+        gameRow: 12
+        opinion: slider
+        playerCount: 2
+        sliderDirection: SquirrelsRabbits
+    - name: big number debug
+      factors:
+        condition: slider
+        debug: debug
+        gameRow: 1
+        opinion: slider
+        playerCount: 2
+        sliderDirection: SquirrelsRabbits

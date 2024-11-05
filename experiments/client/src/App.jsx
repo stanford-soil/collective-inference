@@ -3,7 +3,7 @@ import { EmpiricaContext } from "@empirica/core/player/classic/react";
 import { EmpiricaMenu, EmpiricaParticipant } from "@empirica/core/player/react";
 import React from "react";
 import { Game } from "./Game";
-import { ExitSurvey } from "./intro-exit/ExitSurvey";
+import { ExitSurveyMinimal } from "./intro-exit/ExitSurveyMinimal";
 import { Introduction } from "./intro-exit/Introduction";
 import { Browser } from "./intro-exit/BrowserAdBlock";
 
@@ -40,7 +40,7 @@ function introSteps({ game, player }) {
 
 function exitSteps({ game, player }) {
 console.log(player.get("ended"));
-  return player.get("ended") === "game ended" ? [Last] : [Sorry];
+  return player.get("ended") === "game ended" ? [ExitSurveyMinimal, Last] : [Sorry];
 }
 
 

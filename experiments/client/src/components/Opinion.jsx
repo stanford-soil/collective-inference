@@ -3,6 +3,12 @@ import { InputBox } from "./InputBox";
 import { usePlayer, useStage, useRound, useGame } from "@empirica/core/player/classic/react";
 import { Slider } from '@mui/material';
 
+
+//*
+// Please note, there is a slider input ("treatment".opinion) and a slider game condition("treatment".condition). 
+// This makes sense in the front end but may catch one by surprise in here. 
+//*
+
 export function Opinion({ scope, attribute }) {
     const round = useRound();
     const player = usePlayer();
@@ -30,11 +36,14 @@ export function Opinion({ scope, attribute }) {
     const handleSlider = (event, value) => {
         setSliderValue(value);
         setIsSliderChanged(true);
+        console.log("changed");
+
     };
 
     const handleConfidence = (event, value) => {
         setConfidenceValue(value);
         setIsConfidenceChanged(true);
+        console.log("confidence changed");
     };
 
     const renderIcons = () => {
@@ -66,13 +75,63 @@ for (let i = 0; i < totalIcons; i++) {
         ));
     };
 
-    const handleButtonClick = () => {
-        player.stage.set("guess", sliderValue);
-        player.stage.set("confidence", confidenceValue);
-        player.stage.set("submit", true);
+  //*
+// When the user clicks submit, save their data. If in slider condition, create a fixed message.
+//*
+
+ const handleButtonClick = () => {
+                console.log("handle button triggered")
+
+        if (game.get("treatment").condition === "slider") {
+            handleSliderSubmit(sliderValue);
+        } else {
+            handleSubmit();
+        }
+        
+        // Reset the state to disable the button until values are changed again
+        setIsSliderChanged(false);
+        setIsConfidenceChanged(false);
     };
 
+const handleSliderSubmit = (sliderValue) => {
+    console.log("handle slidersubmit triggered with ", sliderValue,scope, scope.getAttribute(attribute)?.items );
+    player.stage.set("guess", sliderValue);
+    const text = "I think the population is " + sliderValue + "% rabbits";
+    console.log(text);
+    player.stage.set("confidence", confidenceValue);
+    scope.append(attribute, {
+    text,
+        likes : {},
+        time: Date.now(),
+        round: round.get('idx'),
+        recipient: player.get("recipient"),
+        sender: {
+            id: player.id,
+            name: player.get("name") || player.id,
+            avatar: player.get("avatar"),
+        },
+    });
+
+    const playerStageData = scope.getAttribute(attribute)?.items || [];
+    game.set("messages", playerStageData.map((msg, i) => msg.val._value));
+
+    player.stage.set("submit", true);
+};
+
+const handleSubmit = () => {
+    console.log("handle submit triggered")
+    player.stage.set("guess", sliderValue);
+    player.stage.set("confidence", confidenceValue);
+    player.stage.set("submit", true);
+};
+
+
+//*
+// How the slider input box looks is here. How the text one looks is in InputBox.jsx
+//*
+
    if (stage.get('name') === 'observe') {
+     console.log("guess", sliderValue); console.log("confidence", confidenceValue);
     const sliderDirection = game.get("treatment").sliderDirection === "RabbitsSquirrels";
     return game.get("treatment").opinion === "slider" ? (
         <div>
@@ -84,7 +143,7 @@ for (let i = 0; i < totalIcons; i++) {
                             {sliderDirection ? "All Rabbits 🐇" : "All Squirrels 🐿️"}
                         </h2>
                         <Slider
-                            defaultValue={50}
+                            defaultValue={null}
                             aria-label="Default"
                             valueLabelDisplay="auto"
                             onChange={handleSlider}
@@ -117,7 +176,7 @@ for (let i = 0; i < totalIcons; i++) {
                         <div className="flex items-center space-x-4">
                             <h2 className="text-gray-600 text-sm text-center mb-2">Very Uncertain</h2>
                             <Slider
-                                defaultValue={50}
+                                defaultValue={null}
                                 aria-label="Default"
                                 valueLabelDisplay="off"
                                 onChange={handleConfidence}
@@ -150,5 +209,4 @@ for (let i = 0; i < totalIcons; i++) {
         );
     }
 }
-
 

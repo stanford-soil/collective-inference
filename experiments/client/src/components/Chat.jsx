@@ -92,6 +92,7 @@ function Message(props) {
 
 function MessagesPanel(props) {
     let {player, stage, round, scope, msgs, condition } = props;
+    console.log("b4 filter", msgs);
     const scroller = useRef(null);
     const [msgCount, setMsgCount] = useState(0);
     const msgsFiltered = condition === 'interactive'
@@ -101,6 +102,7 @@ function MessagesPanel(props) {
 	     : (stage.get('name')=== 'observe' && condition === 'slider')
 	     ? sliderFilter()
 	     : otherwiseFilter());
+    console.log("after", msgsFiltered);
 
     function interactiveFilter() {
 	return msgs.filter(msg => msg.value.sender.id === player.id || msg.value.recipient === player.id)

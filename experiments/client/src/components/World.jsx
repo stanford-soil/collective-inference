@@ -6,51 +6,49 @@ export function World() {
   const player = usePlayer();
   const stage = useStage();
   
-  // State to control if the window is visible
   const [isVisible, setIsVisible] = useState(false);
 
-  // Turn critter distribution into emoji arrays
   const critterDistributionInital = player.get('emojiArray') || [];
 
+  const rabbitCount = critterDistributionInital.filter(critter => critter === '🐇').length;
+  const squirrelCount = critterDistributionInital.filter(critter => critter === '🐿️').length;
+  const totalCritters = rabbitCount + squirrelCount;
 
+  const critterDistribution = critterDistributionInital.flatMap((critter, index) => {
+    const critterElement = [];
 
-const critterDistribution = critterDistributionInital.flatMap((critter, index) => {
-  const critterElement = [];
+    if (critter === '🐇') {
+      critterElement.push(<img key={`critter-${index}`} src="/rabbit.svg" style={{ width: '5em', height: '5em' }} alt="rabbit" />);
+    } else if (critter === '🐿️') {
+      critterElement.push(<img key={`critter-${index}`} src="/squirrel.png" style={{ width: '4em', height: '3.5em' }} alt="squirrel" />);
+    } else if (critter.trim() === "") {
+      critterElement.push(<span key={`critter-${index}`} style={{ display: 'inline-block', width: '5em' }}>&nbsp;&nbsp;&nbsp;&nbsp;</span>);
+    }
 
-  if (critter === '🐇') {
-    critterElement.push(<img key={`critter-${index}`} src="/rabbit.svg" style={{ width: '5em', height: '5em' }} alt="rabbit" />);
-  } else if (critter === '🐿️') {
-    critterElement.push(<img key={`critter-${index}`} src="/squirrel.png" style={{ width: '4em', height: '3.5em' }} alt="squirrel" />);
-  } else if (critter.trim() === "") {
-    critterElement.push(<span key={`critter-${index}`} style={{ display: 'inline-block', width: '5em' }}>&nbsp;&nbsp;&nbsp;&nbsp;</span>);
-  }
+    if (index < critterDistributionInital.length - 1) {
+      critterElement.push(
+        <span key={`block-${index}`} style={{ display: 'inline-block', width: `${(index + 1) * 10}px`, height: '20px', margin: '0 5px' }} />
+      );
+    }
 
-  // Add a block of different size based on index
-  if (index < critterDistributionInital.length - 1) {
-    critterElement.push(
-      <span key={`block-${index}`} style={{ display: 'inline-block', width: `${(index + 1) * 10}px`, height: '20px', margin: '0 5px' }} />
-    );
-  }
+    return critterElement;
+  });
 
-  return critterElement;
-});
-
-
-  // Check if the current stage is "special"
-  if (stage.get('name') ===  "looking at your yard") {
+  if (stage.get('name') === "looking at your yard") {
     return (
       <div style={{
         position: 'fixed',
         top: "10%",
+        bottom: '5%',
         left: '15%',
         right: '15%',
-        width: '70%',
-        height: '90%',
-        borderRadius: '0',
+        borderRadius: '8px', 
         display: 'flex',
         backgroundColor: '#268b07',
         zIndex: 9999,
-        padding: '1em', 
+        padding: '1em',
+        border: '10px solid #8B4513', 
+        boxShadow: '0px 0px 15px rgba(0, 0, 0, 0.3)', 
       }}>
         <div style={{
           position: 'absolute',
@@ -66,12 +64,26 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
 
         <div style={{
           display: 'flex',
-          flexWrap: 'wrap', 
+          flexWrap: 'wrap',
           justifyContent: 'center',
-          alignItems: 'center',
-          maxWidth: '85%', 
+          alignItems: totalCritters > 20 ? 'flex-start' : 'center',  // Position based on critter count
+          maxWidth: '85%',
         }}>
           {critterDistribution}
+        </div>
+      
+        <div style={{
+          position: 'absolute',
+          top: '0%',
+          left: '0%',
+          fontSize: '1.2em',
+          color: '#333',
+          backgroundColor: '#f9f9f9',
+          padding: '5px 10px',
+          borderRadius: '5px',
+          boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.2)'
+        }}>
+          You see {rabbitCount} rabbits and {squirrelCount} squirrels.
         </div>
       </div>
     );
@@ -79,68 +91,79 @@ const critterDistribution = critterDistributionInital.flatMap((critter, index) =
 
   return (
     <div>
-     <button
-    onClick={() => setIsVisible(!isVisible)}
-    disabled={false} // Set this as per your logic if needed
-    className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline 
-        ${false ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
-    style={{
-        position: 'absolute',
-        top: '12%',
-       
-        transform: 'translateX(-50%)', 
-    }}
->
-    {isVisible ? "Close Outside" : "Peek Outside"}
-</button>
-{isVisible && (
-  <div>
-    
-    <div style={{
-      position: 'absolute',
-      top: '18%',
-      right: '3%',
-      bottom: '3%',
-      left: '3%',
-      backgroundImage: 'url("/freepik.png")',
-      opacity: 0.7, 
-      borderRadius: '20px',
-      zIndex: 8, 
-    }}>
-    </div>
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        disabled={false}
+        className={`bg-blue-500 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline 
+            ${false ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'}`}
+        style={{
+            position: 'absolute',
+            top: '12%',
+            transform: 'translateX(-50%)', 
+        }}
+      >
+        {isVisible ? "Close Outside" : "Peek Outside"}
+      </button>
 
-    {/* Solid background color in the same area as the background image */}
-    <div style={{
-      position: 'absolute',
-      top: '18%',
-      right: '3%',
-      bottom: '0%',
-      left: '3%',
-      backgroundColor: 'white', 
-      borderRadius: '20px',
-      zIndex: 7, 
-    }}>
-    </div>
+      {isVisible && (
+        <div>  
+          <div style={{
+            position: 'absolute',
+            top: '12%',
+            left: '60%',
+            fontSize: '1.2em',
+            color: '#333',
+            backgroundColor: '#f9f9f9',
+            padding: '5px 10px',
+            borderRadius: '5px',
+            boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.2)'
+          }}>
+            You see {rabbitCount} rabbits and {squirrelCount} squirrels.
+          </div>
+          <div style={{
+            position: 'absolute',
+            top: '18%',
+            right: '3%',
+            bottom: '3%',
+            left: '3%',
+            backgroundImage: 'url("/freepik.png")',
+            opacity: 0.8, 
+            borderRadius: '20px',
+            zIndex: 8, 
+            border: '10px solid #8B4513', 
+            boxShadow: '0px 0px 15px rgba(0, 0, 0, 0.3)', 
+          }}>
+          </div>
 
-    <div style={{
-      display: 'flex',
-      flexWrap: 'wrap', 
-      justifyContent: 'center',
-      alignItems: 'center',
-	     margin: '0 auto',
-	     top: '25%',
-      left: '15%',
-      right: '15%',
-      zIndex: 9, // Critters zIndex higher than background
-      position: 'absolute', // Ensure critters are positioned relative to the parent
-    }}>
-      {critterDistribution}
-    </div>
-  </div>
-)}
+          <div style={{
+            position: 'absolute',
+            top: '18%',
+            right: '3%',
+            bottom: '0%',
+            left: '3%',
+            backgroundColor: 'white', 
+            borderRadius: '20px',
+            zIndex: 7, 
+          }}>
+          </div>
 
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap', 
+            justifyContent: 'center',
+            alignItems: totalCritters > 20 ? 'flex-start' : 'center',  // Adjust position here as well
+            margin: '0 auto',
+            top: '25%',
+            left: '15%',
+            right: '15%',
+            zIndex: 9,
+            position: 'absolute',
+          }}>
+            {critterDistribution}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
 
