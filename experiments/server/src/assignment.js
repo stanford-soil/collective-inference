@@ -67,16 +67,10 @@ loadCache()
   });
 
 // Function to get a specific file based on the count
-async function getFile(fileNumber) {
+async function getNextGame() {
     try {
         let count = await readCount();
         let increment = true;
-        if (fileNumber || fileNumber == 0){
-          count = fileNumber;
-          increment = false
-          console.log(`navigate to file[${fileNumber}]`)
-        }
-
         if (count >= 113) {
             const data = await fs.readFile(filePath, 'utf8');
             const jsonData = JSON.parse(data);
@@ -99,5 +93,5 @@ async function getFile(fileNumber) {
 }
 
 module.exports = {
-    getFile
+    getNextGame
 };

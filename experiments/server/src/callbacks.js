@@ -2,7 +2,7 @@ import { ClassicListenersCollector } from "@empirica/core/admin/classic";
 export const Empirica = new ClassicListenersCollector();
 import _ from "lodash";
 import fs from 'fs'; // Import fs to read JSON file
-import { getFile } from './assignment.js';
+import { getNextGame } from './assignment.js';
 
   const gamesData = JSON.parse(fs.readFileSync('games.json'));
    // console.log(gamesData)
@@ -10,9 +10,11 @@ import { getFile } from './assignment.js';
 
     
 Empirica.onGameStart(({ game }) => {
-  getFile(fileNumber).then((file) => {
+    getNextGame().then((file) => {
+	console.log('received file', JSON.stringify(file))
       const treatment = game.get("treatment");
-      const gameRow = _.toInteger(fileNumber);
+	const gameRow = _.toInteger(file['count_no']);
+	console.log(gameRow)
       const critterData = gamesData[gameRow];
       console.log(JSON.stringify(critterData, null, 2))
       if (!critterData) {
