@@ -1,5 +1,3 @@
-const { google } = require('googleapis');
-const { parse } = require('csv-parse/sync');
 const fs = require('fs').promises;
 const path = require('path');
 
