@@ -9,7 +9,7 @@ export function Last() {
     <Alert title="Reward">
       <p>
         Please submit the following code to receive your reward:{" "}
-        <strong>CLBV3HB1</strong>.
+        <strong>C1CJ8LB9</strong>.
       </p>
     </Alert>
   );

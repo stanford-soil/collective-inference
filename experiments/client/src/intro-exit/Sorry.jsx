@@ -9,7 +9,7 @@ export function Sorry() {
    
       <p>
         Sorry, it seems the game has crashed or been cancelled! Unfortunately, we do not re-run players within one game, but please submit the following code to receive your compensation:{" "}
-        <strong>NEW CODE</strong>.
+        <strong>CYEDW6HZ</strong>.
       </p>
   
   );
