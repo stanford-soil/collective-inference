@@ -189,3 +189,16 @@ treatments:
         opinion: slider
         playerCount: 2
         sliderDirection: SquirrelsRabbits
+    - name: trial_0_SR_text
+      factors:
+        condition: interactive
+        opinion: slider
+        playerCount: 4
+        sliderDirection: SquirrelsRabbits
+    - name: trial_113_slider_RS
+      factors:
+        condition: slider
+        gameRow: 113
+        opinion: slider
+        playerCount: 4
+        sliderDirection: RabbitsSquirrels
