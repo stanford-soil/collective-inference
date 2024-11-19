@@ -44,14 +44,14 @@ export function Introduction({ next }) {
                 Goal of the Game
               </h3>
               <p className="text-sm text-gray-700 mb-6">
-                Your neighborhood has a lot of wildlife, particularly <b>rabbits</b> and <b>squirrels</b>. What everyone wants to know is - <b>are there more rabbits or squirrels in the neighborhood?</b>
+                Your neighborhood has a lot of wildlife, particularly <b>rabbits</b> and <b>squirrels</b>. What everyone wants to know is - <b>are there more rabbits or squirrels in the neighborhood?</b> <br/>
                 Unfortunately, you only know what's going on in your part of the neighborhood – how many critters you see outside your <b>window</b>.
                 You will be looking outside once, then discussing what you saw.
                 Everyone has a single window they're looking out of.
               </p>
               <center><img width="1000px" src="./first_window.png" alt="Window View" /></center>
               <p className="text-sm text-gray-700 mt-6">
-                If you need to look out your window again, there will be a <b>peek outside</b> button in the following stages. This button is pictured below. The critters will <b>remain the same throughout the game </b> – they're busy chewing!
+                In case you forget your critters, you've taken a photo. There will be a <b>look at photo</b> button in the following stages. This button is pictured below. The critters will <b>remain the same throughout the game. </b>
               </p>
               <center><img width="100px" src="./peek.png" alt="Peek Button" /></center>
             </>
@@ -70,12 +70,12 @@ export function Introduction({ next }) {
                       <center><img width="300px" src="./interaction.png" alt="Interaction Example" /></center>
                       In the following stage, you will make a judgment of the ratio of rabbits to squirrels using the <b>slider</b>.
                       This slider is <b>only seen by researchers</b> – it’s not shared with your neighbors!
-                      We want to know your <b>estimate</b> of the critters’ ratio in the neighborhood, <b>based on your observations and your neighbors' opinions.</b> You cannot submit your answer without also filling in your confidence!
+                      We want to know your <b>estimate</b> of the critters’ ratio in the neighborhood, <b>based on your observations and your neighbors' opinions.</b> You cannot submit your answer without also filling in your confidence! There's a visualizer beside the slider to help you eyeball the ratio of critters.
                     </>
                   ) : (
                     <>
                       You're going to share what you think with your neighbor using the <b>slider</b>.
-                      Following this, you will see someone else's slider output, and will be asked to submit another opinion. <br /> You cannot submit your answer without also filling in your confidence!
+                      Following this, you will see someone else's slider output, and will be asked to submit another opinion. <br /> You cannot submit your answer without also filling in your confidence! There's a visualizer beside the slider to help you eyeball the ratio of critters.
                     </>
                   )
                 }
@@ -93,7 +93,7 @@ export function Introduction({ next }) {
                     <p>You can be informative or uninformative, sharing as much or as little as you like, with a caveat!</p>
                   )
                 }
-                <b>If all players are correct</b> about the critter ratio at the end, you will receive a bonus.
+                <b>If all players are correct</b> about the neighborhood's underlying critter ratio at the end, you will receive a bonus.
                 <b> The base pay for this experiment is $15/hr.</b>
               </p>
               <p className="text-sm text-gray-700">

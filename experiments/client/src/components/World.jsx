@@ -72,19 +72,7 @@ export function World() {
           {critterDistribution}
         </div>
       
-        <div style={{
-          position: 'absolute',
-          top: '0%',
-          left: '0%',
-          fontSize: '1.2em',
-          color: '#333',
-          backgroundColor: '#f9f9f9',
-          padding: '5px 10px',
-          borderRadius: '5px',
-          boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.2)'
-        }}>
-          You see {rabbitCount} rabbits and {squirrelCount} squirrels.
-        </div>
+       
       </div>
     );
   }
@@ -102,24 +90,13 @@ export function World() {
             transform: 'translateX(-50%)', 
         }}
       >
-        {isVisible ? "Close Outside" : "Peek Outside"}
+        {isVisible ? "Hide photo" : "Look at photo"}
       </button>
 
       {isVisible && (
         <div>  
-          <div style={{
-            position: 'absolute',
-            top: '12%',
-            left: '60%',
-            fontSize: '1.2em',
-            color: '#333',
-            backgroundColor: '#f9f9f9',
-            padding: '5px 10px',
-            borderRadius: '5px',
-            boxShadow: '0px 0px 5px rgba(0, 0, 0, 0.2)'
-          }}>
-            You see {rabbitCount} rabbits and {squirrelCount} squirrels.
-          </div>
+       
+
           <div style={{
             position: 'absolute',
             top: '18%',
