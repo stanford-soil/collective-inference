@@ -150,55 +150,15 @@ factors:
         - value: 111
         - value: 112
         - value: 113
-        - value: 114
-        - value: 115
+
 treatments:
-    - name: test_nodebug_interactive_RS_0
+{% for i in range(4, 114) %}
+    - name: {{ i }}_{{ 'SR' if i % 2 == 0 else 'RS' }}_text
       factors:
         condition: interactive
         opinion: slider
         playerCount: 4
-        sliderDirection: RabbitsSquirrels
-    - name: 0_debug
-      factors:
-        condition: interactive
-        debug: debug
-        opinion: slider
-        playerCount: 4
-        sliderDirection: RabbitsSquirrels
-        trueP: 0.75
-    - name: test_nodebug_slider_RS_0
-      factors:
-        condition: slider
-        opinion: slider
-        playerCount: 4
-        sliderDirection: RabbitsSquirrels
-    - name: 2_debug_slider
-      factors:
-        condition: slider
-        debug: debug
-        gameRow: 12
-        opinion: slider
-        playerCount: 2
-        sliderDirection: SquirrelsRabbits
-    - name: big number debug
-      factors:
-        condition: slider
-        debug: debug
-        gameRow: 1
-        opinion: slider
-        playerCount: 2
-        sliderDirection: SquirrelsRabbits
-    - name: trial_0_SR_text
-      factors:
-        condition: interactive
-        opinion: slider
-        playerCount: 4
-        sliderDirection: SquirrelsRabbits
-    - name: trial_113_slider_RS
-      factors:
-        condition: slider
-        gameRow: 113
-        opinion: slider
-        playerCount: 4
-        sliderDirection: RabbitsSquirrels
+        sliderDirection: {{ 'SquirrelsRabbits' if i % 2 == 0 else 'RabbitsSquirrels' }}
+        gameRow: {{ i }}
+{% endfor %}
+
