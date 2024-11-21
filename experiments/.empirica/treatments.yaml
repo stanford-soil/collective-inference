@@ -32,6 +32,22 @@ factors:
         - value: 0.3
         - value: 0.25
         - value: 0.75
-
 treatments:
-
+    - name: SR_slider
+      factors:
+        condition: slider
+        opinion: slider
+        playerCount: 4
+        sliderDirection: SquirrelsRabbits
+    - name: RS_interactive
+      factors:
+        condition: interactive
+        opinion: slider
+        playerCount: 4
+        sliderDirection: RabbitsSquirrels
+    - name: SR_interactive
+      factors:
+        condition: interactive
+        opinion: slider
+        playerCount: 4
+        sliderDirection: SquirrelsRabbits
