@@ -51,3 +51,9 @@ treatments:
         opinion: slider
         playerCount: 4
         sliderDirection: SquirrelsRabbits
+    - name: RS_slider
+      factors:
+        condition: slider
+        opinion: slider
+        playerCount: 4
+        sliderDirection: RabbitsSquirrels
