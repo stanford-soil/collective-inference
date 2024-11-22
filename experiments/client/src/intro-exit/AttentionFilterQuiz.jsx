@@ -36,7 +36,7 @@ export function AttentionQuiz({ next }) {
         <br />
         <form onSubmit={handleSubmit}>
           <div>
-            <h2><b>Describe the main objective of this game in your own words. Participants who submit less than 100 characters will be booted.</b></h2>
+            <h2><b>Describe the main objective of this game in your own words. Participants who submit less than 100 characters will be booted for inattention.</b></h2>
             <br />
             <textarea
               className="w-full h-24 mt-2 mb-2"
