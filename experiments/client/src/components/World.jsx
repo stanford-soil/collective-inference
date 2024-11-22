@@ -58,7 +58,7 @@ export function World() {
           left: 0,
           backgroundImage: 'url("/freepik.png")',
           backgroundColor: '#268b07',
-          opacity: 0.7,
+          opacity: 0.6,
           zIndex: -1,
         }}></div>
 
@@ -104,7 +104,7 @@ export function World() {
             bottom: '3%',
             left: '3%',
             backgroundImage: 'url("/freepik.png")',
-            opacity: 0.8, 
+            opacity: 0.6, 
             borderRadius: '20px',
             zIndex: 8, 
             border: '10px solid #8B4513', 

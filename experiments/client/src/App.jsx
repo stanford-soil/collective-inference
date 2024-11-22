@@ -12,7 +12,7 @@ import { Consent }from "./intro-exit/Consent.jsx";
 import { Practice } from "./intro-exit/Practice.jsx";
 import { Quiz } from "./intro-exit/IndividualQuiz.jsx";
 import { Last } from "./intro-exit/LastPage.jsx";
-import { Sorry } from "./intro-exit/Sorry.jsx";
+import { SorryCrash } from "./intro-exit/SorryCrash.jsx";
 import { Lobby } from "./intro-exit/Lobby.jsx";
 import { AttentionQuiz } from "./intro-exit/AttentionFilterQuiz.jsx";
 
@@ -40,7 +40,7 @@ function introSteps({ game, player }) {
 
 function exitSteps({ game, player }) {
 console.log(player.get("ended"));
-  return player.get("ended") === "game ended" ? [ExitSurveyMinimal, Last] : [Sorry];
+  return player.get("ended") === "game ended" ? [ExitSurveyMinimal, Last] : [SorryCrash];
 }
 
 
