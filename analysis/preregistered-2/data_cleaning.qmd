@@ -1,0 +1,303 @@
+---
+title: "Experiment1"
+format: html
+editor: visual
+---
+
+# Import packages
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+
+library(tidyverse)
+library(tidyboot)
+library(lme4)
+library(here)
+library(jsonlite)
+library(ggthemes)
+```
+
+## Read in data
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+d.1 <- bind_rows(
+  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/playerStage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/playerStage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/playerStage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/playerStage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/playerStage.csv')),
+ read_csv(here('data/experiment_4_rare_distrib/11-26-1646/playerStage.csv'))
+)
+
+d.2 <- bind_rows(
+  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/round.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/round.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/round.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/round.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/round.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/round.csv'))
+)%>% 
+  rename(roundID = id) 
+
+d.3 <- bind_rows(
+  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/stage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/stage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/stage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/stage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/stage.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/stage.csv'))
+)%>% 
+  rename(stageID = id)%>%
+  rename(stageName = name)
+
+d.5 <- bind_rows(
+  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/playerGame.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/playerGame.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/playerGame.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/playerGame.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/playerGame.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/playerGame.csv'))
+)
+
+
+d.6 <- bind_rows(
+  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/player.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/player.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/player.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/player.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/player.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/player.csv'))
+)%>% 
+  rename(playerID = id) %>% 
+  select(-contains("LastChangedAt")) %>%
+  filter(ended == "game ended")
+
+d.8 <- bind_rows(
+  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/game.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/game.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/game.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/game.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/game.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/game.csv'))
+)%>% 
+  rename(gameID = id)
+
+d.9 <- bind_rows(
+  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/batch.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/batch.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/batch.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/batch.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/batch.csv')),
+  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/batch.csv'))
+)%>% 
+  rename(batchID = id)
+
+decode <-read_csv(here('data/experiment_4_rare_distrib/games.csv'))%>%
+  rename(nCrittersGame = totalCritters)%>% 
+  rename(designatedGame = gameID)
+
+```
+
+## Merge files
+
+```{r}
+d.gamebatch <- merge(d.8, d.9, by = c("batchID"), all=T)%>%
+  select(-contains("LastChangedAt"))
+
+d.playergamebatch <-merge(d.6, d.gamebatch, by="gameID", all = T)
+
+d.59 <-merge(d.playergamebatch,d.5, by = c("gameID", "playerID"), all = T)%>%
+  select(-contains("LastChangedAt"))
+
+rm(d.8, d.9, d.6, d.gamebatch, d.playergamebatch, d.5)
+
+d.stageID <- merge(d.1, d.3, by = c("stageID", "gameID", "roundID"), all = T) %>%
+  select(-contains("LastChangedAt"))
+
+
+d.playerstageround <-merge(d.stageID,d.2, by = c("roundID", "gameID"), all = T)%>%
+  select(-contains("LastChangedAt"))%>%
+  select(gameID, stageName, roundID, confidence, guess, playerID, stageID,idx)
+
+rm(d.1, d.2, d.stageID, d.3)
+
+d.all <-merge(d.playerstageround,d.59, by = c("playerID", "gameID"), all = T)%>%
+  select(gameID, playerID, stageName, treatmentName.x, ended.x, roundID, confidence, guess, stageID.x, idx, emojiArray, exitSurvey, participantID, recipient,treatment.x, chat,messages)%>%
+  mutate(
+    emojiArray = str_remove_all(emojiArray, "\\s"),
+    emojiArray = str_extract_all(emojiArray, "🐇|🐿️"),
+    nRabbits = sapply(emojiArray, function(x) sum(x == "🐇")),
+    nSquirrels = sapply(emojiArray, function(x) sum(x == "🐿️")),
+    nCritters = nSquirrels + nRabbits,
+    mleEstimate = nRabbits / (nRabbits + nSquirrels)
+  ) 
+
+rm(d.59, d.playerstageround)
+```
+
+## Filter for relevant rows
+
+```{r}
+d.all <- d.all %>%
+  distinct() %>%
+  group_by(gameID) %>%
+  mutate(num_players = n_distinct(playerID)) %>%
+  ungroup() %>%
+  filter(num_players == 4) %>%
+  filter(ended.x == 'game ended') %>%
+  filter(stageName == 'observe')
+
+```
+
+## calculations to merge desired with played games
+
+```{r}
+d.allgameplayers <- d.all %>%
+  distinct(playerID, gameID, .keep_all = TRUE)%>%
+  group_by(gameID) %>%
+  mutate(
+    nRabbitsGame = sum(nRabbits, na.rm = TRUE),
+    nSquirrelsGame = sum(nSquirrels, na.rm = TRUE),
+    nCrittersGame = sum(nCritters, na.rm = TRUE),
+    mleGame = nRabbitsGame / (nRabbitsGame + nSquirrelsGame),
+    prob = nCritters / nCrittersGame,
+    entropy = -sum(ifelse(prob > 0, prob * log(prob), 0)),
+    representation = mean(abs(mleEstimate - mleGame))
+  ) %>%
+  ungroup() 
+
+
+
+d.gamelist <- d.allgameplayers%>%
+  group_by(gameID) %>%
+  slice(1) %>% 
+  ungroup()
+
+```
+
+```{r}
+n_unique <- nrow(unique(decode[c("nCritters", "mleGame")]))
+n_unique
+
+dup_rows <- decode  %>%
+  group_by(nCrittersGame, mleGame) %>%
+  filter(n() > 1) %>%
+  count(designatedGame) %>%
+  filter (n==1)
+
+duplicated_rows <-decode %>%
+  filter(designatedGame %in% dup_rows$designatedGame)
+
+# Print the rows
+print(dup_rows)
+
+#looks like 10297 and 3627 are randomly generated identical pairs and 16039 only differs by one (so representation is different)
+d.decode <- decode%>%
+  distinct(designatedGame, .keep_all = TRUE)
+```
+
+```{r}
+d.allgameplayers <- d.allgameplayers %>%
+  mutate(across(c(nCrittersGame, representation, entropy), as.character))
+
+d.decode <- d.decode %>%
+  mutate(across(c(nCrittersGame, representation, entropy), as.character))
+
+
+d.allgameplayers <- d.allgameplayers %>%
+  left_join(d.decode %>% distinct(nCrittersGame, representation, entropy, designatedGame, entropy_bin, representation_bin,nCrittersGame_bin), 
+            by = c("nCrittersGame", "representation", "entropy"))
+
+d.all <- d.all %>%
+  left_join(
+    d.allgameplayers %>%
+      select(nSquirrelsGame, nRabbitsGame, nCrittersGame, gameID, mleGame, prob, entropy, representation, designatedGame, entropy_bin, representation_bin,nCrittersGame_bin) %>%
+      distinct(gameID, .keep_all = TRUE), 
+    by = c("gameID")
+  )
+
+```
+
+## Preemptive filter for games we'll end up excluding & saving before that
+
+```{r}
+list_cols <- sapply(d.all, is.list)
+d.all[list_cols] <- lapply(d.all[list_cols], function(col) {
+  sapply(col, paste, collapse = ";") # Collapse lists into strings
+})
+
+write.csv(d.all, "exp4_clean_data.csv", row.names = FALSE)
+```
+
+```{r}
+persistentnoClick <- data.frame(gameID = character(), playerID = character(), stringsAsFactors = FALSE)
+
+for (i in 1:7) {
+  idx_pair <- c(i + 1, i + 2)
+    filtered_players <- d.all %>%
+    group_by(gameID, playerID) %>%
+    filter(all(is.na(guess[idx_pair]))) %>%
+    select(gameID, playerID) %>%
+    distinct()
+    persistentnoClick <- bind_rows(persistentnoClick, filtered_players)
+}
+persistentnoClick <- distinct(persistentnoClick)
+
+gameIDs_to_remove <- persistentnoClick %>%
+  count(gameID) %>%
+  filter(n >= 2) %>%
+  pull(gameID)
+
+d.allgameplayers <- d.allgameplayers %>%
+  filter(!(gameID %in% gameIDs_to_remove))
+
+```
+
+## Count which games are present
+
+```{r}
+decode <- decode %>%
+  mutate(across(c(nCrittersGame, representation, designatedGame), as.character))
+
+d.allgameplayers <- d.allgameplayers %>%
+  mutate(across(c(nCrittersGame, representation, designatedGame, treatmentName.x), as.character))
+
+d.count.chat <- d.allgameplayers %>%
+  filter(str_ends(treatmentName.x, "interactive"))
+
+d.count.slider <- d.allgameplayers %>%
+  filter(str_ends(treatmentName.x, "slider"))
+
+
+# Count the occurrences of each designatedGame in decode
+decode_counts <- decode %>%
+  count(designatedGame, name = "decode_count")
+
+# Count the occurrences of each designatedGame in d.count.chat
+chat_counts <- d.count.chat %>%
+  count(designatedGame, name = "chat_count")
+
+# Count the occurrences of each designatedGame in d.count.slider
+slider_counts <- d.count.slider %>%
+  count(designatedGame, name = "slider_count")
+
+# Join counts to compare
+missing_chat <- decode_counts %>%
+  left_join(chat_counts, by = "designatedGame") %>%
+  filter(is.na(chat_count) | decode_count > chat_count)
+
+missing_slider <- decode_counts %>%
+  left_join(slider_counts, by = "designatedGame") %>%
+  filter(is.na(slider_count) | decode_count > slider_count)
+
+# Print missing games for each
+cat("Missing or insufficient games in d.count.chat:\n")
+print(missing_chat)
+
+cat("\nMissing or insufficient games in d.count.slider:\n")
+print(missing_slider)
+
+```

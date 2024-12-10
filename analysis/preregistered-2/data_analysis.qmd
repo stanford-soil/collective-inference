@@ -1,0 +1,112 @@
+---
+title: "experiment 4"
+format: html
+editor: visual
+---
+
+## Import packages
+
+```{r}
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+
+library(tidyverse)
+library(tidyboot)
+library(lme4)
+library(here)
+library(jsonlite)
+library(ggthemes)
+
+theme_set(theme_few())
+```
+
+## Read in data
+
+```{r}
+
+d.all <- read_csv(here('data/exp4_clean_data.csv'))
+
+```
+
+## Filter games with 2+ inactive players
+
+```{r}
+persistentnoClick <- data.frame(gameID = character(), playerID = character(), stringsAsFactors = FALSE)
+
+for (i in 1:7) {
+  idx_pair <- c(i + 1, i + 2)
+    filtered_players <- d.all %>%
+    group_by(gameID, playerID) %>%
+    filter(all(is.na(guess[idx_pair]))) %>%
+    select(gameID, playerID) %>%
+    distinct()
+    persistentnoClick <- bind_rows(persistentnoClick, filtered_players)
+}
+persistentnoClick <- distinct(persistentnoClick)
+
+gameIDs_to_remove <- persistentnoClick %>%
+  count(gameID) %>%
+  filter(n >= 2) %>%
+  pull(gameID)
+
+d.all <- d.all %>%
+  filter(!(gameID %in% gameIDs_to_remove)) 
+
+d.allnovel <-d.all %>%
+  filter(is.na(designatedGame))%>%
+  distinct(gameID)
+```
+
+```{r}
+heatmap_test <-d.all %>%
+  group_by(nCrittersGame_bin, representation_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Representation", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+```{r}
+heatmap_test <- d.all %>%
+  group_by(entropy_bin, representation_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "entropy", y = "representation") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+```{r}
+nCritters_entropy_heatmap_new <-d.all %>%
+  group_by(nCrittersGame_bin, entropy_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+
+# Heatmap for nCrittersGame vs. Entropy
+ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Entropy", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
