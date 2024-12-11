@@ -422,4 +422,7 @@ final_df2 %>%
 ```
 
 ```{r}
+final_df2 %>%
+  write_csv("games.csv")
+
 ```
