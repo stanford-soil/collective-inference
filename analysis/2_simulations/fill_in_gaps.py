@@ -52,18 +52,18 @@ def generate_game_data(n_games, rabbit_proportion=0.75, game_filter=None):
 pairwise_matches = [
     #missing in original generation
      (('representation', [(0, 0.12)]), ('entropy', [(0.27, 0.54)])),
-      (('representation', [(0.48, 0.6)]), ('entropy', [(0.27, 0.54)])),
+      #(('representation', [(0.48, 0.6)]), ('entropy', [(0.27, 0.54)])),
        (('representation', [(0.36, 0.48)]), ('entropy', [(1.4, 1.6)])),
         (('representation', [(0.48, 0.6)]), ('entropy', [(1.4, 1.6)])),
 
     (('entropy', [(0.27, 0.54)]), ('total_critters', [(15, 20)])),
 
-    (('representation', [(0.48, 0.6)]), ('total_critters', [(25, 30)])),
-     (('representation', [(0.48, 0.6)]), ('total_critters', [(30, 35)])),
-      (('representation', [(0.48, 0.6)]), ('total_critters', [(35, 40)])),
+    #(('representation', [(0.48, 0.6)]), ('total_critters', [(25, 30)])),
+     #(('representation', [(0.48, 0.6)]), ('total_critters', [(30, 35)])),
+      #(('representation', [(0.48, 0.6)]), ('total_critters', [(35, 40)])),
 
     #missing in data (bc of game 10120)
-    (('representation', [(0.48, 0.6)]), ('total_critters', [(20, 25)])),
+    #(('representation', [(0.48, 0.6)]), ('total_critters', [(20, 25)])),
 ]
 
 # Create the filter with pairwise ranges
@@ -73,5 +73,5 @@ game_filter = GameFilter(required_pairwise_matches=pairwise_matches)
 df = generate_game_data(100, 0.75, game_filter)
 
 # Save DataFrame to CSV file
-df.to_csv('game_results_FIXED.csv', index=False)
+df.to_csv('game_results_2_FIXED_2.csv', index=False)
 
