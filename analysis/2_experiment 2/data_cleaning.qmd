@@ -24,80 +24,82 @@ library(ggthemes)
 
 ```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
 d.1 <- bind_rows(
-  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/playerStage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/playerStage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/playerStage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/playerStage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/playerStage.csv')),
- read_csv(here('data/experiment_4_rare_distrib/11-26-1646/playerStage.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-2101/playerStage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2234/playerStage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2246/playerStage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-21-0329/playerStage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-1731/playerStage.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/11-26-1646/playerStage.csv'))
 )
 
 d.2 <- bind_rows(
-  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/round.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/round.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/round.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/round.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/round.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/round.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-2101/round.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2234/round.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2246/round.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-21-0329/round.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-1731/round.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-26-1646/round.csv'))
 )%>% 
   rename(roundID = id) 
 
 d.3 <- bind_rows(
-  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/stage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/stage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/stage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/stage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/stage.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/stage.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-2101/stage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2234/stage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2246/stage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-21-0329/stage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-1731/stage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-26-1646/stage.csv'))
 )%>% 
   rename(stageID = id)%>%
   rename(stageName = name)
 
 d.5 <- bind_rows(
-  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/playerGame.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/playerGame.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/playerGame.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/playerGame.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/playerGame.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/playerGame.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-2101/playerGame.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2234/playerGame.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2246/playerGame.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-21-0329/playerGame.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-1731/playerGame.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-26-1646/playerGame.csv'))
 )
 
 
 d.6 <- bind_rows(
-  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/player.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/player.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/player.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/player.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/player.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/player.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-2101/player.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2234/player.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2246/player.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-21-0329/player.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-1731/player.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-26-1646/player.csv'))
 )%>% 
   rename(playerID = id) %>% 
   select(-contains("LastChangedAt")) %>%
   filter(ended == "game ended")
 
 d.8 <- bind_rows(
-  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/game.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/game.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/game.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/game.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/game.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/game.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-2101/game.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2234/game.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2246/game.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-21-0329/game.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-1731/game.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-26-1646/game.csv'))
 )%>% 
   rename(gameID = id)
 
 d.9 <- bind_rows(
-  read_csv(here('data/experiment_4_rare_distrib/11-22-2101/batch.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2234/batch.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-20-2246/batch.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-21-0329/batch.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-22-1731/batch.csv')),
-  read_csv(here('data/experiment_4_rare_distrib/11-26-1646/batch.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-2101/batch.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2234/batch.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-20-2246/batch.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-21-0329/batch.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-22-1731/batch.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/11-26-1646/batch.csv'))
 )%>% 
   rename(batchID = id)
 
-decode <-read_csv(here('data/experiment_4_rare_distrib/games.csv'))%>%
-  rename(nCrittersGame = totalCritters)%>% 
+decode <- read_json(here('analysis/2_simulations/games.json'), simplifyVector = TRUE) %>%
+  as_tibble() %>%
+  rename(nCrittersGame = totalCritters) %>%
   rename(designatedGame = gameID)
+
 
 ```
 
@@ -321,6 +323,25 @@ d.all <- d.all %>%
 # save
 
 ```{r}
+# Filter decode for missing_chat gameIDs
+decode_missing_chat <- decode %>%
+   filter(designatedGame != 10120) %>%
+  filter(designatedGame %in% missing_chat$designatedGame)
+
+# Filter decode for missing_slider gameIDs
+decode_missing_slider <- decode %>%
+   filter(designatedGame != 10120) %>%
+  filter(designatedGame %in% missing_slider$designatedGame)
+
+decode_combined <- bind_rows(decode_missing_slider, decode_missing_chat)
+
+#35 then 27 games
+
+write_json(missing_chat_json, "missing_games.json", pretty = TRUE)
+
+```
+
+```{r}
 
 list_cols <- sapply(d.all, is.list)
 d.all[list_cols] <- lapply(d.all[list_cols], function(col) {
@@ -328,5 +349,5 @@ d.all[list_cols] <- lapply(d.all[list_cols], function(col) {
 })
 d.all <- d.all %>%
   select(-messages, -emojiArray)
-write.csv(d.all, "exp2_clean_data.csv", row.names = FALSE)
+#write.csv(d.all, "exp2_clean_data.csv", row.names = FALSE)
 ```
