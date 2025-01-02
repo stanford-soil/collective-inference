@@ -1,0 +1,54 @@
+---
+title: "Experiment1"
+format: html
+editor: visual
+---
+
+# Import packages
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+
+library(tidyverse)
+library(tidyboot)
+library(lme4)
+library(here)
+library(jsonlite)
+library(ggthemes)
+```
+
+```{r}
+validate_json <- function(file_path) {
+  json_text <- readLines(file_path, warn = FALSE)
+  validate(paste(json_text, collapse = "\n"))
+}
+
+# Validate each file
+#validate_json('analysis/2_experiment_2/missing_games.json')
+#validate_json("experiments/server/src/games.json")
+validate_json("experiments/server/src/games_2.json")
+
+getwd()
+
+```
+
+```{r}
+missing_games <- fromJSON("analysis/2_experiment 2/missing_games.json")
+games <- fromJSON("experiments/server/src/games.json")
+games_2 <- fromJSON("experiments/server/src/games_2.json")
+
+# Find rows in `games` that match the IDs in `missing_games`
+matching_rows <- games[games$id %in% missing_games$id, ]
+
+# Add the matching rows to `games_2`
+games_2 <- rbind(games_2, matching_rows)
+
+# Save the updated `games_2.json`
+write(toJSON(games_2, pretty = TRUE, auto_unbox = TRUE), "experiments/server/src/games_2.json")
+
+cat("Rows added successfully to games_2.json\n")
+
+```
