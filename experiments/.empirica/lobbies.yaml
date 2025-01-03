@@ -14,3 +14,7 @@ lobbies:
       kind: shared
       duration: 10m0s
       strategy: fail
+    - name: this
+      kind: shared
+      duration: 15m0s
+      strategy: fail
