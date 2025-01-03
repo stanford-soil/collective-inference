@@ -22,26 +22,34 @@ library(ggthemes)
 
 ```{r}
 
-```
-
-```{r}
-
-
 getwd()
 setwd("/Users/zubyul/social-media-dynamics")
 missing_games <- fromJSON("analysis/2_experiment_2/missing_games.json")
 games <- fromJSON("./experiments/server/src/games.json")
-games_2 <- fromJSON("./experiments/server/src/games_2.json")
+games_2 <- fromJSON("./experiments/server/src/games_2.json")[1:23, ]
 
-# Find rows in `games` that match the IDs in `missing_games`
+# Ensure duplicates in `missing_games` are respected
 matching_rows <- games[games$gameID %in% missing_games$gameID, ]
 
-# Add the matching rows to `games_2`
-games_2 <- rbind(games_2, matching_rows)
+# Repeat rows based on the number of times each `gameID` appears in `missing_games`
+expanded_rows <- do.call(
+  rbind,
+  lapply(unique(missing_games$gameID), function(id) {
+    rows <- matching_rows[matching_rows$gameID == id, ]
+    replicate(sum(missing_games$gameID == id), rows, simplify = FALSE)
+  })
+)
 
-# Save the updated `games_2.json`
-write(toJSON(games_2, pretty = TRUE, auto_unbox = TRUE), "experiments/server/src/games_2.json")
+# Bind the expanded rows to `games_2`
+games_3 <- rbind(games_2, do.call(rbind, expanded_rows))
 
-cat("Rows added successfully to games_2.json\n")
+# Now modify the original games_2 to add an extra one on top with the required adjustments
+extra_rows <- games_2[!(seq_along(games_2$gameID) %in% 1:14) | games_2$gameID %in% c(30, 73, 87, 97), ]
+
+# Add the adjusted rows to the top of games_2
+games_3 <- rbind(extra_rows, games_3)
+
+write(toJSON(games_3, pretty = TRUE, auto_unbox = TRUE), "experiments/server/src/games_3.json")
+
 
 ```
