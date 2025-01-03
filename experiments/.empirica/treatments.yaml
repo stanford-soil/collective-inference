@@ -57,3 +57,11 @@ treatments:
         opinion: slider
         playerCount: 4
         sliderDirection: RabbitsSquirrels
+    - name: debug json
+      factors:
+        condition: interactive
+        debug: debug
+        opinion: slider
+        playerCount: 2
+        sliderDirection: RabbitsSquirrels
+        trueP: 0.75
