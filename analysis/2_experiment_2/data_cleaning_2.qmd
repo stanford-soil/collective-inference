@@ -81,7 +81,7 @@ d.9 <- bind_rows(
 )%>% 
   rename(batchID = id)
 
-decode <- read_json(here('analysis/2_simulations/games_2.json'), simplifyVector = TRUE) %>%
+decode <- read_json(here('experiments/server/games_2.json'), simplifyVector = TRUE) %>%
   as_tibble() %>%
   rename(nCrittersGame = totalCritters) %>%
   rename(designatedGame = gameID)
@@ -144,19 +144,18 @@ d.all <- d.all %>%
 
 ```{r}
 d.allgameplayers <- d.all %>%
-  distinct(playerID, gameID, .keep_all = TRUE)%>%
+  distinct(playerID, gameID, .keep_all = TRUE) %>%
   group_by(gameID) %>%
   mutate(
     nRabbitsGame = sum(nRabbits, na.rm = TRUE),
     nSquirrelsGame = sum(nSquirrels, na.rm = TRUE),
     nCrittersGame = sum(nCritters, na.rm = TRUE),
-    mleGame = nRabbitsGame / (nRabbitsGame + nSquirrelsGame),
-    prob = nCritters / nCrittersGame,
-    entropy = -sum(ifelse(prob > 0, prob * log(prob), 0)),
-    representation = mean(abs(mleEstimate - mleGame))
+    mleGame = round(nRabbitsGame / (nRabbitsGame + nSquirrelsGame), 4),
+    prob = round(nCritters / nCrittersGame, 4),
+    entropy = round(-sum(ifelse(prob > 0, prob * log(prob), 0)), 4),
+    representation = round(mean(abs(mleEstimate - mleGame)), 4)
   ) %>%
-  ungroup() 
-
+  ungroup()
 
 
 d.gamelist <- d.allgameplayers%>%
@@ -196,13 +195,13 @@ d.decode <- d.decode %>%
 
 
 d.allgameplayers <- d.allgameplayers %>%
-  left_join(d.decode %>% distinct(nCrittersGame, representation, entropy, designatedGame, entropy_bin, representation_bin,nCrittersGame_bin), 
-            by = c("nCrittersGame", "representation", "entropy"))
+  left_join(d.decode %>% distinct(nCrittersGame, representation, designatedGame, entropy_bin, representation_bin,nCrittersGame_bin), 
+            by = c("nCrittersGame", "representation"))
 
 d.all <- d.all %>%
   left_join(
     d.allgameplayers %>%
-      select(nSquirrelsGame, nRabbitsGame, nCrittersGame, gameID, mleGame, prob, entropy, representation, designatedGame, entropy_bin, representation_bin,nCrittersGame_bin) %>%
+      select(nSquirrelsGame, nRabbitsGame, nCrittersGame, gameID, mleGame, representation, designatedGame, entropy_bin, representation_bin,nCrittersGame_bin) %>%
       distinct(gameID, .keep_all = TRUE), 
     by = c("gameID")
   )
@@ -323,7 +322,7 @@ decode_combined <- bind_rows(decode_missing_slider, decode_missing_chat)
 
 #35 then 27 games
 
-write_json(missing_chat_json, "missing_games.json", pretty = TRUE)
+write_json(missing_chat_json, "missing_games_2.json", pretty = TRUE)
 
 ```
 
