@@ -70,7 +70,7 @@ pairwise_matches = [
 game_filter = GameFilter(required_pairwise_matches=pairwise_matches)
 
 # Generate game data
-df = generate_game_data(100, 0.75, game_filter)
+df = generate_game_data(10, 0.75, game_filter)
 
 # Save DataFrame to CSV file
 df.to_csv('game_results_2_FIXED_2.csv', index=False)

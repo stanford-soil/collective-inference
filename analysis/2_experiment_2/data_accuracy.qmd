@@ -1,5 +1,5 @@
 ---
-title: "experiment 4"
+title: "experiment 2"
 format: html
 editor: visual
 ---
@@ -25,8 +25,10 @@ theme_set(theme_few())
 
 ```{r}
 
-d.all <- read_csv(here('data/exp4_clean_data.csv'))
+d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan8.csv'))
 
+d.all <- d.all %>%
+  separate(treatmentName.x, into = c("direction", "treatment"), sep = "_")
 ```
 
 ## Filter games with 2+ inactive players
@@ -56,13 +58,18 @@ d.all <- d.all %>%
 d.allnovel <-d.all %>%
   filter(is.na(designatedGame))%>%
   distinct(gameID)
+
+d.allgame <- d.all %>%
+   distinct(gameID, .keep_all = TRUE)
 ```
 
 ```{r}
-heatmap_test <-d.all %>%
-  group_by(nCrittersGame_bin, representation_bin) %>%
-  summarise(count = n()) %>%
-  mutate(prop = count / sum(count))
+heatmap_test <- d.allgame %>%
+  filter(treatment %in% c('slider', 'interactive')) %>%
+  filter(direction %in% c('SR', 'RS')) %>%
+  group_by(treatment, direction, nCrittersGame_bin, representation_bin) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  mutate(prop = count / sum(count, na.rm = TRUE))
 
 ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
   geom_tile(aes(fill = count), color = "white") +
@@ -70,14 +77,20 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
   labs(x = "Representation", y = "nCrittersGame") +
   theme_few() +
   theme(
-    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+    aspect.ratio = 1,
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  facet_wrap(~treatment #+ direction
+             )
+
 
 ```
 
 ```{r}
-heatmap_test <- d.all %>%
-  group_by(entropy_bin, representation_bin) %>%
+heatmap_test <- d.allgame %>%
+  filter(treatment %in% c('slider', 'interactive')) %>%
+  filter(direction %in% c('SR', 'RS')) %>%
+  group_by(treatment, direction, entropy_bin, representation_bin) %>%
   summarise(count = n()) %>%
   mutate(prop = count / sum(count))
 
@@ -88,18 +101,21 @@ ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+  ) +
+  facet_wrap(~treatment #+ direction
+             )
+
 
 ```
 
 ```{r}
-nCritters_entropy_heatmap_new <-d.all %>%
-  group_by(nCrittersGame_bin, entropy_bin) %>%
+nCritters_entropy_heatmap_new <- d.allgame %>%
+  filter(treatment %in% c('slider', 'interactive')) %>%
+  filter(direction %in% c('SR', 'RS')) %>%
+  group_by(treatment, direction, nCrittersGame_bin, entropy_bin) %>%
   summarise(count = n()) %>%
   mutate(prop = count / sum(count))
 
-
-# Heatmap for nCrittersGame vs. Entropy
 ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin)) +
   geom_tile(aes(fill = count), color = "white") +
   scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
@@ -107,6 +123,9 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+  ) +
+  facet_wrap(~treatment #+ direction
+             )
+
 
 ```
