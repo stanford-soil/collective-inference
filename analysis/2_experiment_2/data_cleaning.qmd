@@ -37,7 +37,9 @@ d.1 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2051/playerStage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2201/playerStage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2348/playerStage.csv')),
- read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/playerStage.csv'))
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/playerStage.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/playerStage.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/playerStage.csv'))
 )
 
 d.2 <- bind_rows(
@@ -54,7 +56,9 @@ d.2 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2051/round.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2201/round.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2348/round.csv')),
- read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/round.csv'))
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/round.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/round.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/round.csv'))
 )%>% 
   rename(roundID = id) 
 
@@ -72,7 +76,9 @@ d.3 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2051/stage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2201/stage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2348/stage.csv')),
- read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/stage.csv'))
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/stage.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/stage.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/stage.csv'))
 )%>% 
   rename(stageID = id)%>%
   rename(stageName = name)
@@ -91,7 +97,9 @@ d.5 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2051/playerGame.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2201/playerGame.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2348/playerGame.csv')),
- read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/playerGame.csv'))
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/playerGame.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/playerGame.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/playerGame.csv'))
 )
 
 
@@ -109,7 +117,9 @@ d.6 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2051/player.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2201/player.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2348/player.csv')),
- read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/player.csv'))
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/player.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/player.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/player.csv'))
 )%>% 
   rename(playerID = id) %>% 
   select(-contains("LastChangedAt")) %>%
@@ -129,7 +139,9 @@ d.8 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2051/game.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2201/game.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2348/game.csv')),
- read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/game.csv'))
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/game.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/game.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/game.csv'))
 )%>% 
   rename(gameID = id)
 
@@ -147,7 +159,9 @@ d.9 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2051/batch.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2201/batch.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-03-2348/batch.csv')),
- read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/batch.csv'))
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/batch.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/batch.csv')),
+ read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/batch.csv'))
 )%>% 
   rename(batchID = id)
 
@@ -433,6 +447,7 @@ write.csv(d.all, "exp2_clean_data_jan8.csv", row.names = FALSE)
 ```
 
 ```{r}
+crash <-me
 low_direction <- read_csv(here('analysis/2_experiment_2/low_direction.csv'))
 #this comes from the data_quality_control file, which needs to be run first.
 ```
@@ -454,7 +469,7 @@ missing_rows <- setdiff(decode_combined[, !names(decode_combined) %in% "directio
 ```
 
 ```{r}
-write_json(decode_combined_with_direction, "missing_games_jan9.json", pretty = TRUE)
+write_json(decode_combined_with_direction, "missing_games_jan9_2.json", pretty = TRUE)
 ```
 
 \
