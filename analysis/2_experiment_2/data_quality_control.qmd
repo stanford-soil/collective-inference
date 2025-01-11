@@ -25,7 +25,7 @@ theme_set(theme_few())
 
 ```{r}
 
-d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan8.csv'))
+d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan11.csv'))
 
 d.all <- d.all %>%
   separate(treatmentName.x, into = c("direction", "treatment"), sep = "_")
@@ -86,7 +86,7 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
 #run this with direction excluded
 low_count_combinations <- heatmap_test %>%
   select(-direction) %>%
-  filter(count <= 3)
+  filter(count <= 1)
 
 #run this with direction included
 #low_direction_combinations <- heatmap_test %>%
@@ -119,7 +119,7 @@ ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
 #run this with direction excluded
 low_count_combinations1 <- heatmap_test %>%
   select(-direction) %>%
-  filter(count <= 3)
+  filter(count <= 1)
 
 
 #run this with direction included
@@ -150,7 +150,7 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
 #run this with direction excluded
 low_count_combinations2 <- heatmap_test %>%
   select(-direction) %>%
-  filter(count <= 3)
+  filter(count <= 1)
 
 
 #run this with direction included
@@ -166,8 +166,7 @@ print(low_count_combinations)
 #low_direction<- bind_rows(low_direction_combinations,low_direction_combinations1, low_direction_combinations2)
 
 #3 or less just between treatments
-low_count %>%
-  filter(count == 1)
+
 low_count <- bind_rows(low_count_combinations,low_count_combinations1, low_count_combinations2)
 ```
 

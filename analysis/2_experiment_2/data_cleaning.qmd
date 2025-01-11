@@ -40,7 +40,8 @@ d.1 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/playerStage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/playerStage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/playerStage.csv')),
-  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/playerStage.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/playerStage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/01-11-2206/playerStage.csv'))
 )
 
 d.2 <- bind_rows(
@@ -60,7 +61,8 @@ d.2 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/round.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/round.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/round.csv')),
-  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/round.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/round.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/01-11-2206/round.csv'))
 )%>% 
   rename(roundID = id) 
 
@@ -81,7 +83,8 @@ d.3 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/stage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/stage.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/stage.csv')),
-  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/stage.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/stage.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/01-11-2206/stage.csv'))
 )%>% 
   rename(stageID = id)%>%
   rename(stageName = name)
@@ -103,7 +106,8 @@ d.5 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/playerGame.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/playerGame.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/playerGame.csv')),
-  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/playerGame.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/playerGame.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/01-11-2206/playerGame.csv'))
 )
 
 
@@ -124,7 +128,8 @@ d.6 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/player.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/player.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/player.csv')),
-  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/player.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/player.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/01-11-2206/player.csv'))
 )%>% 
   rename(playerID = id) %>% 
   select(-contains("LastChangedAt")) %>%
@@ -147,7 +152,8 @@ d.8 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/game.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/game.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/game.csv')),
-  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/game.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/game.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/01-11-2206/game.csv'))
 )%>% 
   rename(gameID = id)
 
@@ -168,7 +174,8 @@ d.9 <- bind_rows(
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0302/batch.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-04-0431/batch.csv')),
  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0257/batch.csv')),
-  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/batch.csv'))
+  read_csv(here('data/2_experiment_2_rare_distrib/01-10-0433/batch.csv')),
+  read_csv(here('data/2_experiment_2_rare_distrib/01-11-2206/batch.csv'))
 )%>% 
   rename(batchID = id)
 
@@ -437,7 +444,7 @@ decode_missing_slider <- decode %>%
 
 decode_combined <- bind_rows(decode_missing_slider, decode_missing_chat)
 
-write_json(decode_combined, "missing_both_games_jan8.json", pretty = TRUE)
+write_json(decode_combined, "missing_both_games_jan11.json", pretty = TRUE)
 
 
 ```
@@ -450,7 +457,7 @@ d.all[list_cols] <- lapply(d.all[list_cols], function(col) {
 })
 d.all <- d.all %>%
   select(-messages, -emojiArray)
-write.csv(d.all, "exp2_clean_data_jan8.csv", row.names = FALSE)
+write.csv(d.all, "exp2_clean_data_jan11.csv", row.names = FALSE)
 ```
 
 ```{r}
@@ -470,26 +477,29 @@ low_count_a <- low_count %>%
   filter(is.na(nCrittersGame_bin)) %>%
   left_join(decode, by = c("representation_bin", "entropy_bin")) %>%
   mutate(nCrittersGame_bin = coalesce(nCrittersGame_bin.x, nCrittersGame_bin.y)) %>%
-  select(-nCrittersGame_bin.x, -nCrittersGame_bin.y)
+  select(-nCrittersGame_bin.x, -nCrittersGame_bin.y)%>%
+  distinct(entropy_bin, representation_bin, .keep_all = TRUE)
+
 
 # Fill missing entropy_bin
 low_count_c <- low_count %>%
   filter(is.na(entropy_bin)) %>%
   left_join(decode, by = c("nCrittersGame_bin", "representation_bin")) %>%
   mutate(entropy_bin = coalesce(entropy_bin.x, entropy_bin.y)) %>%
-  select(-entropy_bin.x, -entropy_bin.y)
+  select(-entropy_bin.x, -entropy_bin.y)%>% 
+  distinct(nCrittersGame_bin, representation_bin, .keep_all = TRUE)
 
 # Combine filled datasets
 low_count_filled <- bind_rows(low_count_a, low_count_c)
 
 # Remove duplicate entries by selecting the first match for each row in low_count
 low_count_filled <- low_count_filled %>%
-  distinct(nCrittersGame_bin, representation_bin, entropy_bin, .keep_all = TRUE) %>%
+  
   distinct(designatedGame, .keep_all = TRUE)%>% 
   select(-treatment, -representation_bin, -count, -prop,-direction, -entropy_bin, everything(), treatment, representation_bin, count, prop,direction, entropy_bin) %>%
   arrange(treatment)
 
-write_json(low_count_filled, "missing_games_jan10.json", pretty = TRUE)
+write_json(low_count_filled, "missing_games_jan11.json", pretty = TRUE)
 ```
 
 \
