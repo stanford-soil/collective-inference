@@ -456,22 +456,62 @@ write.csv(d.all, "exp2_clean_data_jan8.csv", row.names = FALSE)
 ```{r}
 crash <-me
 low_direction <- read_csv(here('analysis/2_experiment_2/low_direction.csv'))
+  
 #this comes from the data_quality_control file, which needs to be run first.
+
 ```
 
 ```{r}
-decode_combined_with_direction <-merge(decode_combined, low_direction[, c("treatment", "representation_bin", "direction")], by = c("treatment", "representation_bin"), all.x = TRUE)%>% 
-distinct()
+low_count<- read_csv(here('analysis/2_experiment_2/low_count.csv')) %>%
+   filter(count == 1)
 
-# find rows from decode_combined that were not matched
-unmatched_rows <- anti_join(low_direction, decode_combined, by = c("treatment", "representation_bin"))
+# Fill missing nCrittersGame_bin
+low_count_a <- low_count %>%
+  filter(is.na(nCrittersGame_bin)) %>%
+  left_join(decode, by = c("representation_bin", "entropy_bin")) %>%
+  mutate(nCrittersGame_bin = coalesce(nCrittersGame_bin.x, nCrittersGame_bin.y)) %>%
+  select(-nCrittersGame_bin.x, -nCrittersGame_bin.y)
 
+# Fill missing entropy_bin
+low_count_c <- low_count %>%
+  filter(is.na(entropy_bin)) %>%
+  left_join(decode, by = c("nCrittersGame_bin", "representation_bin")) %>%
+  mutate(entropy_bin = coalesce(entropy_bin.x, entropy_bin.y)) %>%
+  select(-entropy_bin.x, -entropy_bin.y)
 
+# Combine filled datasets
+low_count_filled <- bind_rows(low_count_a, low_count_c)
+
+# Remove duplicate entries by selecting the first match for each row in low_count
+low_count_filled <- low_count_filled %>%
+  distinct(nCrittersGame_bin, representation_bin, entropy_bin, .keep_all = TRUE) %>%
+  distinct(designatedGame, .keep_all = TRUE)%>% 
+  select(-treatment, -representation_bin, -count, -prop,-direction, -entropy_bin, everything(), treatment, representation_bin, count, prop,direction, entropy_bin) %>%
+  arrange(treatment)
+
+write_json(low_count_filled, "missing_games_jan10.json", pretty = TRUE)
+```
+
+\
+
+```{r}
 decode_combined_with_direction <- decode_combined_with_direction %>%
   select(-treatment, -representation_bin, everything(), treatment, representation_bin) %>%
   arrange(treatment, direction)
 
 missing_rows <- setdiff(decode_combined[, !names(decode_combined) %in% "direction"], decode_combined_with_direction[, !names(decode_combined_with_direction) %in% "direction"])
+
+```
+
+```{r}
+decode_with_count<-merge(decode, low_count[, c("treatment", "representation_bin")], by = c("treatment", "representation_bin"), all.x = TRUE)%>% 
+distinct()
+
+
+decode_combined_with_count <- decode_combined_with_count %>%
+  select(-treatment, -representation_bin, everything(), treatment, representation_bin) %>%
+  arrange(treatment)
+
 
 ```
 

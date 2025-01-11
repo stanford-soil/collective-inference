@@ -4,7 +4,7 @@ import _ from "lodash";
 import fs from 'fs'; // Import fs to read JSON file
 import { getNextGame } from './assignment.js';
 
-  const gamesData = JSON.parse(fs.readFileSync('missing_games_jan9_2.json'));
+  const gamesData = JSON.parse(fs.readFileSync('missing_games_jan10.json'));
    // console.log(gamesData)
       // Load pre-generated critters from games.json
 

@@ -79,14 +79,9 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
   theme(
     aspect.ratio = 1,
     axis.text.x = element_text(angle = 45, hjust = 1)
-  ) +
-  facet_wrap(~treatment #+ direction
-             )
-
-
-```
-
-```{r}
+  ) #+
+ # facet_wrap(~treatment #+ direction
+   #          )
 heatmap_test <- d.allgame %>%
   filter(treatment %in% c('slider', 'interactive')) %>%
   filter(direction %in% c('SR', 'RS')) %>%
@@ -101,14 +96,10 @@ ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  ) +
-  facet_wrap(~treatment #+ direction
-             )
+  ) #+
+ # facet_wrap(~treatment #+ direction
+    #         )
 
-
-```
-
-```{r}
 nCritters_entropy_heatmap_new <- d.allgame %>%
   filter(treatment %in% c('slider', 'interactive')) %>%
   filter(direction %in% c('SR', 'RS')) %>%
@@ -123,9 +114,13 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  ) +
-  facet_wrap(~treatment #+ direction
-             )
+  ) #+
+  #facet_wrap(~treatment #+ direction
+   #          )
+
+```
+
+```{r}
 
 
 ```

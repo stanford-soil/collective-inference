@@ -80,17 +80,17 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
     aspect.ratio = 1,
     axis.text.x = element_text(angle = 45, hjust = 1)
   ) +
-  facet_wrap(~treatment + direction
+  facet_wrap(~treatment #+ direction
              )
 
 #run this with direction excluded
-#low_count_combinations <- heatmap_test %>%
- # select(-direction) %>%
-#  filter(count < 3)
+low_count_combinations <- heatmap_test %>%
+  select(-direction) %>%
+  filter(count <= 3)
 
 #run this with direction included
-low_direction_combinations <- heatmap_test %>%
-  filter(count < 2)
+#low_direction_combinations <- heatmap_test %>%
+ # filter(count < 2)
 
 
 print(low_count_combinations)
@@ -113,18 +113,18 @@ ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
   ) +
-  facet_wrap(~treatment + direction
+  facet_wrap(~treatment #+ direction
              )
 
 #run this with direction excluded
-#low_count_combinations1 <- heatmap_test %>%
-#  select(-direction) %>%
- # filter(count < 3)
+low_count_combinations1 <- heatmap_test %>%
+  select(-direction) %>%
+  filter(count <= 3)
 
 
 #run this with direction included
-low_direction_combinations1 <- heatmap_test %>%
-  filter(count < 2)
+#low_direction_combinations1 <- heatmap_test %>%
+#  filter(count < 2)
 
 print(low_count_combinations)
 ```
@@ -145,18 +145,17 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
   ) +
-  facet_wrap(~treatment + direction
+  facet_wrap(~treatment #+ direction
              )
-
 #run this with direction excluded
-#low_count_combinations2 <- heatmap_test %>%
- # select(-direction) %>%
-#  filter(count < 3)
+low_count_combinations2 <- heatmap_test %>%
+  select(-direction) %>%
+  filter(count <= 3)
 
 
 #run this with direction included
-low_direction_combinations2 <- heatmap_test %>%
-  filter(count < 2)
+#low_direction_combinations2 <- heatmap_test %>%
+#  filter(count < 2)
 
 
 print(low_count_combinations)
@@ -164,12 +163,15 @@ print(low_count_combinations)
 
 ```{r}
 # under 2 in direction x treatment
-low_direction<- bind_rows(low_direction_combinations,low_direction_combinations1, low_direction_combinations2)
+#low_direction<- bind_rows(low_direction_combinations,low_direction_combinations1, low_direction_combinations2)
 
 #3 or less just between treatments
-#low_count <- bind_rows(low_count_combinations,low_count_combinations1, low_count_combinations2)
+low_count %>%
+  filter(count == 1)
+low_count <- bind_rows(low_count_combinations,low_count_combinations1, low_count_combinations2)
 ```
 
 ```{r}
-write.csv(low_direction, "low_direction.csv", row.names = FALSE)
+#write.csv(low_direction, "low_direction.csv", row.names = FALSE)
+write.csv(low_count, "low_count.csv", row.names = FALSE)
 ```
