@@ -25,7 +25,7 @@ theme_set(theme_few())
 
 ```{r}
 
-d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan11.csv'))
+d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
 
 d.all <- d.all %>%
   separate(treatmentName.x, into = c("direction", "treatment"), sep = "_")
