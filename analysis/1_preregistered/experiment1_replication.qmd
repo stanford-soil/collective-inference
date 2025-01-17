@@ -143,7 +143,7 @@ unidirectionals %>%
     scale_x_continuous(breaks = c(1,3,5,7,9,11)) +
     theme(aspect.ratio = 1, legend.position = 'top')
 
-ggsave(here('exp1_raw_convergence_prereg_unidirectional.pdf'), height=3, width = 3)
+#ggsave(here('exp1_raw_convergence_prereg_unidirectional.pdf'), height=3, width = 3)
 
 
 ```

@@ -71,7 +71,7 @@ async function getNextGame() {
     try {
         let count = await readCount();
         let increment = true;
-        if (count >= 9) {
+        if (count >= 7) {
             const data = await fs.readFile(filePath, 'utf8');
             const jsonData = JSON.parse(data);
             jsonData.count = 0;
