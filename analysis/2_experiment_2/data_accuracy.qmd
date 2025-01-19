@@ -65,8 +65,6 @@ d.allgame <- d.all %>%
 
 ```{r}
 heatmap_test <- d.allgame %>%
-  filter(treatment %in% c('slider', 'interactive')) %>%
-  filter(direction %in% c('SR', 'RS')) %>%
   group_by(treatment, direction, nCrittersGame_bin, representation_bin) %>%
   summarise(count = n(), .groups = "drop") %>%
   mutate(prop = count / sum(count, na.rm = TRUE))
@@ -79,12 +77,10 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
   theme(
     aspect.ratio = 1,
     axis.text.x = element_text(angle = 45, hjust = 1)
-  ) #+
- # facet_wrap(~treatment #+ direction
-   #          )
+  ) +
+  facet_wrap(~treatment #+ direction
+             )
 heatmap_test <- d.allgame %>%
-  filter(treatment %in% c('slider', 'interactive')) %>%
-  filter(direction %in% c('SR', 'RS')) %>%
   group_by(treatment, direction, entropy_bin, representation_bin) %>%
   summarise(count = n()) %>%
   mutate(prop = count / sum(count))
@@ -96,13 +92,11 @@ ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  ) #+
- # facet_wrap(~treatment #+ direction
-    #         )
+  ) +
+  facet_wrap(~treatment #+ direction
+            )
 
 nCritters_entropy_heatmap_new <- d.allgame %>%
-  filter(treatment %in% c('slider', 'interactive')) %>%
-  filter(direction %in% c('SR', 'RS')) %>%
   group_by(treatment, direction, nCrittersGame_bin, entropy_bin) %>%
   summarise(count = n()) %>%
   mutate(prop = count / sum(count))
@@ -114,61 +108,121 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  ) #+
-  #facet_wrap(~treatment #+ direction
-   #          )
+  ) +
+  facet_wrap(~treatment #+ direction
+            )
 
 ```
 
 ```{r}
+d.all %>%mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) %>%
+  group_by(idx) %>%
+  summarise(na_count = sum(is.na(error))) %>%
+  ggplot(aes(x = idx, y = na_count)) +
+  geom_line() +
+  labs(x = "Index", y = "NA Count", title = "NA Count Over Time") +
+  theme_minimal()
 
-truePs <- d.all %>% 
-  filter(idx == 1) %>%
-  group_by(treatment, gameID, nSquirrelsGame, nRabbitsGame) %>%
-  tally() %>%
-  group_by(treatment) %>%
-  summarize(p = mean(nRabbitsGame / (nSquirrelsGame + nRabbitsGame)))
+```
 
-d.all %>%
-  group_by(treatment, idx, gameID, direction) %>%
-  summarize(guess = mean(guess), .groups = 'drop') %>% # Ensure .groups is specified
-  group_by(treatment, idx, direction) %>% # Add 'direction' for consistent grouping
-  tidyboot::tidyboot_mean(guess) %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = direction)) +
+```{r}
+d.all <- d.all %>% mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))
+
+heatmap_test <- d.all%>%
+  filter(idx ==8) %>%
+  group_by(representation_bin, nCrittersGame_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE)) 
+
+
+ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = errorAvg), color = "white") +  # Fill by error
+  scale_fill_gradient(name = "Error", low = "lightblue", high = "darkblue") +  # Adjust scale
+  labs(x = "Representation", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1,
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  facet_wrap(~treatment) 
+
+heatmap_test_2 <- d.all%>%
+  filter(idx ==8) %>%
+  group_by(entropy_bin, nCrittersGame_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE))
+
+ggplot(heatmap_test_2, aes(x = entropy_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = errorAvg), color = "white") +  # Fill by error
+  scale_fill_gradient(name = "Error", low = "lightblue", high = "darkblue") +  # Adjust scale
+  labs(x = "Entropy", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1,
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  facet_wrap(~treatment) 
+
+heatmap_test_3 <- d.all%>%
+  filter(idx ==8) %>%
+  group_by(representation_bin, entropy_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE))
+
+ggplot(heatmap_test_3, aes(x = entropy_bin, y = representation_bin)) +
+  geom_tile(aes(fill = errorAvg), color = "white") +  # Fill by error
+  scale_fill_gradient(name = "Error", low = "lightblue", high = "darkblue") +  # Adjust scale
+  labs(x = "Entropy", y = "Representation") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1,
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  facet_wrap(~treatment)
+```
+
+```{r}
+d.all %>%  
+  group_by(treatment, direction, idx, gameID, mleGame) %>%
+  summarize(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) %>%
+  group_by(treatment, idx, direction) %>%
+  tidyboot::tidyboot_mean(error, na.rm = T) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatment, linetype = treatment == 'interactive')) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    theme_few() +
+    scale_color_brewer(palette = 'Accent') +
+    guides(linetype = 'none') +
+    scale_x_continuous(breaks = c(1,3,5,7,9,11)) +
+    labs(y = 'average error', x = 'round #', color = '')  +
+    theme(aspect.ratio = 1, legend.position = 'top') +
+  facet_wrap(~direction)
+
+```
+
+```{r}
+d.all_calc <- d.all %>%
+  mutate(usedCalculator = case_when(
+    exitSurvey == '{"usedCalculator":"no"}' ~ 'no',
+    exitSurvey == '{"usedCalculator":"yes"}' ~ 'yes',
+    TRUE ~ NA_character_
+  )) %>%
+  filter(usedCalculator %in% c('yes', 'no')) 
+
+d.all_calc %>%  
+  group_by(treatment, direction, idx, gameID, mleGame, usedCalculator) %>%
+  reframe(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) %>%
+  filter(!is.na(error)) %>%  # Remove any rows where error is NA
+  group_by(treatment, idx, direction, usedCalculator) %>%
+  tidyboot::tidyboot_mean(error) %>%  
+  ggplot(aes(x = idx, y = empirical_stat, color = treatment, linetype = treatment == 'interactive')) +
     geom_point() +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
-    geom_hline(yintercept = c(75), linetype = 'dotted') +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper, fill = direction), color = NA, alpha = 0.1) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
     theme_few() +
-    labs(y = 'average guess', x = 'round #', color = '') +
-    scale_color_colorblind() +
-    scale_fill_colorblind(guide = 'none') +
-    scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
-    theme(aspect.ratio = 1, legend.position = 'top')
-
-```
-
-```{r}
-d.all %>%
-  filter(!(playerID %in% confused)) %>%
-  filter(!(playerID %in% persistentnoClick)) %>%
-  group_by(treatment, idx, gameID) %>%
-  summarize(error = mean(abs(guess - treatAvg))) %>%
-  group_by(treatment, idx) %>%
-  tidyboot_mean(error) %>%
-  
-  ggplot(aes(x = idx, y = empirical_stat, color = treatment)) +
-    geom_point() +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper, fill = treatmentName), 
-                color = NA, 
-                alpha = 0.1) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se =F) +
-    theme_few() +
-    labs(y = 'average error', x = 'round #', color = '') +
-    scale_color_colorblind() +
-    scale_fill_colorblind(guide="none") +
-    ylim(0, 30) +
+    scale_color_brewer(palette = 'Accent') +
+    guides(linetype = 'none') +
     scale_x_continuous(breaks = c(1,3,5,7,9,11)) +
-    theme(aspect.ratio = 1, legend.position = 'top')
+    labs(y = 'average error', x = 'round #', color = '') +
+    theme(aspect.ratio = 1, legend.position = 'top') +
+  facet_wrap(~usedCalculator)
+
 ```

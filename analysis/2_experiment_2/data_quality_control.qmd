@@ -133,8 +133,8 @@ print(low_count_combinations)
 nCritters_entropy_heatmap_new <- d.allgame %>%
   filter(treatment %in% c('slider', 'interactive')) %>%
   filter(direction %in% c('SR', 'RS')) %>%
-  group_by(treatment, direction, nCrittersGame_bin, entropy_bin) %>%
-  summarise(count = n()) %>%
+  group_by(treatment, nCrittersGame_bin, entropy_bin) %>% # dropped direction here
+  summarise(count = n(), .groups = "drop") %>%
   mutate(prop = count / sum(count))
 
 ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin)) +
@@ -145,20 +145,15 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
   ) +
-  facet_wrap(~treatment #+ direction
-             )
-#run this with direction excluded
-low_count_combinations2 <- heatmap_test %>%
-  select(-direction) %>%
+  facet_wrap(~treatment)
+
+low_count_combinations2 <- nCritters_entropy_heatmap_new %>%
   filter(count <= 1)
 
 
 #run this with direction included
 #low_direction_combinations2 <- heatmap_test %>%
 #  filter(count < 2)
-
-
-print(low_count_combinations)
 ```
 
 ```{r}
