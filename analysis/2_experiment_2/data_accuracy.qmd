@@ -29,6 +29,19 @@ d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
 
 d.all <- d.all %>%
   separate(treatmentName.x, into = c("direction", "treatment"), sep = "_")
+
+d.all <- d.all %>%
+  mutate(
+    error = if_else(direction == "RS", abs((100 - guess) - (mleGame * 100)), abs(guess - (mleGame * 100))),
+    prob = round(nCritters / nCrittersGame, 4),  
+    entropy = round(ifelse(prob > 0, -prob * log(prob), 0), 4), 
+    representation = round(abs(mleEstimate - mleGame), 4) 
+  ) %>%
+  mutate(
+   x_bin = cut(abs(entropy), breaks = seq(0, 2, .34), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+      y_bin = cut(abs(representation), breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+      nCrittersGame_bin = cut(nCrittersGame, breaks = seq(15, 100, by = 5), right = TRUE, include.lowest = TRUE)
+    )
 ```
 
 ## Filter games with 2+ inactive players
@@ -126,7 +139,10 @@ d.all %>%mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*10
 ```
 
 ```{r}
-d.all <- d.all %>% mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))
+
+
+
+  
 
 heatmap_test <- d.all%>%
   filter(idx ==8) %>%
@@ -224,5 +240,316 @@ d.all_calc %>%
     labs(y = 'average error', x = 'round #', color = '') +
     theme(aspect.ratio = 1, legend.position = 'top') +
   facet_wrap(~usedCalculator)
+
+```
+
+```{r}
+library(plotly)
+library(dplyr)
+
+# data preparation
+heatmap_test_3d_slider <- d.all %>%
+  
+  group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop")%>%
+  filter(treatment == 'slider')
+
+heatmap_test_3d_interactive <- d.all %>%
+  
+  group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop")%>%
+  filter(treatment == 'interactive')
+
+# create the 3d plot
+plot_ly(
+  data = heatmap_test_3d_slider,
+  x = ~representation_bin,
+  y = ~entropy_bin,
+  z = ~nCrittersGame_bin,
+  color = ~errorAvg,  # color by errorAvg
+  colors = c("lightgreen", "darkblue"),
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(size = 10, opacity = 0.8)
+) %>%
+  plotly::layout(
+    title = "3D Cube Heatmap",
+    scene = list(
+      xaxis = list(title = "Representation"),
+      yaxis = list(stitle = "Entropy"),
+      zaxis = list(title = "nCrittersGame")
+    )
+  )
+
+plot_ly(
+  data = heatmap_test_3d_interactive,
+  x = ~representation_bin,
+  y = ~entropy_bin,
+  z = ~nCrittersGame_bin,
+  color = ~errorAvg,  # color by errorAvg
+  colors = c("lightgreen", "darkblue"),
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(size = 10, opacity = 0.8)
+) %>%
+  plotly::layout(
+    title = "3D Cube Heatmap",
+    scene = list(
+      xaxis = list(title = "Representation"),
+      yaxis = list(stitle = "Entropy"),
+      zaxis = list(title = "nCrittersGame")
+    )
+  )
+```
+
+```{r}
+
+d.all <- d.all %>%
+  mutate(
+    nCrittersGame_bin = str_remove_all(nCrittersGame_bin, "[\\[\\]()]"),
+    entropy_bin = str_remove_all(entropy_bin, "[\\[\\]()]"),
+    representation_bin = str_remove_all(representation_bin, "[\\[\\]()]")
+  )
+
+heatmap_combined <- bind_rows(
+  d.all %>%
+    filter(idx == 8) %>%
+    group_by(treatment, bin = nCrittersGame_bin) %>%
+    summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+    mutate(variable = "nCritters"),
+  
+  d.all %>%
+    filter(idx == 8) %>%
+    group_by(treatment, bin = entropy_bin) %>%
+    summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+    mutate(variable = "entropy"),
+  
+  d.all %>%
+    filter(idx == 8) %>%
+    group_by(treatment, bin = representation_bin) %>%
+    summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+    mutate(variable = "representation")
+)
+
+ggplot(heatmap_combined, aes(x = bin, y = errorAvg, color = treatment, group = treatment)) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = c(0), linetype = 'dotted') +
+  scale_color_brewer(palette = 'Accent') +
+  theme_few() +
+  labs(
+    x = "Bin",
+    y = "Error (Avg)",
+    color = ""
+    ) +
+  facet_wrap(~variable, scales = "free_x") +
+  theme(
+    aspect.ratio = 1,
+    legend.position = 'top',
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+representation = round(abs(mleEstimate - mleGame)
+
+```{r}
+# Clean the bins
+d.all <- d.all %>%
+  mutate(
+    nCrittersGame_bin = str_remove_all(nCrittersGame_bin, "[\\[\\]()]"),
+    entropy_bin = str_remove_all(entropy_bin, "[\\[\\]()]"),
+    representation_bin = str_remove_all(representation_bin, "[\\[\\]()]")
+  )
+
+# Create combined dataset with errorAvg for each nCrittersGame_bin, faceted by entropy_bin
+heatmap_combined <- d.all %>%
+  filter(idx == 8) %>%
+  group_by(treatment, nCrittersGame_bin, representation_bin) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+  mutate(variable = "nCritters")
+
+# Plot
+ggplot(heatmap_combined, aes(x = nCrittersGame_bin, y = errorAvg, color = treatment, group = treatment)) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = c(0), linetype = 'dotted') +
+  scale_color_brewer(palette = 'Accent') +
+  theme_few() +
+  labs(
+    x = "",
+    y = "Error (Avg)",
+    color = ""
+  ) +
+  facet_wrap(~representation_bin, scales = "free_x") +
+  theme(
+    aspect.ratio = 1,
+    legend.position = 'top',
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+```{r}
+d.all %>%
+  lmerTest::lmer(error ~ poly(idx, 2) *treatment 
+                   + (1 + poly(idx, 1) || gameID) 
+                + (1 + poly(idx, 1) || playerID:gameID), 
+       data = ., 
+       contrasts = list(treatment = contr.sum(2))) %>% 
+  summary()
+
+```
+
+```{r}
+d.all <- d.all %>%
+  mutate(
+    scaled_representation = scale(representation),
+    scaled_entropy = scale(entropy),
+    scaled_nCrittersGame = scale(nCrittersGame),
+  )
+d.all <- d.all %>%
+  filter(idx %in% c(1, 8)) %>%
+  group_by(playerID) %>%
+  mutate(guessChange = abs(guess[idx == 1] - guess[idx == 8]))
+
+d.all %>%
+  lmerTest::lmer(
+    guessChange ~ 
+      scaled_representation * treatment * scaled_entropy * scaled_nCrittersGame +
+    (1 | gameID),
+    data = .,
+    contrasts = list(treatment = contr.sum(2))
+  ) %>%
+  summary()
+
+
+```
+
+```{r}
+# Calculate scaled variables
+d.all <- d.all %>%
+  mutate(
+    scaled_representation = scale(representation),
+    scaled_entropy = scale(entropy),
+    scaled_nCrittersGame = scale(nCrittersGame)
+  )
+
+# Filter and calculate errorAvg for each bin
+heatmap_combined <- bind_rows(
+  d.all %>%
+    filter(idx == 8) %>%
+    group_by(treatment, bin = nCrittersGame_bin) %>%
+    summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+    mutate(variable = "nCritters"),
+  
+  d.all %>%
+    filter(idx == 8) %>%
+    group_by(treatment, bin = entropy_bin) %>%
+    summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+    mutate(variable = "entropy"),
+  
+  d.all %>%
+    filter(idx == 8) %>%
+    group_by(treatment, bin = representation_bin) %>%
+    summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+    mutate(variable = "representation")
+)
+
+# Now, include errorAvg in the model by merging it with the original data
+d.all <- d.all %>%
+  left_join(heatmap_combined, by = c("treatment", "nCrittersGame_bin" = "bin"))
+
+# Run the lmer model, now including errorAvg as a fixed effect
+d.all %>%
+  filter(idx == 8) %>%
+  lmerTest::lmer(
+    guessChange ~ 
+      scaled_representation * treatment +
+      scaled_entropy * treatment +
+      scaled_nCrittersGame * treatment +
+      errorAvg +  # Include errorAvg as a fixed effect
+    (1 | gameID),
+    data = .,
+    contrasts = list(treatment = contr.sum(2))
+  ) %>%
+  summary()
+
+```
+
+## trying to make an error across conditions graph
+
+```{r}
+heatmap_test <- d.all %>%
+  filter(idx == 8) %>%
+  group_by(representation_bin, nCrittersGame_bin) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE))
+
+# new dataframe
+diff_error_1 <- d.all %>%
+  filter(idx == 8) %>%
+  group_by(representation_bin, nCrittersGame_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = treatment, values_from = errorAvg, names_prefix = "errorAvg_") %>%
+  mutate(
+    diff_rep_nCritters = errorAvg_slider - errorAvg_interactive,
+    diff_rep_entropy = errorAvg_slider - errorAvg_interactive,
+    diff_entropy_nCritters = errorAvg_slider - errorAvg_interactive
+  )
+
+# new dataframe
+diff_error_2 <- d.all %>%
+  filter(idx == 8) %>%
+  group_by(representation_bin, error_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = treatment, values_from = errorAvg, names_prefix = "errorAvg_") %>%
+  mutate(
+    diff_rep_nCritters = errorAvg_slider - errorAvg_interactive,
+    diff_rep_entropy = errorAvg_slider - errorAvg_interactive,
+    diff_entropy_nCritters = errorAvg_slider - errorAvg_interactive
+  )
+
+# new dataframe
+diff_error_3 <- d.all %>%
+  filter(idx == 8) %>%
+  group_by(entropy_bin, nCrittersGame_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = treatment, values_from = errorAvg, names_prefix = "errorAvg_") %>%
+  mutate(
+    diff_rep_nCritters = errorAvg_slider - errorAvg_interactive,
+    diff_rep_entropy = errorAvg_slider - errorAvg_interactive,
+    diff_entropy_nCritters = errorAvg_slider - errorAvg_interactive
+  )
+
+```
+
+```{r}
+ggplot(d.all, aes(x = abs(MLEerror), y = error, group = idx, color = idx)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "MLEerror to Error",
+       x = "MLEerror",
+       y = "Error") +
+  theme_minimal() 
+```
+
+```{r}
+d.guesses %>%
+  arrange(playerID, idx) %>% 
+  group_by(playerID) %>%
+  mutate(prevGuess = lag(guess)) %>%
+  mutate(distToSelf = abs(guess - prevGuess)) %>%
+  filter(idx > 2) %>%
+  group_by(idx, condition) %>%
+  tidyboot_mean(distToSelf, na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = condition)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 1), se = FALSE) +
+    scale_color_brewer(palette = 'Accent') +
+    guides(linetype = 'none') +
+    scale_x_continuous(breaks = c(2, 4, 6, 8, 10, 12)) +
+    labs(y = 'change from previous guess', x = 'reference point (round #)', color = '') +
+    theme_few() +
+    theme(aspect.ratio = 1, legend.position = 'top')
+
 
 ```

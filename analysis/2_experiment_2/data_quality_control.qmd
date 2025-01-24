@@ -36,8 +36,8 @@ d.all <- d.all %>%
 ```{r}
 persistentnoClick <- data.frame(gameID = character(), playerID = character(), stringsAsFactors = FALSE)
 
-for (i in 1:7) {
-  idx_pair <- c(i + 1, i + 2)
+for (i in 2:7) {
+  idx_pair <- c(i, i +1)
     filtered_players <- d.all %>%
     group_by(gameID, playerID) %>%
     filter(all(is.na(guess[idx_pair]))) %>%
