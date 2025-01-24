@@ -74,6 +74,13 @@ d.allnovel <-d.all %>%
 
 d.allgame <- d.all %>%
    distinct(gameID, .keep_all = TRUE)
+
+d.all <- d.all %>%
+  mutate(
+    nCrittersGame_bin = str_remove_all(nCrittersGame_bin, "[\\[\\]()]"),
+    entropy_bin = str_remove_all(entropy_bin, "[\\[\\]()]"),
+    representation_bin = str_remove_all(representation_bin, "[\\[\\]()]")
+  )
 ```
 
 ```{r}
@@ -304,6 +311,109 @@ plot_ly(
 
 ```{r}
 
+# Create the faceted 2D plot
+ggplot(heatmap_test_3d_slider, aes(x = representation_bin, y = entropy_bin, color = errorAvg)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_gradient(low = "lightgreen", high = "darkblue") +
+  facet_wrap(~nCrittersGame_bin, labeller = label_both) +  # Facet by nCrittersGame_bin
+  theme_minimal() +
+  labs(title = "2D Slices of 3D Cube Heatmap",
+       x = "Representation",
+       y = "Entropy") +
+  theme(strip.text = element_text(size = 10))
+
+
+# Create the faceted 2D plot
+ggplot(heatmap_test_3d_interactive, aes(x = representation_bin, y = entropy_bin, color = errorAvg)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_gradient(low = "lightgreen", high = "darkblue") +
+  facet_wrap(~nCrittersGame_bin, labeller = label_both) +  # Facet by nCrittersGame_bin
+  theme_minimal() +
+  labs(title = "2D Slices of 3D Cube Heatmap",
+       x = "Representation",
+       y = "Entropy") +
+  theme(strip.text = element_text(size = 10))
+
+
+```
+
+```{r}
+# Merge the two datasets by common columns
+merged_data <- merge(heatmap_test_3d_slider, heatmap_test_3d_interactive, by = c("representation_bin", "entropy_bin", "nCrittersGame_bin"))
+
+# Create a new column for the difference in errorAvg
+merged_data$diff_errorAvg <-abs( merged_data$errorAvg.x - merged_data$errorAvg.y)
+
+# Create the faceted 2D plot with the difference
+ggplot(merged_data, aes(x = representation_bin, y = entropy_bin, color = diff_errorAvg)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_gradient(low = "lightgreen", high = "darkblue") +
+  facet_wrap(~nCrittersGame_bin, labeller = label_both) +  # Facet by nCrittersGame_bin
+  theme_minimal() +
+  labs(title = "Difference Between Error Averages",
+       x = "Representation",
+       y = "Entropy") +
+  theme(strip.text = element_text(size = 10))
+
+plot_ly(
+  data = merged_data,
+  x = ~representation_bin,
+  y = ~entropy_bin,
+  z = ~nCrittersGame_bin,
+  color = ~diff_errorAvg,  # color by errorAvg
+  colors = c("lightgreen", "darkblue"),
+  type = "scatter3d",
+  mode = "markers",
+  marker = list(size = 10, opacity = 0.8)
+) %>%
+  plotly::layout(
+    title = "3D Cube Heatmap",
+    scene = list(
+      xaxis = list(title = "Representation"),
+      yaxis = list(stitle = "Entropy"),
+      zaxis = list(title = "nCrittersGame")
+    )
+  )
+
+```
+
+```{r}
+d.all_rebinned <- d.all %>%
+  mutate(
+ x_bin = cut(abs(entropy), breaks = seq(0, 2, .25), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+      y_bin = cut(abs(representation), breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+ nCrittersGame_bin = cut(nCrittersGame, breaks = seq(15, 100, by = 9), right = TRUE, include.lowest = TRUE)
+    )
+
+
+# data preparation
+heatmap_test_rebinned <- d.all_rebinned %>%
+  
+  group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop")
+
+ggplot(heatmap_test_rebinned, aes(x = representation_bin, y = entropy_bin, color = errorAvg)) +
+  geom_tile(aes(fill = errorAvg), color = "white")+
+  scale_color_gradient(low = "lightgreen", high = "darkblue") +
+  facet_wrap(~nCrittersGame_bin, labeller = label_both) +  # Facet by nCrittersGame_bin
+  theme_few() +
+  labs(title = "2D Slices of 3D Cube Heatmap",
+       x = "Representation",
+       y = "Entropy") +
+ theme(aspect.ratio = 1, legend.position = 'top') #+
+  #facet_wrap(~treatment)
+
+
+```
+
+\
+
+\
+
+\
+
+```{r}
+
 d.all <- d.all %>%
   mutate(
     nCrittersGame_bin = str_remove_all(nCrittersGame_bin, "[\\[\\]()]"),
@@ -355,12 +465,7 @@ representation = round(abs(mleEstimate - mleGame)
 
 ```{r}
 # Clean the bins
-d.all <- d.all %>%
-  mutate(
-    nCrittersGame_bin = str_remove_all(nCrittersGame_bin, "[\\[\\]()]"),
-    entropy_bin = str_remove_all(entropy_bin, "[\\[\\]()]"),
-    representation_bin = str_remove_all(representation_bin, "[\\[\\]()]")
-  )
+
 
 # Create combined dataset with errorAvg for each nCrittersGame_bin, faceted by entropy_bin
 heatmap_combined <- d.all %>%
