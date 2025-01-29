@@ -461,6 +461,11 @@ d.modified <- d.all %>%
 d.all$designatedGame <- as.character(d.all$designatedGame)
 d.modified$designatedGame <- as.character(d.modified$designatedGame)
 
+
+d.allExperimental <- d.all %>% 
+  bind_rows(d.modified)
+
+
 d.all <- d.all %>% 
   filter(!is.na(designatedGame))%>%
   bind_rows(d.modified)
