@@ -56,7 +56,7 @@ compare.msg <- compare.msg %>%
 
 ```{r}
 summary_data <- d.allmsg %>%
-   filter(round == 8) %>%
+  filter(!coding == 'o') %>%
   group_by(gameID) %>%
   summarize(
     avg_error = mean(error, na.rm = TRUE),
@@ -64,7 +64,7 @@ summary_data <- d.allmsg %>%
     sn_count = sum(str_count(coding, "sn")),
     pb_count = sum(str_count(coding, "pb")),
     sb_count = sum(str_count(coding, "sb"))
-  ) %>% ungroup() %>%
+  ) %>%
   mutate(
     total_count = pn_count + sn_count + pb_count + sb_count,
     pn_prop = pn_count / total_count,
@@ -82,13 +82,13 @@ summary_data_long$decile <- cut(summary_data_long$avg_error,
                                 breaks = quantile(summary_data_long$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
                                 include.lowest = TRUE, labels = FALSE)
 
-# Normalize proportions to ensure they sum to 1 within each decile (across all gameIDs)
+# Normalize within each decile
 summary_data_long <- summary_data_long %>%
   group_by(decile) %>%
   mutate(proportion = proportion / sum(proportion)) %>%
   ungroup()
 
-
+# Plotting
 ggplot(summary_data_long, aes(x = factor(decile), y = proportion, fill = message_type)) +
   geom_bar(stat = "identity", position = "stack") +
   theme_minimal() +
@@ -99,8 +99,9 @@ ggplot(summary_data_long, aes(x = factor(decile), y = proportion, fill = message
        x = "error (binned)",
        y = "proportion",
        fill = "message type") +
-theme(aspect.ratio = 1, legend.position = "top") +
+  theme(aspect.ratio = 1, legend.position = "top") +
   guides(fill = guide_legend(nrow = 2))
+
 ```
 
 ```{r}
