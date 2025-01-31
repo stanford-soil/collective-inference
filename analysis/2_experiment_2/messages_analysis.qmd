@@ -59,42 +59,38 @@ summary_data <- d.allmsg %>%
   filter(!coding == 'o') %>%
   group_by(gameID) %>%
   summarize(
-    avg_error = mean(error, na.rm = TRUE),
+    avg_error = mean(error[round == 8], na.rm = TRUE),
     pn_count = sum(str_count(coding, "pn")),
     sn_count = sum(str_count(coding, "sn")),
     pb_count = sum(str_count(coding, "pb")),
     sb_count = sum(str_count(coding, "sb"))
-  ) %>%
-  mutate(
-    total_count = pn_count + sn_count + pb_count + sb_count,
-    pn_prop = pn_count / total_count,
-    sn_prop = sn_count / total_count,
-    pb_prop = pb_count / total_count,
-    sb_prop = sb_count / total_count
-  )
+  ) 
+
 
 summary_data_long <- summary_data %>%
-  select(gameID, avg_error, pn_prop, sn_prop, pb_prop, sb_prop) %>%
-  pivot_longer(cols = c(pn_prop, sn_prop, pb_prop, sb_prop), 
-               names_to = "message_type", values_to = "proportion")
+  select(gameID, avg_error, pn_count, sn_count, pb_count, sb_count) %>%
+  pivot_longer(cols = c(pn_count, sn_count, pb_count, sb_count), 
+               names_to = "message_type", values_to = "count")
 
 summary_data_long$decile <- cut(summary_data_long$avg_error, 
                                 breaks = quantile(summary_data_long$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
                                 include.lowest = TRUE, labels = FALSE)
 
-# Normalize within each decile
 summary_data_long <- summary_data_long %>%
-  group_by(decile) %>%
-  mutate(proportion = proportion / sum(proportion)) %>%
-  ungroup()
+  group_by(decile)%>% 
+  mutate(
+    total_count = sum(count)) %>% ungroup() %>%
+  mutate(
+    proportion = count / total_count
+  ) 
 
 # Plotting
 ggplot(summary_data_long, aes(x = factor(decile), y = proportion, fill = message_type)) +
   geom_bar(stat = "identity", position = "stack") +
   theme_minimal() +
   scale_fill_brewer(palette = 'Accent', 
-                    labels = c("pn_prop" = "personal number", "sn_prop" = "social number",
-                               "pb_prop" = "personal belief", "sb_prop" = "social belief")) +
+                    labels = c("pn_count" = "personal number", "sn_count" = "social number",
+                               "pb_count" = "personal belief", "sb_count" = "social belief")) +
   labs(title = "",
        x = "error (binned)",
        y = "proportion",
