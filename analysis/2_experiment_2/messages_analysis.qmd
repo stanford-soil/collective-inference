@@ -55,7 +55,15 @@ compare.msg <- compare.msg %>%
 ```
 
 ```{r}
+d.allmsg <- d.allmsg %>%
+  left_join(d.all %>%
+              select(gameID, playerID, exitSurvey), 
+            by = c("gameID", "sender.id" = "playerID"))
+```
+
+```{r}
 summary_data <- d.allmsg %>%
+  
   filter(!coding == 'o') %>%
   group_by(gameID) %>%
   summarize(
@@ -76,18 +84,18 @@ summary_data_long$decile <- cut(summary_data_long$avg_error,
                                 breaks = quantile(summary_data_long$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
                                 include.lowest = TRUE, labels = FALSE)
 
-summary_data_long <- summary_data_long %>%
-  group_by(decile)%>% 
-  mutate(
-    total_count = sum(count)) %>% ungroup() %>%
-  mutate(
-    proportion = count / total_count
+summary_data_long_proportions <- summary_data_long %>%
+  group_by(decile) %>% 
+  mutate(total_count = sum(count)) %>% 
+  group_by(decile, message_type) %>%
+  summarize(proportion = sum(count) / mean(total_count)
   ) 
 
 # Plotting
-ggplot(summary_data_long, aes(x = factor(decile), y = proportion, fill = message_type)) +
+summary_data_long_proportions %>%
+  mutate(message_type = fct_relevel(message_type, "pn_count", 'pb_count',  'sn_count', 'sb_count')) %>%
+  ggplot(aes(x = factor(decile),  y = proportion, fill = message_type)) +
   geom_bar(stat = "identity", position = "stack") +
-  theme_minimal() +
   scale_fill_brewer(palette = 'Accent', 
                     labels = c("pn_count" = "personal number", "sn_count" = "social number",
                                "pb_count" = "personal belief", "sb_count" = "social belief")) +
@@ -97,7 +105,6 @@ ggplot(summary_data_long, aes(x = factor(decile), y = proportion, fill = message
        fill = "message type") +
   theme(aspect.ratio = 1, legend.position = "top") +
   guides(fill = guide_legend(nrow = 2))
-
 ```
 
 ```{r}
@@ -171,5 +178,3 @@ ggplot(summary_data_long, aes(x = group, y = proportion, fill = message_type)) +
  scale_x_discrete(expand = c(0.02, 0.02)) +
  theme(aspect.ratio = 0.5) # Made plot wider by reducing aspect ratio
 ```
-
-ss

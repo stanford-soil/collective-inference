@@ -659,17 +659,17 @@ plot_ly(
 
 ```{r}
 
-d.all <- d.all %>% mutate(
+d.all_minmax <- d.all %>% mutate(
   entropy_minmax = ifelse(entropy <= median(entropy), "H_etpy", "E_etpy"),
   representation_minmax = ifelse(representation <= median(representation), "E_rep", "H_rep"),
   nCrittersGame_minmax = ifelse(nCrittersGame <= median(nCrittersGame), "H_crits", "E_crits"),
   group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")) %>%
   group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
   mutate(errorAvg = mean(error, na.rm = TRUE)) %>% ungroup()  %>% filter(idx==8)
-lm_model <- lm(errorAvg ~ group, data = d.all)
+lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
 
 # Calculate center lines and their distances
-group_distances <- d.all %>%
+group_distances <- d.all_minmax %>%
   group_by(group, treatment) %>%
   summarise(median_error = median(errorAvg)) %>%
   pivot_wider(names_from = treatment, values_from = median_error) %>%
@@ -677,25 +677,25 @@ group_distances <- d.all %>%
   arrange(distance)
 
 # Calculate game counts per group and treatment
-counts <- d.all %>%
+counts <- d.all_minmax %>%
   group_by(group, treatment) %>%
   summarise(nGames = n()) %>%
   pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
 
 # Calculate center lines for group ordering
-center_lines <- d.all %>%
+center_lines <- d.all_minmax %>%
   group_by(group, treatment) %>%
   summarise(center_line = median(errorAvg)) %>%
   pivot_wider(names_from = treatment, values_from = center_line) %>%
   mutate(center_line_distance = abs(interactive - slider))
 
 # Reorder groups based on center line distance
-d.all <- d.all %>%
+d.all_minmax <- d.all_minmax %>%
   mutate(group = factor(group, levels = center_lines %>%
                           arrange(center_line_distance) %>%
                           pull(group)))
 
-ggplot(d.all, aes(x = group, y = errorAvg, color = treatment, fill = treatment)) +  
+ggplot(d.all_minmax, aes(x = group, y = errorAvg, color = treatment, fill = treatment)) +  
   scale_color_brewer(palette = 'Accent') +
   scale_fill_brewer(palette = 'Accent') + 
   geom_boxplot(alpha = 0.5) +
@@ -803,6 +803,18 @@ ggplot(heatmap_combined, aes(x = nCrittersGame_bin, y = errorAvg, color = treatm
 ```
 
 ```{r}
+conflicts_prefer(lmerTest::lmer)
+d.all %>%
+  ungroup() %>%
+  mutate(treatment = fct_relevel(treatment, 'slider', 'interactive')) %>%
+  lmer(scale(error) ~ poly(idx, 2) + treatment + (1 + poly(idx, 2) || gameID/playerID),
+       data = .,
+       contrasts = list(treatment = contr.sum(2)),
+       control = lmerControl(optimizer = 'bobyqa')) %>%
+  summary()
+```
+
+```{r}
 d.all %>%
   lmerTest::lmer(error ~ poly(idx, 2) *treatment 
                    + (1 + poly(idx, 1) || gameID) 
@@ -820,12 +832,12 @@ d.all <- d.all %>%
     scaled_entropy = scale(entropy),
     scaled_nCrittersGame = scale(nCrittersGame),
   )
-d.all <- d.all %>%
+d.all_1 <- d.all %>%
   filter(idx %in% c(1, 8)) %>%
   group_by(playerID) %>%
   mutate(guessChange = abs(guess[idx == 1] - guess[idx == 8]))
 
-d.all %>%
+d.all_1 %>%
   lmerTest::lmer(
     guessChange ~ 
       scaled_representation * treatment * scaled_entropy * scaled_nCrittersGame +
@@ -839,54 +851,46 @@ d.all %>%
 ```
 
 ```{r}
-# Calculate scaled variables
-d.all <- d.all %>%
-  mutate(
-    scaled_representation = scale(representation),
-    scaled_entropy = scale(entropy),
-    scaled_nCrittersGame = scale(nCrittersGame)
-  )
 
-# Filter and calculate errorAvg for each bin
 heatmap_combined <- bind_rows(
-  d.all %>%
+  d.all_1 %>%
     filter(idx == 8) %>%
     group_by(treatment, bin = nCrittersGame_bin) %>%
     summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
     mutate(variable = "nCritters"),
   
-  d.all %>%
+  d.all_1 %>%
     filter(idx == 8) %>%
     group_by(treatment, bin = entropy_bin) %>%
     summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
     mutate(variable = "entropy"),
   
-  d.all %>%
+  d.all_1 %>%
     filter(idx == 8) %>%
     group_by(treatment, bin = representation_bin) %>%
     summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
     mutate(variable = "representation")
 )
 
-# Now, include errorAvg in the model by merging it with the original data
-d.all <- d.all %>%
+d.all_1 <- d.all_1 %>%
   left_join(heatmap_combined, by = c("treatment", "nCrittersGame_bin" = "bin"))
 
-# Run the lmer model, now including errorAvg as a fixed effect
-d.all %>%
+d.all_1 %>%
   filter(idx == 8) %>%
   lmerTest::lmer(
     guessChange ~ 
       scaled_representation * treatment +
       scaled_entropy * treatment +
       scaled_nCrittersGame * treatment +
-      errorAvg +  # Include errorAvg as a fixed effect
     (1 | gameID),
     data = .,
     contrasts = list(treatment = contr.sum(2))
   ) %>%
   summary()
 
+```
+
+```{}
 ```
 
 ## trying to make an error across conditions graph
@@ -963,5 +967,9 @@ d.guesses %>%
     theme_few() +
     theme(aspect.ratio = 1, legend.position = 'top')
 
+
+```
+
+```{r}
 
 ```
