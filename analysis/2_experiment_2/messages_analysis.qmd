@@ -57,16 +57,20 @@ compare.msg <- compare.msg %>%
 ```{r}
 d.allmsg <- d.allmsg %>%
   left_join(d.all %>%
-              select(gameID, playerID, exitSurvey), 
-            by = c("gameID", "sender.id" = "playerID"))
+            select(gameID, playerID, exitSurvey), 
+            by = c("gameID", "sender.id" = "playerID"))  %>%
+#  mutate(usedCalculator = str_extract(exitSurvey, '(?<="usedCalculator":")[^"]*'),
+mutate(exitSurvey = if_else(str_detect(exitSurvey, '"usedCalculator":"yes"'),
+                                  "yes",
+                                  "no")) %>% unique()
 ```
 
 ```{r}
 summary_data <- d.allmsg %>%
-  
   filter(!coding == 'o') %>%
   group_by(gameID) %>%
   summarize(
+    exitSurvey = if_else(any(str_detect(exitSurvey, 'yes')), "yes", "no"),
     avg_error = mean(error[round == 8], na.rm = TRUE),
     pn_count = sum(str_count(coding, "pn")),
     sn_count = sum(str_count(coding, "sn")),
@@ -76,7 +80,7 @@ summary_data <- d.allmsg %>%
 
 
 summary_data_long <- summary_data %>%
-  select(gameID, avg_error, pn_count, sn_count, pb_count, sb_count) %>%
+  select(gameID, exitSurvey, avg_error, pn_count, sn_count, pb_count, sb_count) %>%
   pivot_longer(cols = c(pn_count, sn_count, pb_count, sb_count), 
                names_to = "message_type", values_to = "count")
 
@@ -85,6 +89,7 @@ summary_data_long$decile <- cut(summary_data_long$avg_error,
                                 include.lowest = TRUE, labels = FALSE)
 
 summary_data_long_proportions <- summary_data_long %>%
+ # filter(exitSurvey == 'no') %>%
   group_by(decile) %>% 
   mutate(total_count = sum(count)) %>% 
   group_by(decile, message_type) %>%
@@ -119,7 +124,7 @@ d.allmsg2 <- d.allmsg2 %>%
     representation_minmax = ifelse(representation <= median(representation), "E_rep", "H_rep"),
     nCrittersGame_minmax = ifelse(nCrittersGame <= median(nCrittersGame), "H_crits", "E_crits"),
     group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
-  ) %>%
+  ) %>%filter(group !='E_etpy\nH_rep\nE_crits') %>%
   group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
   mutate(errorAvg = mean(error, na.rm = TRUE)) %>% 
   ungroup() %>% 
@@ -142,30 +147,35 @@ summary_data <- d.allmsg2 %>%
     sb_prop = sb_count / total_count
   )
 
-# Summarize the data for proportions by group
 summary_data_long <- summary_data %>%
-  select(group, pn_prop, sn_prop, pb_prop, sb_prop) %>%
-  pivot_longer(cols = c(pn_prop, sn_prop, pb_prop, sb_prop), 
-               names_to = "message_type", values_to = "proportion")
+  select(gameID, avg_error, pn_count, sn_count, pb_count, sb_count, group) %>%
+  pivot_longer(cols = c(pn_count, sn_count, pb_count, sb_count), 
+               names_to = "message_type", 
+               values_to = "count")
 
-# Remove rows with NA values in 'proportion' or 'group'
-summary_data_long <- summary_data_long %>%
-  filter(!is.na(proportion) & !is.na(group))
+# Create deciles for avg_error
+decile_breaks <- unique(quantile(summary_data_long$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE))
+summary_data_long$decile <- cut(summary_data_long$avg_error, 
+                                breaks = decile_breaks, 
+                                include.lowest = TRUE, labels = FALSE)
 
-# Normalize proportions to ensure they sum to 1 within each group
-summary_data_long <- summary_data_long %>%
-  group_by(group) %>%
-  mutate(proportion = proportion / sum(proportion)) %>%
-  ungroup()
+# Summarize to calculate proportions per decile and group
+summary_data_long_proportions <- summary_data_long %>%
+  group_by( group) %>% 
+  mutate(total_count = sum(count)) %>% 
+  ungroup() %>%
+  group_by( group, message_type) %>%
+  summarize(proportion = sum(count) / first(total_count), .groups = "drop")
+
 
 # Set the custom order for 'group'
 group_order <- c( "H_etpy\nE_rep\nH_crits", "H_etpy\nE_rep\nE_crits",
                  "E_etpy\nE_rep\nE_crits", "E_etpy\nE_rep\nH_crits", "H_etpy\nH_rep\nE_crits",
                  "E_etpy\nH_rep\nH_crits", "H_etpy\nH_rep\nH_crits", "E_etpy\nH_rep\nE_crits")
 
-summary_data_long$group <- factor(summary_data_long$group, levels = group_order)
+summary_data_long_proportions$group <- factor(summary_data_long_proportions$group, levels = group_order)
 
-ggplot(summary_data_long, aes(x = group, y = proportion, fill = message_type)) +
+ggplot(summary_data_long_proportions, aes(x = group, y = proportion, fill = message_type)) +
  geom_bar(stat = "identity", position = "stack") +
  theme_few() +
  labs(title = "Proportion of Message Types by Group",

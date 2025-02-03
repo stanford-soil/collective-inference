@@ -1,0 +1,170 @@
+---
+title: "experiment 2"
+format: html
+editor: visual
+---
+
+## Import packages
+
+```{r}
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+
+library(tidyverse)
+library(tidyboot)
+library(lme4)
+library(here)
+library(jsonlite)
+library(ggthemes)
+
+theme_set(theme_few())
+```
+
+## Read in data
+
+```{r}
+
+d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
+
+d.all <- d.all %>%
+  separate(treatmentName.x, into = c("direction", "treatment"), sep = "_")
+
+d.all <- d.all %>%
+  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))
+```
+
+```{r}
+
+d.guesses.v2.raw <- read_csv(here('data/PreregMergedGuesses.csv')) %>%
+  filter(any(!is.na(treatmentName)))
+
+unique_rows.v2 <- d.guesses.v2.raw %>%
+  filter(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")) %>%
+  distinct(playerID, gameID, guess, roundID, .keep_all = TRUE)
+
+d.guesses.v2 <- d.guesses.v2.raw %>%
+  filter(!(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3"))) %>%
+  bind_rows(unique_rows.v2) %>%
+  mutate(data = "new") %>%
+  mutate(treatmentName = case_when(
+    treatmentName == "rerun-unidirectional- 0.7" ~ 'unidirectional-0.7',
+    treatmentName == "rerun-unidirectional- 0.3" ~ 'unidirectional-0.3',
+    treatmentName =="rerun-interactive-0.3" ~ 'interactive-0.3',
+    treatmentName =="rerun-interactive- 0.7" ~ 'interactive-0.7',
+    treatmentName =="rerun-slider- 0.3" ~ 'slider-0.3',
+    treatmentName =="rerun-slider- 0.7" ~ 'slider-0.7'
+  )) %>%
+  separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
+  group_by(gameID) %>%
+  mutate(nCritters = nRabbits + nSquirrels,
+         mleEstimateIndiv = (nRabbits / (nRabbits + nSquirrels)), 
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), .5, mleEstimateIndiv),
+         nCrittersGame = nRabbitsGame+nSquirrelsGame,
+         mleEstimateGame = (nRabbitsGame / (nRabbitsGame + nSquirrelsGame)))  %>%
+  arrange(playerID, idx)
+
+d.guesses.v1 <- read_csv(here('data/merged_data_exp.csv')) %>%
+  distinct(playerID, gameID, guess, roundID, .keep_all = TRUE) %>%
+  filter(any(!is.na(treatmentName))) %>%
+  mutate(data = "old")%>%
+  filter(!is.na(guess)) %>%
+  mutate(treatmentName = case_when(
+    treatmentName == "experiment1-0.7" ~ 'unidirectional-0.7',
+    treatmentName == "experiment1-0.3" ~ 'unidirectional-0.3',
+    treatmentName =="experiment2-interactive-0.3" ~ 'interactive-0.3',
+    treatmentName =="experiment2-interactive-0.7" ~ 'interactive-0.7',
+    treatmentName =="experiment2-slider-0.3" ~ 'slider-0.3',
+    treatmentName =="experiment2-slider-0.7" ~ 'slider-0.7'
+  )) %>%
+  separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
+  group_by(gameID) %>%
+  mutate(nRabbitsGame = sum(nRabbits),
+         nSquirrelsGame = sum(nSquirrels), 
+         nCritters = nRabbits + nSquirrels,
+         mleEstimateIndiv = (nRabbits / (nRabbits + nSquirrels)), 
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), .5, mleEstimateIndiv),
+         nCrittersGame = nRabbitsGame + nSquirrelsGame,
+         mleEstimateGame = (nRabbitsGame / (nRabbitsGame + nSquirrelsGame))) %>%
+  arrange(playerID, idx)
+
+d.guesses <- d.guesses.v1 %>%
+  group_by(gameID) %>%
+  mutate(
+    totalCritters = sum(nCritters),
+    prob = nCritters / totalCritters,
+    entropy = -sum(ifelse(prob > 0, prob * log(prob), 0)),
+    representation = mean(abs(mleEstimateIndiv - mleEstimateGame))
+  ) %>%
+  ungroup() %>%
+   mutate(error =  abs(guess - (mleEstimateGame*100)))
+
+
+
+
+```
+
+![](images/clipboard-275902377.png)
+
+```{r}
+#based on exp 2 medians
+d.guesses_minmax <- d.guesses %>%
+  mutate(
+    entropy_minmax = ifelse(entropy <= 0.9553, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= 292.23, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(nCrittersGame <= 23, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  )%>%group_by(gameID)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup()# %>%
+  #filter(idx == 8)
+
+
+
+lm_model <- lm(errorAvg ~ group, data = d.guesses_minmax)
+
+# Calculate center lines and their distances
+group_distances <- d.guesses_minmax %>%
+  group_by(group, condition) %>%
+  summarise(median_error = median(errorAvg)) %>%
+  pivot_wider(names_from = condition, values_from = median_error) %>%
+  mutate(distance = abs(interactive - slider)) %>%
+  arrange(distance)
+
+# Calculate game counts per group and treatment
+counts <-d.guesses_minmax %>%
+  group_by(group, condition) %>%
+  summarise(nGames = n()) %>%
+  pivot_wider(names_from = condition, values_from = nGames, names_prefix = "nGames_")
+
+# Calculate center lines for group ordering
+center_lines <- d.guesses_minmax %>%
+  group_by(group, condition) %>%
+  summarise(center_line = median(errorAvg)) %>%
+  pivot_wider(names_from = condition, values_from = center_line) %>%
+  mutate(center_line_distance = abs(interactive - slider))
+
+# Reorder groups based on center line distance
+d.all_minmax <- d.guesses_minmax %>%
+  mutate(group = factor(group, levels = center_lines %>%
+                          arrange(center_line_distance) %>%
+                          pull(group)))
+
+d.guesses_minmax %>%
+  ggplot(aes(x = group, y = errorAvg, color = condition, fill = condition)) +  
+   scale_color_brewer(palette = 'Accent') +
+  scale_fill_brewer(palette = 'Accent') + 
+  geom_boxplot(alpha = 0.5) +
+  geom_text(data = counts, 
+            aes(x = group, y = Inf, 
+                label = paste0("I: ", nGames_interactive, 
+                               "\nS: ", nGames_slider)),
+            vjust = 1.5, inherit.aes = FALSE) +
+  labs(x = "", y = "Error") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1),
+        legend.position = "top",
+        panel.background = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank())
+
+```

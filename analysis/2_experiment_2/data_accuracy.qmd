@@ -186,6 +186,7 @@ ggplot(heatmap_test_3, aes(x = entropy_bin, y = representation_bin)) +
   theme_few() +
   theme(
     aspect.ratio = 1,
+    
     axis.text.x = element_text(angle = 45, hjust = 1)
   ) +
   facet_wrap(~treatment)
@@ -659,18 +660,31 @@ plot_ly(
 
 ```{r}
 
-d.all_minmax <- d.all %>% mutate(
-  entropy_minmax = ifelse(entropy <= median(entropy), "H_etpy", "E_etpy"),
-  representation_minmax = ifelse(representation <= median(representation), "E_rep", "H_rep"),
-  nCrittersGame_minmax = ifelse(nCrittersGame <= median(nCrittersGame), "H_crits", "E_crits"),
-  group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")) %>%
-  group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
-  mutate(errorAvg = mean(error, na.rm = TRUE)) %>% ungroup()  %>% filter(idx==8)
+d.all_minmax <- d.all %>%  mutate(
+    entropy_median = median(entropy),
+    representation_median = median(representation),
+    nCrittersGame_median = median(nCrittersGame)
+  ) %>%
+  mutate(
+    entropy_minmax = ifelse(entropy <= entropy_median, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= representation_median, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(nCrittersGame <= nCrittersGame_median, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  ) %>%
+ #group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  group_by(gameID, treatment)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup() # %>%
+  #filter(idx == 8)
+
+print(unique(d.all_minmax %>% select(entropy_median, representation_median, nCrittersGame_median)))
+
 lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
 
 # Calculate center lines and their distances
 group_distances <- d.all_minmax %>%
-  group_by(group, treatment) %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>% 
   summarise(median_error = median(errorAvg)) %>%
   pivot_wider(names_from = treatment, values_from = median_error) %>%
   mutate(distance = abs(interactive - slider)) %>%
@@ -678,6 +692,7 @@ group_distances <- d.all_minmax %>%
 
 # Calculate game counts per group and treatment
 counts <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
   group_by(group, treatment) %>%
   summarise(nGames = n()) %>%
   pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
@@ -685,18 +700,20 @@ counts <- d.all_minmax %>%
 # Calculate center lines for group ordering
 center_lines <- d.all_minmax %>%
   group_by(group, treatment) %>%
+  filter(group !='E_etpy\nH_rep\nE_crits')%>%
   summarise(center_line = median(errorAvg)) %>%
   pivot_wider(names_from = treatment, values_from = center_line) %>%
   mutate(center_line_distance = abs(interactive - slider))
 
 # Reorder groups based on center line distance
-d.all_minmax <- d.all_minmax %>%
+d.all_minmax2 <- d.all_minmax %>%
   mutate(group = factor(group, levels = center_lines %>%
                           arrange(center_line_distance) %>%
-                          pull(group)))
+                          pull(group))) %>% filter(group !='E_etpy\nH_rep\nE_crits') %>% droplevels()
 
-ggplot(d.all_minmax, aes(x = group, y = errorAvg, color = treatment, fill = treatment)) +  
-  scale_color_brewer(palette = 'Accent') +
+d.all_minmax2 %>%
+  ggplot(aes(x = group, y = errorAvg, color = treatment, fill = treatment)) +  
+   scale_color_brewer(palette = 'Accent') +
   scale_fill_brewer(palette = 'Accent') + 
   geom_boxplot(alpha = 0.5) +
   geom_text(data = counts, 
@@ -711,6 +728,33 @@ ggplot(d.all_minmax, aes(x = group, y = errorAvg, color = treatment, fill = trea
         panel.background = element_rect(fill = NA, color = "black"),
         panel.grid = element_blank())
 
+```
+
+```{r}
+d.all_minmax$group <- relevel(d.all_minmax$group, ref = "E_etpy\nE_rep\nE_crits")
+
+d.all_minmax %>%
+  lmerTest::lmer(error ~ group *treatment
+                   + (1 | gameID), 
+       data = ., 
+       contrasts = list(treatment = contr.sum(2))) %>% 
+  summary()
+
+```
+
+```{r}
+d.all_minmax %>%
+  lmerTest::lmer(
+    formula = error ~  poly(idx, 1) *treatment * entropy_minmax * representation_minmax * nCrittersGame_minmax + (1 | gameID),
+    data = .,
+    contrasts = list(
+      treatment             = contr.sum,
+      entropy_minmax        = contr.sum,
+      representation_minmax = contr.sum,
+      nCrittersGame_minmax  = contr.sum
+    )
+  ) %>%
+  summary()
 ```
 
 \
