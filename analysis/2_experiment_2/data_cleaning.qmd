@@ -256,7 +256,7 @@ d.playerstageround <-merge(d.stageID,d.2, by = c("roundID", "gameID"), all = T)%
 rm(d.1, d.2, d.stageID, d.3)
 
 d.all <-merge(d.playerstageround,d.59, by = c("playerID", "gameID"), all = T)%>%
-  select(gameID, playerID, stageName, treatmentName.x, ended.x, roundID, confidence, guess, stageID.x, idx, emojiArray, exitSurvey, participantID, recipient,treatment.x, chat,messages)%>%
+  select(gameID, playerID, stageName, treatmentName.x, ended.x, roundID, confidence, guess, stageID.x, idx, emojiArray, exitSurvey, participantID, recipient,treatment.x, chat,messages, participantIdentifier)%>%
   mutate(
     emojiArray = str_remove_all(emojiArray, "\\s"),
     emojiArray = str_extract_all(emojiArray, "🐇|🐿️"),
@@ -591,4 +591,32 @@ decode_combined_with_count <- decode_combined_with_count %>%
 write_json(decode_combined_with_direction, "missing_games_jan9_3.json", pretty = TRUE)
 ```
 
-\
+# Rewarding players
+
+```{r}
+reward <- d.all %>% 
+  filter(!gameID %in% gameIDs_to_remove) %>% 
+  filter(idx == 8) %>% 
+  select(-stageName, -treatmentName.x, -roundID, -emojiArray, -confidence, -ended.x, 
+         -stageID.x, -exitSurvey, -treatment.x, -chat, -messages, -recipient, 
+         -designatedGame, -playerID, -participantID, -num_players, -prob, -entropy, 
+         -representation, -entropy_bin, -representation_bin, -nCrittersGame_bin, 
+         -idx, -mleEstimate) %>%
+  group_by(gameID) %>%
+  mutate(groupGuess = mean(guess))%>%
+  mutate(mleGame = mleGame*100) %>%
+  mutate(groupError = abs(mleGame-groupGuess))%>%
+ # filter(gameID == "01JD3FQ43P5AM13THQ6278KVBM") #that one person that kept messaging me to bonus them
+  filter(groupError < 5) %>%
+ unique() %>%
+  select(-nRabbits, -nSquirrels, -nCritters, -nSquirrelsGame, -nCrittersGame, -nRabbitsGame) %>%
+  ungroup() %>%
+  mutate(answerVariance = abs(groupGuess - guess))%>%
+  filter(answerVariance < 6) %>%
+  group_by(gameID)%>%
+  mutate(nPlayers = n())%>%
+  ungroup()%>%
+  filter(nPlayers >3)
+```
+
+# 

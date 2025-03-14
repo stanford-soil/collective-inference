@@ -711,22 +711,33 @@ d.all_minmax2 <- d.all_minmax %>%
                           arrange(center_line_distance) %>%
                           pull(group))) %>% filter(group !='E_etpy\nH_rep\nE_crits') %>% droplevels()
 
-d.all_minmax2 %>%
+d <-d.all_minmax2 %>%
   ggplot(aes(x = group, y = errorAvg, color = treatment, fill = treatment)) +  
    scale_color_brewer(palette = 'Accent') +
   scale_fill_brewer(palette = 'Accent') + 
   geom_boxplot(alpha = 0.5) +
-  geom_text(data = counts, 
-            aes(x = group, y = Inf, 
-                label = paste0("I: ", nGames_interactive, 
-                               "\nS: ", nGames_slider)),
-            vjust = 1.5, inherit.aes = FALSE) +
+  #geom_text(data = counts, 
+           # aes(x = group, y = Inf, 
+                #label = paste0("I: ", nGames_interactive, 
+                              # "\nS: ", nGames_slider)),
+           # vjust = 1.5, inherit.aes = FALSE) +
   labs(x = "", y = "Error") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 0, hjust = 1),
         legend.position = "top",
         panel.background = element_rect(fill = NA, color = "black"),
         panel.grid = element_blank())
+d
+
+ggsave(
+  "difficulty.png",
+  plot = d,
+ # width = 3.5,  
+ # height = 10,
+  units = "in",
+  device = "png",
+  dpi      = 300 
+)
 
 ```
 
@@ -745,7 +756,22 @@ d.all_minmax %>%
 ```{r}
 d.all_minmax %>%
   lmerTest::lmer(
-    formula = error ~  poly(idx, 1) *treatment * entropy_minmax * representation_minmax * nCrittersGame_minmax + (1 | gameID),
+    formula = error ~  poly(idx, 2) *treatment * entropy_minmax * representation_minmax * nCrittersGame_minmax + (1 | gameID),
+    data = .,
+    contrasts = list(
+      treatment             = contr.sum,
+      entropy_minmax        = contr.sum,
+      representation_minmax = contr.sum,
+      nCrittersGame_minmax  = contr.sum
+    )
+  ) %>%
+  summary()
+```
+
+```{r}
+d.all_minmax %>%
+  lmerTest::lmer(
+    formula = confidence ~  poly(idx, 2) *treatment * entropy_minmax * representation_minmax * nCrittersGame_minmax *error + (1 | gameID),
     data = .,
     contrasts = list(
       treatment             = contr.sum,
@@ -792,23 +818,31 @@ heatmap_combined <- bind_rows(
     mutate(variable = "representation")
 )
 
-ggplot(heatmap_combined, aes(x = bin, y = errorAvg, color = treatment, group = treatment)) +
+p <- ggplot(heatmap_combined, aes(x = bin, y = errorAvg, color = treatment, group = treatment)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
   geom_hline(yintercept = c(0), linetype = 'dotted') +
   scale_color_brewer(palette = 'Accent') +
   theme_few() +
-  labs(
-    x = "Bin",
-    y = "Error (Avg)",
-    color = ""
-    ) +
-  facet_wrap(~variable, scales = "free_x") +
+  labs(x = "Bin", y = "Error (Avg)", color = "") +
+  facet_wrap(~variable, ncol = 1, scales = "free_x") +
   theme(
-    aspect.ratio = 1,
     legend.position = 'top',
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 15, hjust = 1)  
   )
+
+# Then save with a decent width
+ggsave(
+  "marginals.png",
+  plot = p,
+  width = 3.5,  
+  height = 10,
+  units = "in",
+  device = "png",
+  dpi      = 300 
+)
+
+p
 
 ```
 
@@ -960,7 +994,7 @@ diff_error_1 <- d.all %>%
 # new dataframe
 diff_error_2 <- d.all %>%
   filter(idx == 8) %>%
-  group_by(representation_bin, error_bin, treatment) %>%
+  group_by(representation_bin, entropy_bin, treatment) %>%
   summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
   pivot_wider(names_from = treatment, values_from = errorAvg, names_prefix = "errorAvg_") %>%
   mutate(

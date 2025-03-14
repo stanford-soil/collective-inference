@@ -26,9 +26,9 @@ library(ggthemes)
 library(dplyr)
 
 # Read the CSV files
-chat_1 <- read_csv(here('data/extracted_msgs_exp1_2/msgs_cleaned_exp1.csv'))
-chat_2 <- read_csv(here('data/extracted_msgs_exp1_2/messages_exp2.csv'))
-chat_3 <- read_csv(here('data/extracted_msgs_prereg/cleaned_messages.csv'))
+chat_1 <- read_csv(here('data/0_extracted_msgs_exp1_2_exploratory/msgs_cleaned_exp1.csv'))
+chat_2 <- read_csv(here('data/0_extracted_msgs_exp1_2_exploratory/messages_exp2.csv'))
+chat_3 <- read_csv(here('data/1_preregistered_experiment_1/1_extracted_msgs_prereg/cleaned_messages.csv'))
 
 # Standardize column names to lowercase
 chat_1 <- chat_1 %>% rename_with(tolower)
