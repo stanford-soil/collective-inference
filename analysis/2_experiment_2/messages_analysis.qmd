@@ -69,8 +69,7 @@ print(unique_to_df1)
 print(unique_to_df2)
 
 
-combined_df <- bind_rows(d.allmsg, d.allmsg_exp1) 
-
+combined_df <- bind_rows(d.allmsg, d.allmsg_exp1)
 combined_df_binning <- combined_df%>%
   select(sender.id, gameID, nRabbits, nSquirrels, entropy)%>%
 unique()%>%
@@ -88,7 +87,7 @@ unique()%>%
     entropy_new = -sum(ifelse(prob > 0, prob * log(prob), 0)),
     representation = mean(abs(mleEstimate - mleGame))
   ) %>% 
-  ungroup() %>%
+  ungroup() %>% 
     mutate(
       entropy_bin = cut((entropy_new), breaks = seq(0, 2, .27), right = TRUE, include.lowest = TRUE, dig.lab = 2), 
       representation_bin = cut((representation), breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2),
@@ -105,15 +104,18 @@ unique()%>%
 d.allmsg <- d.allmsg %>% left_join(combined_df_binning, by = c("gameID", "sender.id")) %>%
   group_by(gameID) %>%
   filter(n_distinct(sender.id) == 4) %>%
-  ungroup()
+  ungroup() %>%  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) 
+  
 d.allmsg_exp1 <- d.allmsg_exp1 %>% left_join(combined_df_binning, by = c("gameID", "sender.id")) %>%
   group_by(gameID) %>%
   filter(n_distinct(sender.id) == 4) %>%
-  ungroup()
+  ungroup()%>% mutate (error = abs(as.numeric(mleGame*100) - guess))
+
 combined_df <- combined_df %>% left_join(combined_df_binning, by = c("gameID", "sender.id"))%>%
   group_by(gameID) %>%
   filter(n_distinct(sender.id) == 4) %>%
-  ungroup()
+  ungroup()%>%  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) 
+  
 ```
 
 # analyze codes
@@ -354,7 +356,7 @@ d.allmsg2 <- d.allmsg %>%
   ungroup() %>%
   group_by(gameID) %>%
   mutate(
-    error_change_overall = abs(first(avg_error[round == max(round)]) - first(avg_error[round == min(round)])),
+    error_change_overall = (first(avg_error[round == max(round)]) - first(avg_error[round == min(round)])),
     s_count = sum(str_count(coding, "s"), na.rm = TRUE)
   ) %>%
   ungroup()
@@ -368,26 +370,28 @@ d.allmsg_exp1_2 <- d.allmsg_exp1 %>%
   ungroup() %>%
   group_by(gameID) %>%
   mutate(
-    error_change_overall = abs(first(avg_error[round == max(round)]) - first(avg_error[round == min(round)])),
+    error_change_overall = (first(avg_error[round == max(round)]) - first(avg_error[round == min(round)])),
     s_count = sum(str_count(coding, "s"), na.rm = TRUE)
   ) %>%
   ungroup()
 
-ggplot(subset(d.allmsg_exp1_2, round == 12), aes(x = s_count, y = error)) +
+ggplot(subset(d.allmsg_exp1_2, round == 12), aes(x = s_count, y = error_change_overall)) +
   geom_point() +geom_smooth(method="lm")+
   labs(
-    y = "error",
+    y = "error_change_overall",
     x = "s",
     title = "Scatter Plot of Error vs S Count"
   )
-ggplot(subset(d.allmsg2, round == 8), aes(x = s_count, y = error)) +
+ggplot(subset(d.allmsg2, round == 8), aes(x = s_count, y = error_change_overall)) +
   geom_point() + geom_smooth(method="lm")+
   labs(
-    y = "error",
+    y = "error_change_overall",
     x = "s",
     title = "Scatter Plot of Error vs S Count"
   )
 ```
+
+# Error change
 
 ```{r}
 d.allmsg2 <- d.allmsg2 %>% 
@@ -457,31 +461,34 @@ d.allmsg_exp1_2 <- d.allmsg_exp1_2%>%
 
 ```{r}
 d.allmsg2 <- d.allmsg2 %>% 
-mutate(s_bin = cut(s_count, breaks = seq(min(s_count), max(s_count), length.out = 4), include.lowest = TRUE))
+mutate(s_bin = cut(s_count, breaks = seq(min(s_count), max(s_count), length.out = 3), include.lowest = TRUE))
 
 d.allmsg_exp1_2 <- d.allmsg_exp1_2 %>% 
   filter(!treatment == "unidirectional")%>%
-mutate(s_bin = cut(s_count, breaks = seq(min(s_count), max(s_count), length.out = 4), include.lowest = TRUE))
+mutate(s_bin = cut(s_count, breaks = seq(min(s_count), max(s_count), length.out = 3), include.lowest = TRUE))
 
 ggplot(d.allmsg2, aes(x = round, y = error, color = s_bin)) +
   geom_smooth(method = 'lm') +
-  #geom_point() +
+stat_summary(fun = mean, geom = "point")+
   theme_minimal()
 
-lmer(error ~ s_bin + (1 | gameID), data = d.allmsg2)
+#lmer(error ~ s_bin + (1 | gameID), data = d.allmsg2)
 
 #glm(log(error) ~ s_bin, family = "poisson",
    #    data = d.allmsg2)
 
 ggplot(d.allmsg_exp1_2, aes(x = round, y = error, color = s_bin)) +
   geom_smooth(method = 'lm') +
-  #geom_point() +
+stat_summary(fun = mean, geom = "point")+
   theme_minimal()
 
-lmer(error ~ s_bin + (1 | gameID), data = d.allmsg_exp1_2)
+#lmer(error ~ s_bin + (1 | gameID), data = d.allmsg_exp1_2)
 
-#glm(log(error) ~ s_bin, family = "poisson",
-  #     data = d.allmsg_exp1_2)
+summary(glm((error+0.1) ~ s_count*round, family = "Gamma",
+       data = d.allmsg2))
+
+summary(lm((error) ~ s_count*round,
+       data = d.allmsg2))
 ```
 
 ```{r}
@@ -490,7 +497,7 @@ d.allmsg2 <- d.allmsg2 %>%
 
 d.allmsg_exp1_2 <- d.allmsg_exp1_2 %>% 
   filter(!treatment== "unidirectional")%>%
-  mutate(s_bin = ifelse(s_count < 5, "zero", "not zero"))
+  mutate(s_bin = ifelse(s_count <5, "zero", "not zero"))
 
 
 ggplot(d.allmsg2, aes(x = round, y = error, color = s_bin)) +
@@ -508,7 +515,8 @@ ggplot(d.allmsg_exp1_2, aes(x = round, y = error, color = s_bin)) +
   #geom_point() +
   theme_minimal()
 
-lmer(error ~ s_bin + (1 | gameID), data = d.allmsg_exp1_2)
+summary(lmer(error ~ s_count*round + (1 | gameID), data = d.allmsg_exp1_2))
+summary(lmer(error ~ s_count*round + (1 | gameID), data = d.allmsg2))
 
 ```
 
@@ -705,6 +713,7 @@ ggplot(combined_df2, aes(x = round, y = error, color = s_bin)) +
 stat_summary(fun = mean, geom = "point")+
   theme_minimal()
 
+summary(lmer(error ~ s_count*round + (1 | gameID), data = combined_df2))
 
 ```
 
@@ -775,10 +784,10 @@ d
 ```
 
 ```{r}
-combined_df3 <- bind_rows(d.allmsg2[d.allmsg2$round == 8, ], 
+combined_df_final_rounds <- bind_rows(d.allmsg2[d.allmsg2$round == 8, ], 
                           d.allmsg_exp1_2[d.allmsg_exp1_2$round == 12, ])
 
-heatmap_test <- combined_df3%>%
+heatmap_test <- combined_df_final_rounds%>%
   group_by(representation_bin, nCrittersGame_bin, s_bin) %>%
   summarize(errorAvg = mean(error, na.rm = TRUE)) 
 
@@ -794,7 +803,7 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
   ) +
   facet_wrap(~s_bin) 
 
-heatmap_test_2 <- combined_df3%>%
+heatmap_test_2 <- combined_df_final_rounds%>%
   group_by(entropy_bin, nCrittersGame_bin, s_bin) %>%
   summarize(errorAvg = mean(error, na.rm = TRUE))
 
@@ -809,7 +818,7 @@ ggplot(heatmap_test_2, aes(x = entropy_bin, y = nCrittersGame_bin)) +
   ) +
   facet_wrap(~s_bin) 
 
-heatmap_test_3 <- combined_df3%>%
+heatmap_test_3 <- combined_df_final_rounds%>%
   group_by(representation_bin, entropy_bin, s_bin) %>%
   summarize(errorAvg = mean(error, na.rm = TRUE))
 
@@ -824,4 +833,60 @@ ggplot(heatmap_test_3, aes(x = entropy_bin, y = representation_bin)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   ) +
   facet_wrap(~s_bin)
+```
+
+```{r}
+combined_s_participants <- combined_df2 %>%  
+  group_by(gameID) %>% 
+  mutate(s_player_count = n_distinct(sender.id[str_detect(coding, "s")])) %>%
+  ungroup() %>% 
+  mutate(s_player_count = as.factor(s_player_count)) %>% 
+  filter(treatment != "unidirectional")
+
+ggplot(combined_s_participants, aes(x = round, y = error, color = s_player_count)) +
+  geom_smooth(method = 'lm', 
+             # formula = y ~ poly(x, 2)
+              ) +
+  stat_summary(fun = mean, geom = "point") +
+  theme_minimal() +
+  facet_wrap(~s_bin)
+
+```
+
+```{r}
+combined_df2 <- combined_df2 %>%  
+  group_by(gameID) %>% 
+  mutate(s_player_count = n_distinct(sender.id[str_detect(coding, "s")])) %>%
+  ungroup() %>% 
+  mutate(s_player_count_group = ifelse(s_player_count <= 1, "0-1", "2-4")) %>% 
+  filter(treatment != "unidirectional")
+
+ggplot(combined_df2, aes(x = round, y = error, color = s_player_count_group)) +
+  geom_smooth(method = 'lm', 
+             # formula = y ~ poly(x, 2)
+              ) +
+  stat_summary(fun = mean, geom = "point") +
+  theme_minimal()
+
+
+```
+
+```{r}
+model1 <-  lmerTest::lmer(error ~ s_player_count*round + (1 | gameID), data = combined_df2)
+
+summary(model1)
+
+model2 <-  lmerTest::lmer(error ~ s_player_count_group*round + (1 | gameID), data = combined_df2)
+
+summary(model2)
+```
+
+```{r}
+combined_df2 %>%
+  ggplot(aes(x = as.numeric(error))) +
+    geom_histogram(binwidth =1) +
+    facet_wrap(~ direction, scales = "free") +
+    #xlim(0,100) +
+    labs(title = "Distribution of mleEstimate for each treatmentName") +
+  theme_few()
 ```

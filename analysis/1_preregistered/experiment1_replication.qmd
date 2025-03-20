@@ -258,7 +258,7 @@ unidirectionals %>%
   filter(!(playerID %in% confused)) %>%
   filter(!(playerID %in% persistentnoClick)) %>%
   group_by(treatmentName, idx, gameID) %>%
-  summarize(error = mean(abs(guess - treatAvg))) %>%
+  summarize(error = mean(abs(guess - mleEstimateGame))) %>%
   group_by(treatmentName, idx) %>%
   tidyboot_mean(error) %>%
    mutate(treatmentName = case_when(treatmentName == 'rerun-unidirectional- 0.3' ~ 'p=0.3',
@@ -294,15 +294,15 @@ interactives %>%
        contrasts = list(treatmentName = contr.sum(2))) %>% 
   summary()
 
-interactives %>%
+d.guesses %>%
   filter(!(playerID %in% confused)) %>%
   filter(!(playerID %in% persistentnoClick)) %>%
   group_by(treatmentName, idx, gameID) %>%
-  summarize(error = mean(abs(guess - treatAvg))) %>%
+  summarize(error = mean(abs(guess - mleEstimateGame))) %>%
   group_by(treatmentName, idx) %>%
   tidyboot_mean(error) %>%
-      mutate(treatmentName = case_when(treatmentName == 'rerun-interactive-0.3' ~ 'p=0.3',
-                                   treatmentName == 'rerun-interactive- 0.7' ~ 'p=0.7')) %>%
+     # mutate(treatmentName = case_when(treatmentName == 'rerun-interactive-0.3' ~ 'p=0.3',
+      #                             treatmentName == 'rerun-interactive- 0.7' ~ 'p=0.7')) %>%
 ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
     geom_point() +
     geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper, fill = treatmentName), 
