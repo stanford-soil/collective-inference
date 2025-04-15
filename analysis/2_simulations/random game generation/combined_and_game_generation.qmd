@@ -1,0 +1,428 @@
+---
+title: "experiment 2"
+format: html
+editor: visual
+---
+
+## Import packages
+
+```{r}
+library(conflicted)  
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+library(jsonlite)
+library(tidyverse)
+library(here)
+library(ggthemes)
+
+theme_set(theme_few())
+```
+
+# Read in simulated data
+
+```{r}
+d.random <- here('analysis/2_simulations/game_results_fixed_075.csv') %>%
+  read_csv(col_types = 'ccii') %>%
+  mutate(
+    mleEstimate = nRabbits / (nRabbits + nSquirrels),
+    nCritters = nRabbits + nSquirrels
+  ) %>%
+  replace_na(list(mleEstimate = .5)) %>%
+  group_by(gameID) %>%
+  mutate(
+    nRabbitsGame = sum(nRabbits),
+    nSquirrelsGame = sum(nSquirrels),
+    mleGame = nRabbitsGame / (nRabbitsGame + nSquirrelsGame),
+    totalCritters = sum(nCritters),
+    prob = nCritters / totalCritters,
+    entropy = -sum(ifelse(prob > 0, prob * log(prob), 0)),
+    representation = mean(abs(mleEstimate - mleGame))
+  ) %>%
+  ungroup() %>%
+  filter(totalCritters >= 15)
+
+```
+
+# Read in V2 data
+
+```{r}
+d.guesses.v2.raw <- read_csv(here('data/PreregMergedGuesses.csv')) %>%
+  filter(idx == 4) %>%
+  filter(any(!is.na(treatmentName)))
+
+unique_rows.v2 <- d.guesses.v2.raw %>%
+  filter(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")) %>%
+  distinct(playerID, gameID, guess, roundID, .keep_all = TRUE)
+
+d.guesses.v2 <- d.guesses.v2.raw %>%
+  filter(!(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3"))) %>%
+  bind_rows(unique_rows.v2) %>%
+  mutate(data = "new") %>%
+  mutate(treatmentName = case_when(
+    treatmentName == "rerun-unidirectional- 0.7" ~ 'unidirectional-0.7',
+    treatmentName == "rerun-unidirectional- 0.3" ~ 'unidirectional-0.3',
+    treatmentName =="rerun-interactive-0.3" ~ 'interactive-0.3',
+    treatmentName =="rerun-interactive- 0.7" ~ 'interactive-0.7',
+    treatmentName =="rerun-slider- 0.3" ~ 'slider-0.3',
+    treatmentName =="rerun-slider- 0.7" ~ 'slider-0.7'
+  )) %>%
+  separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
+  group_by(gameID) %>%
+  mutate(nCritters = nRabbits + nSquirrels,
+         mleEstimateIndiv = (nRabbits / (nRabbits + nSquirrels)), 
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), .5, mleEstimateIndiv),
+         nCrittersGame = nRabbitsGame+nSquirrelsGame,
+         mleEstimateGame = (nRabbitsGame / (nRabbitsGame + nSquirrelsGame)))  %>%
+  arrange(playerID, idx)
+```
+
+```{r}
+d.guesses.v1 <- read_csv(here('data/merged_data_exp.csv')) %>%
+  filter(idx == 4) %>%
+  distinct(playerID, gameID, guess, roundID, .keep_all = TRUE) %>%
+  filter(any(!is.na(treatmentName))) %>%
+  mutate(data = "old")%>%
+  filter(!is.na(guess)) %>%
+  mutate(treatmentName = case_when(
+    treatmentName == "experiment1-0.7" ~ 'unidirectional-0.7',
+    treatmentName == "experiment1-0.3" ~ 'unidirectional-0.3',
+    treatmentName =="experiment2-interactive-0.3" ~ 'interactive-0.3',
+    treatmentName =="experiment2-interactive-0.7" ~ 'interactive-0.7',
+    treatmentName =="experiment2-slider-0.3" ~ 'slider-0.3',
+    treatmentName =="experiment2-slider-0.7" ~ 'slider-0.7'
+  )) %>%
+  separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
+  group_by(gameID) %>%
+  mutate(nRabbitsGame = sum(nRabbits),
+         nSquirrelsGame = sum(nSquirrels), 
+         nCritters = nRabbits + nSquirrels,
+         mleEstimateIndiv = (nRabbits / (nRabbits + nSquirrels)), 
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), .5, mleEstimateIndiv),
+         nCrittersGame = nRabbitsGame + nSquirrelsGame,
+         mleEstimateGame = (nRabbitsGame / (nRabbitsGame + nSquirrelsGame))) %>%
+  arrange(playerID, idx)
+```
+
+```{r}
+d.guesses <- d.guesses.v1 %>%
+  group_by(gameID) %>%
+  mutate(
+    totalCritters = sum(nCritters),
+    prob = nCritters / totalCritters,
+    entropy = -sum(ifelse(prob > 0, prob * log(prob), 0)),
+    representation = mean(abs(mleEstimateIndiv - mleEstimateGame))
+  ) %>%
+  ungroup() %>%
+  select(playerID, gameID, nCrittersGame, nCritters, treatment, prob, totalCritters,
+         entropy, representation, condition)
+```
+
+```{r}
+combined_heatmap <- bind_rows(
+  d.random %>% 
+    mutate(dataset = "simulated") %>%
+    mutate(
+      x_bin = cut(abs(entropy), breaks = seq(0, 2, .34), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+      y_bin = cut(abs(representation), breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+      bin_label = paste("Bin (", x_bin, ", ", y_bin, ")", sep = "")  # Add this line for bin labeling
+    ),
+  d.guesses %>% 
+    mutate(dataset = "empirical") %>%
+    mutate(
+      x_bin = cut(abs(entropy), breaks = seq(0, 2, .34), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+      y_bin = cut(abs(representation), breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2),
+      bin_label = paste("Bin (", x_bin, ", ", y_bin, ")", sep = "")  # Add this line for bin labeling
+    )
+) %>%
+group_by(x_bin, y_bin, dataset) %>%
+summarise(count = n(), .groups = "drop") %>%  # Ensure to drop grouping after summarizing
+group_by(dataset) %>%
+mutate(prop = count / sum(count)) %>%
+na.omit()  
+
+ggplot(combined_heatmap, aes(x = x_bin, y = y_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
+  labs(
+    x = "Entropy",
+    y = "Representativeness"
+  ) +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  facet_wrap(~dataset)
+
+```
+
+```{r}
+nCritters_entropy_heatmap <- d.random %>%
+  mutate(
+    nCrittersGame_bin = cut(totalCritters,right = TRUE, breaks = seq(15, 100, by = 5), include.lowest = TRUE),
+    entropy_bin = cut(entropy, breaks = seq(0, 2, .27), include.lowest = TRUE, right = TRUE, dig.lab = 2)
+  ) %>%
+  group_by(nCrittersGame_bin, entropy_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+
+# Heatmap for nCrittersGame vs. Entropy
+ggplot(nCritters_entropy_heatmap, aes(x = entropy_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Proportion of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Entropy", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+```
+
+```{r}
+# Binned data for nCrittersGame vs. Representation
+nCritters_rep_heatmap <- d.random %>%
+  mutate(
+    nCrittersGame_bin = cut(totalCritters,right = TRUE, breaks = seq(15, 100, by = 5), include.lowest = TRUE),
+    representation_bin = cut(representation,right = TRUE, breaks = seq(0, 1, .12), include.lowest = TRUE, dig.lab = 2)
+  ) %>%
+  group_by(nCrittersGame_bin, representation_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+# Heatmap for nCrittersGame vs. Representation
+ggplot(nCritters_rep_heatmap, aes(x = representation_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Proportion of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Representation", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+```{r}
+d.random <- d.random %>% 
+    mutate(
+      entropy_bin = cut(abs(entropy), breaks = seq(0, 2, .27), right = TRUE, include.lowest = TRUE, dig.lab = 2), 
+      representation_bin = cut(abs(representation), breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2)) %>%
+    mutate(
+      nCrittersGame_bin = cut(totalCritters, breaks = seq(15, 100, by = 5), right = TRUE, include.lowest = TRUE)
+    ) %>%
+  filter(!is.na(entropy_bin))
+
+possible_values_e <- unique(factor(d.random$entropy_bin))
+print(possible_values_e)
+possible_values_r <- unique(d.random$representation_bin)
+print(possible_values_r)
+possible_values_tC <- unique(d.random$nCrittersGame_bin)
+print(possible_values_tC)
+```
+
+```{r}
+set.seed(1)
+# Drop excess levels from all factor columns in the dataframe
+d.random <- d.random %>%
+  mutate(across(where(is.factor), droplevels))
+# Initialize an empty dataframe to store results
+filtered_df <- data.frame()
+# Define the combinations of columns to check
+combinations <- list(
+  c("entropy_bin", "representation_bin"),
+  c("entropy_bin", "nCrittersGame_bin"),
+  c("representation_bin", "nCrittersGame_bin")
+)
+# Loop through each combination of columns
+for (combo in combinations) {
+  col1 <- combo[1]
+  col2 <- combo[2]
+
+  # Get unique combinations of the two columns
+  unique_combinations <- unique(d.random[, c(col1, col2)])
+
+  # For each unique combination of values
+  for (i in 1:nrow(unique_combinations)) {
+    vals <- unique_combinations[i, ]
+
+    # Convert to character for comparison
+    val1 <- as.character(vals[[1]])
+    val2 <- as.character(vals[[2]])
+
+    # Debugging: print current combination being processed
+    print(paste("Processing:", val1, val2))
+
+    # Filter rows matching the current combination
+    combo_rows <- d.random[
+      as.character(d.random[[col1]]) == val1 & 
+      as.character(d.random[[col2]]) == val2, ]
+
+    # Debugging: check how many rows match the current combination
+    print(paste("Rows matched for", val1, val2, ":", nrow(combo_rows)))
+
+    # Find how many of these rows are already in filtered_df
+    existing_rows <- filtered_df[
+      as.character(filtered_df[[col1]]) == val1 & 
+      as.character(filtered_df[[col2]]) == val2, ]
+
+    # Sample up to 4 rows for the current combination
+    needed <- 4 - nrow(existing_rows)
+
+    if (needed > 0 && nrow(combo_rows) > 0) {
+      sampled_rows <- combo_rows[sample(1:nrow(combo_rows), min(needed, nrow(combo_rows))), ]
+      filtered_df <- rbind(filtered_df, sampled_rows)
+    }
+  }
+}
+print(filtered_df)
+```
+
+```{r}
+# Count unique pairings for each comparison
+count_entropy_representation <- filtered_df %>%
+  group_by(entropy_bin, representation_bin) %>%
+  summarise(count = n(), .groups = 'drop')
+
+count_representation_nCritters <- filtered_df %>%
+  group_by(representation_bin, nCrittersGame_bin) %>%
+  summarise(count = n(), .groups = 'drop')
+
+count_nCritters_entropy <- filtered_df %>%
+  group_by(nCrittersGame_bin, entropy_bin) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Combine the counts into one summary dataframe
+count_summary <- list(
+  entropy_representation = count_entropy_representation,
+  representation_nCritters = count_representation_nCritters,
+  nCritters_entropy = count_nCritters_entropy
+)
+
+# Print the counts for each unique comparison
+print(count_summary$entropy_representation)
+print(count_summary$representation_nCritters)
+print(count_summary$nCritters_entropy)
+
+
+
+```
+
+```{r}
+#for random_generation_07 if entropy is binned by (0, 2, .25)
+#rows_to_drop <- c(1,2,6,13,14,21,24,74,77,79)
+
+#for random_generation_075
+rows_to_drop <- c(1,5,7,10,13,17,25,29,30,33,48,69,70)
+
+balanced_df <- filtered_df[-rows_to_drop, ]
+#I went through the lines manually because for whatever reason it's hard to get R to clean the data combinatorally. Or at least I don't know how to do it. drop this line if you change the data or the seed
+#I am confident there is a way to do this that targets the most commonly occuring groups first, eg 0Rep/35nCrit. Maybe running the same script over the data backwards? maybe sorting by combination # and then dropping any where all combination numbers >4?
+#this was faster at this point but ^ will work if I have to redo the data  
+```
+
+```{r}
+heatmap_test <- balanced_df %>%
+  group_by(nCrittersGame_bin, representation_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Representation", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+```
+
+```{r}
+heatmap_test <- balanced_df %>%
+  group_by(entropy_bin, representation_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "entropy", y = "representation") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+\
+
+```{r}
+nCritters_entropy_heatmap_new <-balanced_df %>%
+  group_by(nCrittersGame_bin, entropy_bin) %>%
+  summarise(count = n()) %>%
+  mutate(prop = count / sum(count))
+
+
+# Heatmap for nCrittersGame vs. Entropy
+ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = count), color = "white") +
+  scale_fill_gradient(name = "Count of Games", low = "lightblue", high = "darkblue") +
+  labs(x = "Entropy", y = "nCrittersGame") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+```
+
+```{r}
+filtered_gameID_df <- d.random %>% 
+  filter(gameID %in% balanced_df$gameID)
+
+repeated_gameIDs <- balanced_df %>%
+  count(gameID) %>%
+  filter(n > 1)
+
+print(repeated_gameIDs)
+```
+
+```{r}
+balanced_df2 <- left_join(d.random, balanced_df) %>%
+  filter(gameID %in% balanced_df$gameID)
+
+
+final_df <- balanced_df2 %>%
+  filter(gameID %in% balanced_df2$gameID) %>%
+  group_by(gameID) %>%
+  summarise(
+    players = list(playerID),
+    nRabbits = list(nRabbits),
+    nSquirrels = list(nSquirrels),
+    mleEstimate = list(mleEstimate),
+    nCritters = list(nCritters),
+    across(c(nRabbitsGame, nSquirrelsGame, mleGame, totalCritters,
+             prob, entropy, representation, entropy_bin,
+             representation_bin, nCrittersGame_bin), first))
+
+duplicates <- final_df %>%
+  filter(gameID %in% c(13549,15700,8531)) %>%
+  bind_rows(.) %>%  # Duplicate these rows
+  bind_rows(final_df %>%
+              filter(gameID %in% c(10023,10120,14614)) %>%
+              bind_rows(., ., .))  # Duplicate these rows for a total of four 
+
+# Combine the original summary with duplicates
+final_df2 <- bind_rows(final_df, duplicates) 
+
+# Convert to JSON and write to file
+final_df2 %>%
+  toJSON(pretty = TRUE) %>%
+  write(file = "games.json")
+```
+
+```{r}
+final_df2 %>%
+  write_csv("games.csv")
+
+```

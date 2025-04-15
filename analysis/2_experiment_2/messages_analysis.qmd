@@ -27,12 +27,12 @@ theme_set(theme_few())
 
 ```{r,include=FALSE}
 
-d.allmsg <- read_csv(here('analysis/2_experiment_2/coded.csv'))%>%
+d.allmsg <- read_csv(here('analysis/2_experiment_2/message_data/coded.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y")) 
 d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
 
-d.allmsg_exp1 <- read_csv(here('analysis/2_experiment_2/recoded_messages_exp1.csv'))%>%
+d.allmsg_exp1 <- read_csv(here('analysis/2_experiment_2/message_data/recoded_messages_exp1.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y"))
 d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))%>%
@@ -40,7 +40,7 @@ d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))%>%
   select(-ends_with(".y"))
 
 d.allmsg_exp1  <- merge(d.allmsg_exp1, d.guesses, by.x = c("gameID", "sender.id", "round"), by.y = c("gameID", "playerID", "idx"), all = TRUE)  %>% filter(!is.na(coding))%>% 
-  distinct(across(-coding), .keep_all = TRUE) %>% filter(!is.na(roundID)) %>% mutate (error = abs(mleEstimateGame-guess))%>% unique()
+  distinct(across(-coding), .keep_all = TRUE) %>% filter(!is.na(roundID)) %>% mutate (error = abs(mleEstimateGame-guess))%>% unique() 
 
 ```
 
@@ -114,8 +114,9 @@ d.allmsg_exp1 <- d.allmsg_exp1 %>% left_join(combined_df_binning, by = c("gameID
 combined_df <- combined_df %>% left_join(combined_df_binning, by = c("gameID", "sender.id"))%>%
   group_by(gameID) %>%
   filter(n_distinct(sender.id) == 4) %>%
-  ungroup()%>%  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) 
+  ungroup()%>%  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))  #%>% filter(!guess == 50)
   
+
 ```
 
 # analyze codes
@@ -872,7 +873,7 @@ ggplot(combined_df2, aes(x = round, y = error, color = s_player_count_group)) +
 ```
 
 ```{r}
-model1 <-  lmerTest::lmer(error ~ s_player_count*round + (1 | gameID), data = combined_df2)
+model1 <-  lmerTest::lmer(error ~ s_player_count*round + (1 | gameID), data = combined_s_participants)
 
 summary(model1)
 
@@ -889,4 +890,5 @@ combined_df2 %>%
     #xlim(0,100) +
     labs(title = "Distribution of mleEstimate for each treatmentName") +
   theme_few()
+
 ```
