@@ -883,12 +883,12 @@ summary(model2)
 ```
 
 ```{r}
-combined_df2 %>%
+combined_df %>%
   ggplot(aes(x = as.numeric(error))) +
     geom_histogram(binwidth =1) +
     facet_wrap(~ direction, scales = "free") +
     #xlim(0,100) +
     labs(title = "Distribution of mleEstimate for each treatmentName") +
-  theme_few()
+  theme_few() #+facet_wrap(~treatment)
 
 ```
