@@ -6,7 +6,7 @@ editor: visual
 
 ## Import packages
 
-```{r}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 library(conflicted)  
 conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
@@ -24,7 +24,7 @@ theme_set(theme_few())
 
 ## Read in data
 
-```{r}
+```{r, echo=FALSE,  message=FALSE, warning=FALSE}
 d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))
 d.guesses <- d.guesses %>%
   filter(!is.na(treatmentName))
@@ -164,6 +164,25 @@ d.guesses %>%
 d.guesses %>%
   group_by(data) %>%
   summarise(count = n())
+
+```
+
+```{r}
+df_filtered <- d.guesses %>%
+  filter(idx == 2) %>%
+  group_by(gameID) %>%
+  mutate(
+    nCritters = nSquirrels + nRabbits,
+    totalCritters = sum(nCritters),
+    prob = nCritters / totalCritters,  # Probability per player
+    entropy = -sum(ifelse(prob > 0, prob * log(prob), 0)),  # Calculate entropy across group
+    avgMlePlayers = mean(mleEstimateIndiv),
+    representation = abs(abs(avgMlePlayers) - abs(mleEstimateGame))
+  ) %>%
+  ungroup() %>%
+  select(playerID, gameID, nCrittersGame, treatment, error, prob, totalCritters,
+         entropy, representation, condition)
+
 
 ```
 

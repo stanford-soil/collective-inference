@@ -25,12 +25,12 @@ theme_set(theme_few())
 
 ```{r,include=FALSE}
 
-d.allmsg <- read_csv(here('analysis/2_experiment_2/coded.csv'))%>%
+d.allmsg <- read_csv(here('analysis/2_experiment_2/message_data/coded.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y")) 
 d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
 
-d.allmsg_exp1 <- read_csv(here('analysis/2_experiment_2/recoded_messages_exp1.csv'))%>%
+d.allmsg_exp1 <- read_csv(here('analysis/2_experiment_2/message_data/recoded_messages_exp1.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y"))
 d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))%>%
@@ -230,8 +230,14 @@ combined_df_errorChange <- combined_df_errorChange%>%
     by = c("gameID", "sender.id", "round"))%>% 
   mutate(roundErrorChange = abs(roundErrorPrev - roundError))
 
-combined_df_errorChange <- combined_df_errorChange %>% filter(!guess %in% c('50', '0','1', '5', '100'))
 
+```
+
+# filter for common error
+
+```{r}
+
+combined_df_errorChange <- combined_df_errorChange %>% filter(!guess %in% c('50', '0','1', '5', '100'))
 ```
 
 ```{r}
@@ -389,8 +395,4 @@ combined_df_errorChange %>%
     #xlim(0,100) +
     labs(title = "Distribution of mleEstimate for each treatmentName") +
   theme_few()
-```
-
-```{r}
-
 ```

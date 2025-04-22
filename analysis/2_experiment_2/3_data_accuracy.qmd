@@ -6,7 +6,7 @@ editor: visual
 
 ## Import packages
 
-```{r}
+```{r,  echo=FALSE,}
 library(conflicted)  
 conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
@@ -23,7 +23,7 @@ theme_set(theme_few())
 
 ## Read in data
 
-```{r}
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
 
 d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
 
@@ -72,6 +72,8 @@ d.all <- d.all %>%
     representation_bin = str_remove_all(representation_bin, "[\\[\\]()]")
   )
 ```
+
+# count of games in each information condition
 
 ```{r}
 heatmap_test <- d.allgame %>%
@@ -124,6 +126,8 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
 
 ```
 
+# count of no data entered over rounds
+
 ```{r}
 d.all %>%
   group_by(idx) %>%
@@ -135,11 +139,9 @@ d.all %>%
 
 ```
 
+# error between slider and interactive condition
+
 ```{r}
-
-
-
-  
 
 heatmap_test <- d.all%>%
   filter(idx ==8) %>%
@@ -192,6 +194,8 @@ ggplot(heatmap_test_3, aes(x = entropy_bin, y = representation_bin)) +
   facet_wrap(~treatment)
 ```
 
+# error differences in slider direction 
+
 ```{r}
 d.all %>%  
   group_by(treatment, direction, idx, gameID, mleGame) %>%
@@ -211,6 +215,8 @@ d.all %>%
   facet_wrap(~direction)
 
 ```
+
+# error differences in calculator useage
 
 ```{r}
 d.all_calc <- d.all %>%
@@ -240,6 +246,8 @@ d.all_calc %>%
   facet_wrap(~usedCalculator)
 
 ```
+
+# error heatmap
 
 ```{r}
 
@@ -296,113 +304,7 @@ plot_ly(
   )
 ```
 
-```{r}
-
-ggplot(heatmap_test_3d_slider, aes(x = representation_bin, y = entropy_bin, color = errorAvg)) +
-  geom_point(size = 3, alpha = 0.8) +
-  scale_color_gradient(low = "lightgreen", high = "darkblue") +
-  facet_wrap(~nCrittersGame_bin, labeller = label_both) +  # Facet by nCrittersGame_bin
-  theme_minimal() +
-  labs(title = "2D Slices of 3D Cube Heatmap",
-       x = "Representation",
-       y = "Entropy") +
-  theme(strip.text = element_text(size = 10))
-
-
-ggplot(heatmap_test_3d_interactive, aes(x = representation_bin, y = entropy_bin, color = errorAvg)) +
-  geom_point(size = 3, alpha = 0.8) +
-  scale_color_gradient(low = "lightgreen", high = "darkblue") +
-  facet_wrap(~nCrittersGame_bin, labeller = label_both) +  # Facet by nCrittersGame_bin
-  theme_minimal() +
-  labs(title = "2D Slices of 3D Cube Heatmap",
-       x = "Representation",
-       y = "Entropy") +
-  theme(strip.text = element_text(size = 10))
-
-
-```
-
-```{r}
-d.all_rebinned <- d.all %>%
-  mutate(
-entropy_bin = cut(entropy, 
-                  breaks = seq(0.3, 1.4, length.out = 4), 
-                  right = TRUE, 
-                  include.lowest = TRUE),
-
-representation_bin = cut(representation, 
-                        breaks = seq(0.04, 0.6, length.out = 4), 
-                        right = TRUE, 
-                        include.lowest = TRUE),
-
-nCrittersGame_bin = cut(nCrittersGame, 
-                        breaks = seq(15, 40, length.out = 4), 
-                        right = TRUE, 
-                        include.lowest = TRUE)
-
-    )
-
-
-# data preparation
-heatmap_test_rebinned_i <- d.all_rebinned %>%
-  group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
-  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
-  filter(treatment =='interactive')
-heatmap_test_rebinned_s <- d.all_rebinned %>%
-  group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
-  summarize(errorAvg = mean(error, na.rm = TRUE), .groups = "drop") %>%
-  filter(treatment =='slider')
-
-ggplot(heatmap_test_rebinned_i, aes(x = representation_bin, y = entropy_bin, fill = errorAvg)) +
-  geom_tile(color = "white") +  # Only set color here
-  scale_fill_gradient(low = "lightgreen", high = "darkblue") +  # Apply the gradient to fill
-  facet_wrap(~nCrittersGame_bin, labeller = label_both) +
-  theme_few() +
-  labs(title = "interactive",
-       x = "Representation",
-       y = "Entropy") +
-  theme(aspect.ratio = 1, legend.position = 'top')
-
-ggplot(heatmap_test_rebinned_s, aes(x = representation_bin, y = entropy_bin, fill = errorAvg)) +
-  geom_tile(color = "white") +  # Only set color here
-  scale_fill_gradient(low = "lightgreen", high = "darkblue") +  # Apply the gradient to fill
-  facet_wrap(~nCrittersGame_bin, labeller = label_both) +
-  theme_few() +
-  labs(title = "slider",
-       x = "Representation",
-       y = "Entropy") +
-  theme(aspect.ratio = 1, legend.position = 'top')
-
-# Merge the two datasets by common columns
-merged_data_2 <- merge(heatmap_test_rebinned_s, heatmap_test_rebinned_i, by = c("representation_bin", "entropy_bin", "nCrittersGame_bin"))
-
-# Create a new column for the difference in errorAvg
-merged_data_2$diff_errorAvg <- merged_data_2$errorAvg.x - merged_data_2$errorAvg.y
-
-ggplot(merged_data_2, aes(x = representation_bin, y = entropy_bin, fill = diff_errorAvg)) +
-  geom_tile(color = "white") +
-  scale_fill_gradient(low = "lightgreen", high = "purple", breaks = seq(floor(min(merged_data_2$diff_errorAvg) / 5) * 5, 
-                                   ceiling(max(merged_data_2$diff_errorAvg) / 5) * 5, by = 5)) +  
-  facet_wrap(~nCrittersGame_bin, labeller = labeller(nCrittersGame_bin = function(x) paste("total critters:", x))) +
-  theme_few() +
-  labs(title = "", x = "Representation", y = "Entropy") +
-  theme(aspect.ratio = 1, 
-        legend.position = 'top', 
-        axis.text.x = element_text(angle = 35, hjust = 1)) +
-  guides(fill = guide_colorbar(
-    label = TRUE, 
-    title = "error difference from interactive", 
-    title.position = "top", 
-    barwidth = 15,
-    barheight = 1,
-    ticks = TRUE,
-    label.position = "bottom", 
-    label.theme = element_text(size = 10)
-  ))
-
-ggsave(here('exp3_error_avg.pdf'), height=8, width = 10)
-
-```
+# error across different information difficulties in different conditions
 
 ```{r}
 
@@ -487,6 +389,8 @@ d
 
 ```
 
+# group v treatment accounting for game noise
+
 ```{r}
 #d.all_minmax$group <- relevel(d.all_minmax$group, ref = "E_etpy\nE_rep\nE_crits")
 
@@ -498,6 +402,8 @@ d.all_minmax %>%
   summary()
 
 ```
+
+# each difficulty separately accounting for game noise
 
 ```{r}
 d.all_minmax %>%
@@ -514,6 +420,8 @@ d.all_minmax %>%
   summary()
 ```
 
+# confidence of each group
+
 ```{r}
 d.all_minmax %>%
   lmerTest::lmer(
@@ -529,11 +437,7 @@ d.all_minmax %>%
   summary()
 ```
 
-\
-
-\
-
-\
+# error across different groups of difficulty
 
 ```{r}
 
@@ -578,21 +482,23 @@ p <- ggplot(heatmap_combined, aes(x = bin, y = errorAvg, color = treatment, grou
   )
 
 # Then save with a decent width
-#ggsave(
-#  "marginals.png",
-#  plot = p,
-#  width = 3.5,  
-#  height = 10,
-#  units = "in",
-#  device = "png",
-#  dpi      = 300 
-#)
+ggsave(
+  "marginals.png",
+  plot = p,
+  width = 3.5,  
+  height = 10,
+  units = "in",
+  device = "png",
+  dpi      = 300 
+)
 
 p
 
 ```
 
 representation = round(abs(mleEstimate - mleGame)
+
+# error of number of critters faceted by representation
 
 ```{r}
 # Clean the bins
@@ -763,6 +669,8 @@ diff_error_3 <- d.all %>%
 
 ```
 
+# error over time for individuals with inaccurate information
+
 ```{r}
 ggplot(d.all, aes(x = abs((mleEstimate*100)-mleGame*100), y = error, group = idx, color = idx)) +
   geom_smooth(method = "lm", se = FALSE) +
@@ -771,6 +679,8 @@ ggplot(d.all, aes(x = abs((mleEstimate*100)-mleGame*100), y = error, group = idx
        y = "Error") +
   theme_minimal() 
 ```
+
+# change from previous guess
 
 ```{r}
 d.all %>%
@@ -793,6 +703,8 @@ d.all %>%
 
 
 ```
+
+# pull to 50/0/100 values for participants
 
 ```{r}
 d.all %>%

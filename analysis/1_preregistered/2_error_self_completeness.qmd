@@ -6,7 +6,7 @@ editor: visual
 
 ## Import packages
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(conflicted)  
 conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
@@ -25,7 +25,7 @@ theme_set(theme_few())
 
 ## Read in data
 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))
 d.guesses <- d.guesses %>%
   filter(!is.na(treatmentName))
@@ -361,25 +361,6 @@ print(nrow(reducedInfo))
 
 print(nrow(reducedPlayers))
    #games with incomplete information (less that 20 samples/less than 4 players
-```
-
-```{r}
-reducedInfo %>%  
-    filter(nCrittersGame < 10)  %>%
-  group_by(treatment, condition, idx, gameID, mleEstimateGame) %>%
-  summarize(error = mean(abs(guess - mleEstimateGame), na.rm= T)) %>%
-  group_by(condition, idx) %>%
-  tidyboot::tidyboot_mean(error, na.rm = T) %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = condition, linetype = condition == 'interactive')) +
-    geom_point() +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
-    geom_hline(yintercept = c(0), linetype = 'dotted') +
-    theme_few() +
-    scale_color_brewer(palette = 'Accent') +
-    guides(linetype = 'none') +
-    scale_x_continuous(breaks = c(1,3,5,7,9,11)) +
-    labs(y = 'average error', x = 'round #', color = '')  +
-    theme(aspect.ratio = 1, legend.position = 'top')
 ```
 
 ```{r}

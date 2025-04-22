@@ -227,15 +227,3 @@ d.guesses_filtered %>%
   summary()
 
 ```
-
-```{r}
-d.guesses_filtered%>% 
-  mutate(groupConsistency = guess- mleEstimateGame)
-ggplot(d.guesses, aes(x = groupConsistency, fill = factor(-idx))) +
-  geom_density(alpha = 0.5) +
-  labs(title = "Density of Player's Guess Difference from Collective Over Time",
-       x = "Difference (Guess - p)",
-       y = "Density",
-       fill = "Round") +
-  theme_minimal()
-```

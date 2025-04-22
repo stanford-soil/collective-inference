@@ -223,14 +223,14 @@ d.9 <- bind_rows(
 )%>% 
   rename(batchID = id)
 
-decode1 <- read_json(here('analysis/2_simulations/games_dontoverwrite.json'), simplifyVector = TRUE) %>%
+decode1 <- read_json(here('analysis/2_simulations/generated_files_used/games_dontoverwrite.json'), simplifyVector = TRUE) %>%
   as_tibble() %>%
   rename(nCrittersGame = totalCritters) %>%
   rename(designatedGame = gameID)%>%
    filter(designatedGame != 10120) %>%
   mutate(representation = as.character(representation))
 
-decode3 <- read_json(here('analysis/2_simulations/games_2_dontoverwrite.json'), simplifyVector = TRUE) %>%
+decode3 <- read_json(here('analysis/2_simulations/generated_files_used/games_2_dontoverwrite.json'), simplifyVector = TRUE) %>%
   as_tibble() %>%
   rename(nCrittersGame = totalCritters) %>%
   rename(designatedGame = gameID)%>%

@@ -6,7 +6,7 @@ editor: visual
 
 # Import packages
 
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 library(conflicted)  
 conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
@@ -22,7 +22,7 @@ library(ggthemes)
 
 ## Read in data
 
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))
 d.guesses <- d.guesses %>%
   filter(!is.na(treatmentName))

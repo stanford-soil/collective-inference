@@ -6,7 +6,7 @@ editor: visual
 
 ### Import packages
 
-```{r}
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
 library(conflicted)  
 conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
@@ -21,7 +21,7 @@ library(ggthemes)
 
 ### Read in data
 
-```{r}
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
 ParseJSONColumn <- function(x) {
   str_c("[ ", str_c(x, collapse = ",", sep=" "), " ]")  %>% 
     fromJSON(flatten = T) 
@@ -47,7 +47,7 @@ d.treatmentse1 <- read_csv(here('data/0_experiment1_exploratory/games.csv')) %>%
   distinct()
 ```
 
-```{r}
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
 
 # map game IDs to their treatments
 d.players.b1 <- read_csv(here('data/0_experiment2_exploratory/batch1/players.csv')) %>%
@@ -84,9 +84,7 @@ d.playerse1 <- read_csv(here('data/0_experiment1_exploratory/players.csv')) %>%
 
 ```
 
-```{r}
-
-
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
 # map round IDs to their indices
 d.rounds.b1 <- read_csv(here('data/0_experiment2_exploratory/batch1/rounds.csv')) %>%
   select(gameID, roundID = id, idx) %>%
@@ -108,7 +106,7 @@ d.roundse1 <- read_csv(here('data/0_experiment1_exploratory/rounds.csv')) %>%
 
 ```
 
-```{r}
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
 
 # create long-form dataframe of all messages sent in each game
 d.msgs.b1 <- read_csv(here('data/0_experiment2_exploratory/batch1/games.csv')) %>% 
@@ -158,7 +156,7 @@ d.msgs <-rbind(d.msgs.b1, d.msgs.b2,d.msgs.b3,d.msgs.b4, d.msgse1)
 rm(d.msgs.b1, d.msgs.b2,d.msgs.b3,d.msgs.b4, d.msgse1)
 ```
 
-```{r}
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
 # create long-form dataframe of all guesses made in each game
 d.guesses.b1 <- read_csv(here('data/0_experiment2_exploratory/batch1/playerStages.csv')) %>% 
   filter(!is.na(submit)) %>%
@@ -487,27 +485,6 @@ d.guesses.collapsed %>%
   theme(aspect.ratio = 1, legend.position = 'top')
 
 
-```
-
-```{r}
-gameIDs <- unique(d.guesses.collapsed$gameID) 
-
-for (gameID in gameIDs) {
-  game_data <- d.guesses.collapsed %>%
-    filter(gameID == !!gameID)
-
-  # Create the plot
-  p <- ggplot(game_data, aes(x = idx, y = wisError, color = treatment)) +
-    geom_point() +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
-    scale_x_continuous(breaks = 2:8, limits = c(2, 8)) +
-    scale_color_brewer(palette = 'Accent') +
-    labs(y = 'average error per player within game', x = 'Round') +
-    theme(aspect.ratio = 1)
-  
-  
-  print(p)  
-}
 ```
 
 ```{r}
