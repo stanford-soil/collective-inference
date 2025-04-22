@@ -57,12 +57,12 @@ d.guesses <- d.guesses %>%  distinct(.keep_all = TRUE)
 ```
 
 ```{r}
-confused <- d.guesses %>%
-  filter(idx == 1) %>%
-  mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
-  mutate(discrepency = abs(guess - mleEstimate)) %>% 
-  filter(discrepency > 70) %>% 
-  pull(playerID)
+#confused <- d.guesses %>%
+ # filter(idx == 1) %>%
+#  mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
+ # mutate(discrepency = abs(guess - mleEstimate)) %>% 
+#  filter(discrepency > 70) %>% 
+ # pull(playerID)
 
 persistentnoClick <- c()  
 for (i in 1:7) {
@@ -106,7 +106,7 @@ d.guesses_filtered <- d.guesses %>%
 
 ```
 
-## Result #1: Convergence
+## Result #1: Convergence (based on assigned p)
 
 ```{r}
 d.guesses_filtered %>%  
@@ -134,13 +134,12 @@ d.guesses %>%  filter(!(playerID %in% persistentnoClick)) %>%
   group_by(treatmentName, idx) %>%
   tidyboot::tidyboot_mean(guess, na.rm = TRUE) %>%
   ggplot(aes(x = idx, y = empirical_stat, color = treatmentName)) +
-    geom_point() +
-    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
-    geom_hline(yintercept = c(30,70), linetype = 'dotted') +
-    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.1) +
-    theme_few() +
-    labs(y = 'average guess', x = 'round #') +
-    scale_color_colorblind()
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+  geom_hline(yintercept = c(30,70), linetype = 'dotted') +
+  theme_few() +
+  labs(y = 'average guess', x = 'round #') +
+  scale_color_colorblind()
 ```
 
 ## Result #2: Examine error (collapsing across treatment)
@@ -250,24 +249,31 @@ d.guesses_filtered <- d.guesses_filtered %>%
 ```
 
 ```{r}
+
+d.guesses_filtered <-d.guesses %>%  
+  filter(!(playerID %in% persistentnoClick))%>%
+  mutate(outlierPercent = abs(mleEstimateIndiv - mleEstimateGame)) %>%
+  mutate(error = guess - mleEstimateGame)
+
 # Assuming you have a linear model fit earlier
-model <- lm(abs(wisError) ~ outlierPercent, data = d.guesses_filtered)
+ggplot(d.guesses_filtered, aes(x = outlierPercent, y = error, color = idx)) +
+  geom_jitter(alpha = 0.1) +
+  labs(y = "average error", x = "outlier degree", color= "round") +
+  geom_smooth(aes(group = idx), method = "lm", se = FALSE, alpha = 0.3) +
+  theme_few() +
+  scale_color_continuous_tableau(palette = 'Classic Blue') +
+  guides(color = guide_colorbar(nbin = 9, barheight = 7,barwidth=0.5,
+                                 title.position = "top"))+
+  theme(legend.position = "right", aspect.ratio = 1)  +
+  ylim(-80,80) +
+  xlim(0, 80)
 
-# Calculate the slope difference
-slope_difference <- coef(model)[2] - coef(model)[1]
+#ggsave(here('exp1_outlier.pdf'), height=3, width = 3)
+d.guesses_filtered %>%
+  lme4::lmer(error ~ scale(outlierPercent) * scale(idx) + (1 + scale(outlierPercent) + scale(idx) | gameID), 
+       data = .) %>% 
+  summary()
 
-# Now you can use it in the annotate function
-ggplot(d.guesses_filtered, aes(x = outlierPercent, y = abs(wisError), color = idx)) +
-  geom_point() +
-  labs(y = "Error", x = "Outlier Percent") +
-  ggtitle("Scatter Plot of Outlier Percent vs Error") +
-  geom_smooth(method = "lm", se = FALSE, aes(group = idx)) +
-  theme_minimal() +
-  coord_cartesian(clip = "off") +  
-  theme(legend.position = "bottom") + 
-  annotate("text", x = max(d.guesses_filtered$outlierPercent), y = max(d.guesses_filtered$error), 
-           label = paste("Change across rounds:", round(slope_difference, 3)),
-           hjust = 1, vjust = 1, color = "black", size = 3)
 
 ```
 
@@ -492,9 +498,10 @@ d.guesses %>%
 
 ```
 
+# error based on assigned p
+
 ```{r}
-d.guesses_filtered %>%
- # filter(idx != 1) %>%
+d.guesses %>% mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
   mutate(nCrittersGroup = case_when(
     nCrittersGame >= 0 & nCrittersGame <= 17 ~ "< 18",
     nCrittersGame >= 18 & nCrittersGame <= 22 ~ "18-22",
@@ -517,4 +524,196 @@ d.guesses_filtered %>%
     facet_wrap(~ nCrittersGroup) +
     labs(y = 'average error', x = 'round #') +
     theme(aspect.ratio = 1, legend.position = 'top')
+```
+
+```{r}
+playercount <- d.guesses %>%
+   filter(idx == 1) %>%
+   distinct(playerID, .keep_all = TRUE)
+
+nrow(playercount)
+```
+
+# error based on game-level p
+
+```{r}
+d.guesses.collapsed <- d.guesses %>%
+  group_by(idx, gameID) %>%
+  mutate(nRabbitsGame = sum(nRabbits),
+         nSquirrelsGame = sum(nSquirrels),
+         nCrittersGame = nSquirrelsGame+nRabbitsGame) %>%
+  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
+         AvgPercent = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv)) %>%
+  mutate(wisError = guess-AvgPercent) %>% mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
+  filter(!is.na(guess))
+```
+
+```{r}
+d.guesses.collapsed %>%
+ # filter(idx != 1) %>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 0 & nCrittersGame <= 17 ~ "< 18",
+    nCrittersGame >= 18 & nCrittersGame <= 22 ~ "18-22",
+    nCrittersGame >= 23 & nCrittersGame <= 60 ~ "> 22",
+  )) %>%
+  filter(!is.na(nCrittersGroup)) %>%
+  group_by(treatment, idx, gameID, AvgPercent, nCrittersGroup) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm = TRUE), .groups = 'drop') %>%
+  group_by(treatment, idx, nCrittersGroup) %>%
+  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
+  ungroup() %>%
+  mutate(nCrittersGroup = fct_relevel(nCrittersGroup, '< 18', '18-22', '> 22')) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatment)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
+    theme_few() +
+    scale_color_brewer(palette = 'Accent') +
+    scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
+    facet_wrap(~ nCrittersGroup) +
+    labs(y = 'average error', x = 'round #') +
+    theme(aspect.ratio = 1, legend.position = 'top')
+```
+
+```{r}
+d.guesses.collapsed  %>% 
+  group_by(treatment, condition, idx, gameID, AvgPercent) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm= T)) %>%
+  group_by(treatment, idx) %>%
+  tidyboot::tidyboot_mean(error, na.rm = T) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatment, linetype = treatment == 'unidirectional')) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    theme_few() +
+    scale_color_brewer(palette = 'Accent') +
+    guides(linetype = 'none') +
+    scale_x_continuous(breaks = c(1,3,5,7,9,11)) +
+    labs(y = 'average error', x = 'round #', color = '')  +
+    theme(aspect.ratio = 1, legend.position = 'top')
+```
+
+```{r}
+conflicts_prefer(lme4::lmer)
+stats <- d.guesses.collapsed %>%
+  mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
+  group_by(treatment, condition, idx, AvgPercent) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm = TRUE)) %>%
+  group_by(treatment, idx) %>%
+  tidyboot::tidyboot_mean(error, na.rm = TRUE)
+
+# Fit the mixed-effects model
+model <- lmer(empirical_stat ~ treatment * poly(idx, 2) + (1 | idx), data = stats)
+
+# Summarize the model to get fixed effects and p-values
+summary(model)
+```
+
+```{r}
+d.guesses.collapsed %>%
+    mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
+  ungroup() %>%
+  group_by(treatment, gameID, idx) %>%
+  summarize(gameError = abs(mean(AvgPercent) - mean(guess, na.rm= T)),
+            nCrittersGame = mean(nCrittersGame)) %>%
+  ggplot(aes(x = nCrittersGame, y = log1p(gameError), color = treatment)) +
+    geom_point(alpha = 0.25) +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 1), se = FALSE) +
+    theme_few() +
+    scale_color_brewer(palette = 'Accent') +
+    facet_grid(~ treatment) +
+    labs(y = 'average error', x = 'total sample size') +
+    theme(aspect.ratio = 2, legend.position = 'none')
+```
+
+```{r}
+d.guesses.collapsed %>% 
+      mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
+  group_by(playerID) %>%
+  mutate(prevGuess = lag(guess)) %>% 
+  arrange(playerID, idx) %>%
+  mutate(distToSelf = abs(guess - prevGuess)) %>%
+  group_by(idx, treatment) %>% 
+  filter(idx>1) %>%
+  tidyboot_mean(distToSelf, na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatment)) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y~ poly(x, 1), se = F) +
+    scale_color_brewer(palette = 'Accent') +
+    guides(linetype = 'none') +
+    scale_x_continuous(breaks = c(2,4,6,8)) +
+    labs(y = 'change from previous guess', x = 'reference point (round #)', color = '') +
+    theme_few() +
+    theme(aspect.ratio = 1, legend.position = 'top')
+```
+
+```{r}
+d.guesses.collapsed %>%
+        mutate(treatment = recode(treatment, `0.7` = "unidirectional", `0.3` = "unidirectional")) %>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 10 & nCrittersGame <= 20 ~ 20,
+    nCrittersGame >= 21 & nCrittersGame <= 30 ~ 30,
+    nCrittersGame >= 31 & nCrittersGame <= 40 ~ 40,
+    nCrittersGame >= 41 & nCrittersGame <= 50 ~ 50,
+    nCrittersGame >= 51 & nCrittersGame <= 60 ~ 60,
+    nCrittersGame >= 61 & nCrittersGame <= 70 ~ 70,
+    nCrittersGame >= 71 & nCrittersGame <= 80 ~ 80,
+    nCrittersGame >= 81 & nCrittersGame <= 90 ~ 90,
+    nCrittersGame >= 91 & nCrittersGame <= 100 ~ 100,
+    TRUE ~ NA_real_
+  )) %>%
+  filter(!is.na(nCrittersGroup)) %>%
+  filter(treatment == 'interactive') %>%
+  group_by(nCrittersGroup) %>%
+  summarise(unique_games = n_distinct(gameID)) %>%
+  print()
+
+d.guesses.collapsed %>%
+  mutate(nCrittersGroup = case_when(
+    nCrittersGame >= 0 & nCrittersGame <= 10 ~ "0-10",
+    nCrittersGame > 10 & nCrittersGame <= 20 ~ "11-20",
+    nCrittersGame > 20 & nCrittersGame <= 30 ~ "21-30",
+    nCrittersGame > 30 & nCrittersGame <= 40 ~ "31-40",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(nCrittersGroup)) %>% 
+  group_by(treatment, idx, gameID, AvgPercent, nCrittersGroup) %>%
+  summarize(error = mean(abs(guess - AvgPercent), na.rm = TRUE), .groups = 'drop') %>%
+  group_by(treatment, idx, nCrittersGroup) %>%
+  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup, group = nCrittersGroup, linetype = 'interactive')) +
+  geom_point() +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
+  geom_hline(yintercept = 0, linetype = 'dotted') +
+  theme_few() +
+  scale_color_manual(values = c("0-10" = "lightblue", "11-20" = "blue", "21-30" = "darkblue", "31-40" = "navy")) +
+  guides(linetype = 'none') +
+  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
+  labs(y = 'average error', x = 'round #', color = 'Number of Critters') +
+  theme(aspect.ratio = 1, legend.position = 'top')
+
+```
+
+```{r}
+d.guesses <- d.guesses %>%
+  mutate(indvPercent = ifelse(nRabbits > 0 & nSquirrels == 0, 100, 
+                   ifelse(nSquirrels > 0 & nRabbits == 0, 1, 
+                          ifelse(nRabbits + nSquirrels == 0, 0, 
+                                 floor((nRabbits / (nRabbits + nSquirrels)) * 100))))) %>%
+  group_by(idx, gameID) %>%
+  mutate(nRabbitsGame = sum(nRabbits),
+         nSquirrelsGame = sum(nSquirrels)) %>%
+  mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
+         AvgPercent = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
+         mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))
+
+d.guesses.collapsed %>%
+  group_by(gameID, treatment) %>%
+  #summarize(mleEstimate = mean(mleEstimateIndiv)) %>%
+  ggplot(aes(x = nCrittersGame)) +
+    geom_histogram(binwidth = 5) +
+    #facet_wrap(~ treatmentName, scales = "free") +
+   # labs(title = "Critters ") +
+    theme_few()
 ```
