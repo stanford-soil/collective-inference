@@ -200,6 +200,8 @@ summary_data_long_proportions %>%
   guides(fill = guide_legend(nrow = 2))
 ```
 
+# preregistered data only
+
 ```{r}
 summary_data <- d.allmsg_exp1 %>%
   filter(!coding == 'o') %>%
@@ -275,6 +277,8 @@ summary_data %>% mutate(decile = ntile(avg_error, 5)) %>%
  lm(log(avg_error) ~ sn_count+sb_count+pb_count+pn_count,
        data = .) %>% summary()
 ```
+
+# original data by group type
 
 ```{r}
 
@@ -392,7 +396,7 @@ ggplot(subset(d.allmsg2, round == 8), aes(x = s_count, y = error_change_overall)
   )
 ```
 
-# Error change
+# Error change for complex and preregistered datasets
 
 ```{r}
 d.allmsg2 <- d.allmsg2 %>% 
@@ -521,6 +525,8 @@ summary(lmer(error ~ s_count*round + (1 | gameID), data = d.allmsg2))
 
 ```
 
+# game count for complex dataset
+
 ```{r}
 heatmap_test <- d.allmsg %>%
     filter(!treatment== "unidirectional")%>%
@@ -575,6 +581,8 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
 
 ```
 
+# game count for preregistered dataset
+
 ```{r}
 heatmap_test <- d.allmsg_exp1 %>%
     filter(!treatment== "unidirectional")%>%
@@ -627,6 +635,8 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   facet_wrap(~treatment #+ direction
             )
 ```
+
+# combined game count
 
 ```{r}
 
@@ -702,6 +712,8 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   facet_wrap(~treatment)
 
 ```
+
+# combined s count error
 
 ```{r}
 combined_df2 <- bind_rows(d.allmsg2, d.allmsg_exp1_2) 
@@ -783,6 +795,8 @@ d <- d.all_minmax2 %>%
         panel.grid = element_blank())
 d
 ```
+
+# s count game representation
 
 ```{r}
 combined_df_final_rounds <- bind_rows(d.allmsg2[d.allmsg2$round == 8, ], 

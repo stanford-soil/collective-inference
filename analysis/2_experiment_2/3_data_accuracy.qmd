@@ -194,7 +194,7 @@ ggplot(heatmap_test_3, aes(x = entropy_bin, y = representation_bin)) +
   facet_wrap(~treatment)
 ```
 
-# error differences in slider direction 
+# error differences in slider direction
 
 ```{r}
 d.all %>%  

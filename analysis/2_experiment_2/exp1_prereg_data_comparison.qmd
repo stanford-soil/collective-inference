@@ -104,8 +104,6 @@ d.guesses <- d.guesses.v1 %>%
 
 ```
 
-![](images/clipboard-275902377.png)
-
 ```{r}
 #based on exp 2 medians
 d.guesses_minmax <- d.guesses %>%
