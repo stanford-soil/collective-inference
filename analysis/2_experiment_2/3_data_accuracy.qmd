@@ -387,6 +387,9 @@ d
 #  dpi      = 300 
 #)
 
+levels(d.all_minmax2$group)
+unique(d.all_minmax2$group)
+
 ```
 
 # group v treatment accounting for game noise

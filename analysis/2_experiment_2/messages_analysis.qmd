@@ -30,7 +30,14 @@ theme_set(theme_few())
 d.allmsg <- read_csv(here('analysis/2_experiment_2/message_data/coded.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y")) 
+
 d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
+
+d.all <- d.all %>%
+  separate(treatmentName.x, into = c("direction", "treatment"), sep = "_")
+
+d.all <- d.all %>%
+  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))
 
 d.allmsg_exp1 <- read_csv(here('analysis/2_experiment_2/message_data/recoded_messages_exp1.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
@@ -117,6 +124,43 @@ combined_df <- combined_df %>% left_join(combined_df_binning, by = c("gameID", "
   ungroup()%>%  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))  #%>% filter(!guess == 50)
   
 
+```
+
+```{r}
+persistentnoClick <- data.frame(gameID = character(), playerID = character(), stringsAsFactors = FALSE)
+
+for (i in 1:7) {
+  idx_pair <- c(i + 1, i + 2)
+    filtered_players <- d.all %>%
+    group_by(gameID, playerID) %>%
+    filter(all(is.na(guess[idx_pair]))) %>%
+    select(gameID, playerID) %>%
+    distinct()
+    persistentnoClick <- bind_rows(persistentnoClick, filtered_players)
+}
+persistentnoClick <- distinct(persistentnoClick)
+
+gameIDs_to_remove <- persistentnoClick %>%
+  count(gameID) %>%
+  filter(n >= 2) %>%
+  pull(gameID)
+
+d.all <- d.all %>%
+  filter(!(gameID %in% gameIDs_to_remove)) 
+
+d.allnovel <-d.all %>%
+  filter(is.na(designatedGame))%>%
+  distinct(gameID)
+
+d.allgame <- d.all %>%
+   distinct(gameID, .keep_all = TRUE)
+
+d.all <- d.all %>%
+  mutate(
+    nCrittersGame_bin = str_remove_all(nCrittersGame_bin, "[\\[\\]()]"),
+    entropy_bin = str_remove_all(entropy_bin, "[\\[\\]()]"),
+    representation_bin = str_remove_all(representation_bin, "[\\[\\]()]")
+  )
 ```
 
 # analyze codes
@@ -897,12 +941,472 @@ summary(model2)
 ```
 
 ```{r}
-combined_df %>%
+combined_df2 %>%
   ggplot(aes(x = as.numeric(error))) +
     geom_histogram(binwidth =1) +
     facet_wrap(~ direction, scales = "free") +
     #xlim(0,100) +
     labs(title = "Distribution of mleEstimate for each treatmentName") +
   theme_few() #+facet_wrap(~treatment)
+
+```
+
+# grouped
+
+```{r}
+
+d.all_minmax <- d.all%>% mutate(
+    entropy_median = median(entropy),
+    representation_median = median(representation),
+    nCrittersGame_median = median(nCrittersGame)
+  ) %>%
+  mutate(
+    entropy_minmax = ifelse(entropy <= entropy_median, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= representation_median, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(nCrittersGame <= nCrittersGame_median, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  ) %>%
+ #group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  group_by(gameID, treatment)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup() # %>%
+  #filter(idx == 8)
+
+#print(unique(d.all_minmax %>% select(entropy_median, representation_median, nCrittersGame_median)))
+
+lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
+
+# Calculate center lines and their distances
+group_distances <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>% 
+  summarise(median_error = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = median_error) %>%
+  mutate(distance = abs(interactive - slider)) %>%
+  arrange(distance)
+
+# Calculate game counts per group and treatment
+counts <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>%
+  summarise(nGames = n()) %>%
+  pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
+
+# Calculate center lines for group ordering
+center_lines <- d.all_minmax %>%
+  group_by(group, treatment) %>%
+  filter(group !='E_etpy\nH_rep\nE_crits')%>%
+  summarise(center_line = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = center_line) %>%
+  mutate(center_line_distance = abs(interactive - slider))
+
+# Reorder groups based on center line distance
+d.all_minmax2 <- d.all_minmax %>%
+  mutate(group = factor(group, levels = center_lines %>%
+                          arrange(center_line_distance) %>%
+                          pull(group))) %>% filter(group !='E_etpy\nH_rep\nE_crits') %>% droplevels()
+
+d <-d.all_minmax2 %>%
+  ggplot(aes(x = group, y = errorAvg, color = treatment, fill = treatment)) +  
+   scale_color_brewer(palette = 'Accent') +
+  scale_fill_brewer(palette = 'Accent') + 
+  geom_boxplot(alpha = 0.5) +
+  #geom_text(data = counts, 
+           # aes(x = group, y = Inf, 
+                #label = paste0("I: ", nGames_interactive, 
+                              # "\nS: ", nGames_slider)),
+           # vjust = 1.5, inherit.aes = FALSE) +
+  labs(x = "", y = "Error") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1),
+        legend.position = "top",
+        panel.background = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank())
+d
+```
+
+# grouped but s_count
+
+```{r}
+
+d.all_minmax <- d.all%>% mutate(
+    entropy_median = median(entropy),
+    representation_median = median(representation),
+    nCrittersGame_median = median(nCrittersGame)
+  ) %>%
+  mutate(
+    entropy_minmax = ifelse(entropy <= entropy_median, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= representation_median, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(nCrittersGame <= nCrittersGame_median, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  ) %>%
+ #group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  group_by(gameID, treatment)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup() # %>%
+  #filter(idx == 8)
+
+d.all_minmax <-d.all_minmax %>%
+  left_join(combined_df2%>% select(round, recipient, sender.id, gameID, s_count),
+            by = c("gameID", "recipient","playerID" = "sender.id", "idx" = "round"))
+
+
+#print(unique(d.all_minmax %>% select(entropy_median, representation_median, nCrittersGame_median)))
+
+lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
+
+# Calculate center lines and their distances
+group_distances <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>% 
+  summarise(median_error = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = median_error) %>%
+  mutate(distance = abs(interactive - slider)) %>%
+  arrange(distance)
+
+# Calculate game counts per group and treatment
+counts <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>%
+  summarise(nGames = n()) %>%
+  pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
+
+# Calculate center lines for group ordering
+center_lines <- d.all_minmax %>%
+  group_by(group, treatment) %>%
+  filter(group !='E_etpy\nH_rep\nE_crits')%>%
+  summarise(center_line = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = center_line) %>%
+  mutate(center_line_distance = abs(interactive - slider))
+
+# Reorder groups based on center line distance
+d.all_minmax2 <- d.all_minmax %>%
+  mutate(group = factor(group, levels = center_lines %>%
+                          arrange(center_line_distance) %>%
+                          pull(group))) %>% filter(group !='E_etpy\nH_rep\nE_crits') %>% droplevels()
+d.sum <- d.all_minmax2 %>%
+  filter(treatment == 'interactive') %>%
+  group_by(gameID, group) %>%
+  summarize(
+    s_count_total = sum(s_count, na.rm = TRUE),
+    error_mean = mean(error, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+d.sum %>%
+  mutate(s_bin = case_when(
+    s_count_total > 5 ~ "over 5",
+    TRUE ~ "under 5"
+  )) %>%
+  ggplot(aes(x = group, y = error_mean, fill = s_bin)) +  
+  geom_boxplot(alpha = 0.5, position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "Error", fill = "S_count bin") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1),
+        legend.position = "top",
+        panel.background = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank())
+
+```
+
+# combined data
+
+```{r}
+
+d.all_minmax <- combined_df2%>% mutate(
+    entropy_median = median(entropy_new),
+    representation_median = median(representation),
+    nCrittersGame_median = median(totalCritters)
+  ) %>%
+  mutate(
+    entropy_minmax = ifelse(entropy_new <= entropy_median, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= representation_median, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(totalCritters <= nCrittersGame_median, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  ) %>%
+ #group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  group_by(gameID, treatment)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup() # %>%
+  #filter(idx == 8)
+
+
+
+#print(unique(d.all_minmax %>% select(entropy_median, representation_median, nCrittersGame_median)))
+
+lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
+
+
+# Calculate game counts per group and treatment
+counts <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>%
+  summarise(nGames = n()) %>%
+  pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
+
+
+# Reorder groups based on center line distance
+d.all_minmax2 <- d.all_minmax 
+
+d.sum <- d.all_minmax2 %>%
+  filter(treatment == 'interactive') %>%
+  group_by(gameID, group) %>%
+  summarize(
+    s_count_total = sum(s_count, na.rm = TRUE),
+    error_mean = mean(error, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+d.sum %>%
+  mutate(s_bin = case_when(
+    s_count_total > 5 ~ "over 5",
+    TRUE ~ "under 5"
+  )) %>%
+  ggplot(aes(x = group, y = error_mean, fill = s_bin)) +  
+  geom_boxplot(alpha = 0.5, position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "Error", fill = "S_count bin") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1),
+        legend.position = "top",
+        panel.background = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank())
+
+```
+
+```{r}
+exclude_anchors <- c(0, 50, 100)
+
+d.all_unmoored <- d.all %>%
+  filter(!Reduce(`|`, lapply(exclude_anchors, function(x) between(guess, x - 0, x + 0))))
+
+combined_df2_unmoored <- combined_df2 %>%  filter(!Reduce(`|`, lapply(exclude_anchors, function(x) between(guess, x - 0, x + 0))))
+
+combined_df2_unmoored %>%
+  ggplot(aes(x = as.numeric(error))) +
+    geom_histogram(binwidth =1) +
+    facet_wrap(~ direction, scales = "free") +
+    #xlim(0,100) +
+    labs(title = "Distribution of mleEstimate for each treatmentName") +
+  theme_few() #+facet_wrap(~treatment)
+```
+
+```{r}
+
+d.all_minmax <- d.all_unmoored%>% mutate(
+    entropy_median = median(entropy),
+    representation_median = median(representation),
+    nCrittersGame_median = median(nCrittersGame)
+  ) %>%
+  mutate(
+    entropy_minmax = ifelse(entropy <= entropy_median, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= representation_median, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(nCrittersGame <= nCrittersGame_median, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  ) %>%
+ #group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  group_by(gameID, treatment)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup() # %>%
+  #filter(idx == 8)
+
+#print(unique(d.all_minmax %>% select(entropy_median, representation_median, nCrittersGame_median)))
+
+lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
+
+# Calculate center lines and their distances
+group_distances <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>% 
+  summarise(median_error = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = median_error) %>%
+  mutate(distance = abs(interactive - slider)) %>%
+  arrange(distance)
+
+# Calculate game counts per group and treatment
+counts <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>%
+  summarise(nGames = n()) %>%
+  pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
+
+# Calculate center lines for group ordering
+center_lines <- d.all_minmax %>%
+  group_by(group, treatment) %>%
+  filter(group !='E_etpy\nH_rep\nE_crits')%>%
+  summarise(center_line = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = center_line) %>%
+  mutate(center_line_distance = abs(interactive - slider))
+
+# Reorder groups based on center line distance
+d.all_minmax2 <- d.all_minmax %>%
+  mutate(group = factor(group, levels = center_lines %>%
+                          arrange(center_line_distance) %>%
+                          pull(group))) %>% filter(group !='E_etpy\nH_rep\nE_crits') %>% droplevels()
+
+d <-d.all_minmax2 %>%
+  ggplot(aes(x = group, y = errorAvg, color = treatment, fill = treatment)) +  
+   scale_color_brewer(palette = 'Accent') +
+  scale_fill_brewer(palette = 'Accent') + 
+  geom_boxplot(alpha = 0.5) +
+  #geom_text(data = counts, 
+           # aes(x = group, y = Inf, 
+                #label = paste0("I: ", nGames_interactive, 
+                              # "\nS: ", nGames_slider)),
+           # vjust = 1.5, inherit.aes = FALSE) +
+  labs(x = "", y = "Error") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1),
+        legend.position = "top",
+        panel.background = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank())
+d
+
+```
+
+```{r}
+
+d.all_minmax <- d.all_unmoored%>% mutate(
+    entropy_median = median(entropy),
+    representation_median = median(representation),
+    nCrittersGame_median = median(nCrittersGame)
+  ) %>%
+  mutate(
+    entropy_minmax = ifelse(entropy <= entropy_median, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= representation_median, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(nCrittersGame <= nCrittersGame_median, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  ) %>%
+ #group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  group_by(gameID, treatment)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup() # %>%
+  #filter(idx == 8)
+
+d.all_minmax <-d.all_minmax %>%
+  left_join(combined_df2%>% select(round, recipient, sender.id, gameID, s_count),
+            by = c("gameID", "recipient","playerID" = "sender.id", "idx" = "round"))
+
+
+#print(unique(d.all_minmax %>% select(entropy_median, representation_median, nCrittersGame_median)))
+
+lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
+
+# Calculate center lines and their distances
+group_distances <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>% 
+  summarise(median_error = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = median_error) %>%
+  mutate(distance = abs(interactive - slider)) %>%
+  arrange(distance)
+
+# Calculate game counts per group and treatment
+counts <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>%
+  summarise(nGames = n()) %>%
+  pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
+
+# Calculate center lines for group ordering
+center_lines <- d.all_minmax %>%
+  group_by(group, treatment) %>%
+  filter(group !='E_etpy\nH_rep\nE_crits')%>%
+  summarise(center_line = median(errorAvg)) %>%
+  pivot_wider(names_from = treatment, values_from = center_line) %>%
+  mutate(center_line_distance = abs(interactive - slider))
+
+# Reorder groups based on center line distance
+d.all_minmax2 <- d.all_minmax %>%
+  mutate(group = factor(group, levels = center_lines %>%
+                          arrange(center_line_distance) %>%
+                          pull(group))) %>% filter(group !='E_etpy\nH_rep\nE_crits') %>% droplevels()
+d.sum <- d.all_minmax2 %>%
+  filter(treatment == 'interactive') %>%
+  filter(idx == '8') %>%
+  group_by(gameID, group) %>%
+  summarize(
+    s_count_total = sum(s_count, na.rm = TRUE),
+    error_mean = mean(error, na.rm = TRUE),
+    .groups = "drop"
+  ) #%>%
+#mutate(s_bin = cut(s_count_total, breaks = seq(min(s_count_total), max(s_count_total), length.out = 3), include.lowest = TRUE))
+
+d.sum %>%
+  mutate(s_bin = case_when(
+    s_count_total > 5 ~ "over 5",
+   TRUE ~ "under 5"
+  )) %>%
+  ggplot(aes(x = group, y = error_mean, fill = s_bin)) +  
+  geom_boxplot(alpha = 0.5, position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "Error", fill = "S_count bin") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1),
+        legend.position = "top",
+        panel.background = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank())
+
+```
+
+```{r}
+
+d.all_minmax <- combined_df2_unmoored%>% mutate(
+    entropy_median = median(entropy_new),
+    representation_median = median(representation),
+    nCrittersGame_median = median(totalCritters)
+  ) %>%
+  mutate(
+    entropy_minmax = ifelse(entropy_new <= entropy_median, "H_etpy", "E_etpy"),
+    representation_minmax = ifelse(representation <= representation_median, "E_rep", "H_rep"),
+    nCrittersGame_minmax = ifelse(totalCritters <= nCrittersGame_median, "H_crits", "E_crits"),
+    group = paste(entropy_minmax, representation_minmax, nCrittersGame_minmax, sep = "\n")
+  ) %>%
+ #group_by(representation_bin, entropy_bin, nCrittersGame_bin, treatment) %>%
+  group_by(gameID, treatment)%>%
+  mutate(errorAvg = mean(error, na.rm = TRUE)) %>%
+  ungroup() # %>%
+  #filter(idx == 8)
+
+
+
+#print(unique(d.all_minmax %>% select(entropy_median, representation_median, nCrittersGame_median)))
+
+lm_model <- lm(errorAvg ~ group, data = d.all_minmax)
+
+
+# Calculate game counts per group and treatment
+counts <- d.all_minmax %>%
+  filter(group !='E_etpy\nH_rep\nE_crits') %>%
+  group_by(group, treatment) %>%
+  summarise(nGames = n()) %>%
+  pivot_wider(names_from = treatment, values_from = nGames, names_prefix = "nGames_")
+
+
+# Reorder groups based on center line distance
+d.all_minmax2 <- d.all_minmax 
+
+d.sum <- d.all_minmax2 %>%
+  filter(treatment == 'interactive') %>% 
+  filter(round == '8')%>%
+  group_by(gameID, group) %>%
+  summarize(
+    s_count_total = sum(s_count, na.rm = TRUE),
+    error_mean = mean(error, na.rm = TRUE),
+    .groups = "drop"
+  )%>%
+mutate(s_bin = cut(s_count_total, breaks = seq(min(s_count_total), max(s_count_total), length.out = 3), include.lowest = TRUE))
+
+d.sum %>%
+ # mutate(s_bin = case_when(
+ #   s_count_total > 5 ~ "over 5",
+#    TRUE ~ "under 5"
+#  )) %>%
+  ggplot(aes(x = group, y = error_mean, fill = s_bin)) +  
+  geom_boxplot(alpha = 0.5, position = position_dodge(width = 0.8)) +
+  labs(x = "", y = "Error", fill = "S_count bin") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1),
+        legend.position = "top",
+        panel.background = element_rect(fill = NA, color = "black"),
+        panel.grid = element_blank())
 
 ```
