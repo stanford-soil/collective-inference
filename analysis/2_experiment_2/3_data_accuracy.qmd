@@ -384,7 +384,7 @@ d
  # height = 10,
 #  units = "in",
 #  device = "png",
-#  dpi      = 300 
+#  dpi = 300 
 #)
 
 levels(d.all_minmax2$group)

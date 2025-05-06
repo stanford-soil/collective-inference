@@ -439,7 +439,7 @@ d.allf <- d.all %>%
 ```
 
 ```{r}
-d.allf <- d.allf %>%
+d.allf <- d.allf %>%mutate(across(c(entropy, representation, nCrittersGame), as.numeric)) %>% 
   mutate(nCritters = nSquirrels + nRabbits,    
          mleEstimate = nRabbits / (nRabbits + nSquirrels)) %>%
   group_by(gameID, idx) %>%
@@ -447,9 +447,8 @@ d.allf <- d.allf %>%
     nRabbitsGame = sum(nRabbits),
     nSquirrelsGame = sum(nSquirrels),
     mleGame = nRabbitsGame / (nRabbitsGame + nSquirrelsGame),
-    totalCritters = sum(nCritters),
-    prob = nCritters / totalCritters
-  ) %>%
+    prob = nCritters / nCrittersGame
+  ) %>%   
   mutate(
     entropy_new = -sum(ifelse(prob > 0, prob * log(prob), 0)),  # entropy per gameID
     representation = mean(abs(mleEstimate - mleGame))
@@ -458,9 +457,10 @@ d.allf <- d.allf %>%
   mutate(
     entropy_bin = cut(entropy_new, breaks = seq(0, 2, .27), right = TRUE, include.lowest = TRUE, dig.lab = 2), 
     representation_bin = cut(representation, breaks = seq(0, 1, .12), right = TRUE, include.lowest = TRUE, dig.lab = 2),
-    nCrittersGame_bin = cut(totalCritters, breaks = seq(15, 100, by = 5), right = TRUE, include.lowest = TRUE)
+    nCrittersGame_bin = cut(nCrittersGame, breaks = seq(15, 100, by = 5), right = TRUE, include.lowest = TRUE)
   ) %>% 
-  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) 
+  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) %>%
+  filter(!stageName =="looking at your yard")
 ```
 
 ```{r}
@@ -497,40 +497,107 @@ d.allf  %>%
 ```
 
 ```{r}
-persistentnoClick <- data.frame(gameID = character(), playerID = character(), idx = integer(), stringsAsFactors = FALSE)
+persistentnoClick <- data.frame(gameID = character(), playerID = character(), drop_idx = integer(), stringsAsFactors = FALSE)
 
 for (i in 1:7) {
   idx_pair <- c(i, i + 1)
   filtered_players <- d.allf %>%
     group_by(gameID, playerID) %>%
     filter(all(is.na(guess[idx_pair]))) %>%
-    mutate(idx_missed = i) %>%  
-    select(gameID, playerID, idx_missed) %>%
+    mutate(drop_idx = i) %>%  
+    select(gameID, playerID, drop_idx) %>%
     distinct()
   persistentnoClick <- bind_rows(persistentnoClick, filtered_players)
 }
 persistentnoClick <- distinct(persistentnoClick)
 
-
-
-persistentnoClick <- persistentnoClick %>%     
-  group_by(gameID, playerID) %>% 
-  summarise(idx_missed = min(idx_missed), .groups = "drop")
-
-d.allf <- d.allf %>%                              
-  left_join(persistentnoClick, by = c("gameID", "playerID")) %>% 
-  mutate(persistentnoClick = if_else(!is.na(idx_missed) & idx >= idx_missed, "yes", "no")) %>% 
-  select(-idx_missed)
-
+persistentnoClick <- persistentnoClick %>%
+  left_join(d.allf, by = c("gameID", "playerID", "drop_idx" = "idx")) %>% 
+  mutate(across(c(entropy, representation, nCrittersGame), as.numeric)) %>% 
+  mutate(entropy_bin = cut(entropy,breaks = seq(0,2,.27), right = TRUE, include.lowest = TRUE, dig.lab = 2), representation_bin = cut(representation, breaks = seq(0,1,.12), right = TRUE, include.lowest = TRUE, dig.lab = 2), nCrittersGame_bin = cut(nCrittersGame, breaks = seq(0, 100, 5), right = TRUE, include.lowest = TRUE)) %>%
+  distinct(gameID, playerID, .keep_all = TRUE) %>%
+  filter(is.na(guess)) 
 ```
 
 ```{r}
-d.allf %>%
-  group_by(idx) %>%
-  summarise(persistent_no_click_count = sum(persistentnoClick == "yes")) %>%
-  ggplot(aes(x = idx, y = persistent_no_click_count)) +
+persistentnoClick %>%
+  group_by(drop_idx)%>%
+  summarize(n_players = n_distinct(playerID)) %>%
+  ggplot(aes(x = drop_idx, y = n_players)) +
   geom_line() +
-  labs(x = "Index", y = "Persistent No Click Count", title = "Persistent No Click Over Time") +
+  labs(x = "idx", y = "Unique player count") +
   theme_minimal()
 
+persistentnoClick %>%
+  group_by(drop_idx)%>%
+  summarize(n_games = n_distinct(gameID)) %>%
+  ggplot(aes(x = drop_idx, y = n_games)) +
+  geom_line() +
+  labs(x = "idx", y = "Unique game count") +
+  theme_minimal()
+
+persistentnoClick %>%
+  group_by(drop_idx, entropy_bin)%>%
+  summarize(n_players = n_distinct(playerID)) %>%
+  ggplot(aes(x = drop_idx, y = n_players)) +
+  geom_line() +
+  labs(x = "idx", y = "Unique player count") +
+  theme_minimal()+facet_wrap(~entropy_bin)
+
+persistentnoClick %>%
+  group_by(drop_idx, nCrittersGame_bin)%>%
+  summarize(n_players = n_distinct(playerID)) %>%
+  ggplot(aes(x = drop_idx, y = n_players)) +
+  geom_line() +
+  labs(x = "idx", y = "Unique player count") +
+  theme_minimal()+facet_wrap(~nCrittersGame_bin)
+
+persistentnoClick %>%
+  group_by(drop_idx, representation_bin)%>%
+  summarize(n_players = n_distinct(playerID)) %>%
+  ggplot(aes(x = drop_idx, y = n_players)) +
+  geom_line() +
+  labs(x = "idx", y = "Unique player count") +
+  theme_minimal()+facet_wrap(~representation_bin)
+```
+
+```{r}
+persistentnoClick %>%
+  group_by(entropy_bin, nCrittersGame_bin) %>%
+  summarize(n_players = n_distinct(playerID), .groups = "drop") %>%
+  ggplot(aes(x = entropy_bin, y = nCrittersGame_bin)) +
+  geom_tile(aes(fill = n_players), color = "white") +
+  scale_fill_gradient(name = "n_players", low = "lightblue", high = "darkblue") +
+  labs(x = "Entropy", y = "nCrittersGame_bin") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1,
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+persistentnoClick %>%
+  group_by(entropy_bin, representation_bin) %>%
+  summarize(n_players = n_distinct(playerID), .groups = "drop") %>%
+  ggplot(aes(x = entropy_bin, y = representation_bin)) +
+  geom_tile(aes(fill = n_players), color = "white") +
+  scale_fill_gradient(name = "n_players", low = "lightblue", high = "darkblue") +
+  labs(x = "Entropy", y = "Representation") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1,
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+persistentnoClick %>%
+  group_by(representation_bin, nCrittersGame_bin) %>%
+  summarize(n_players = n_distinct(playerID), .groups = "drop") %>%
+  ggplot(aes(x = nCrittersGame_bin, y = representation_bin)) +
+  geom_tile(aes(fill = n_players), color = "white") +
+  scale_fill_gradient(name = "n_players", low = "lightblue", high = "darkblue") +
+  labs(x = "nCrittersGame_bin", y = "Representation") +
+  theme_few() +
+  theme(
+    aspect.ratio = 1,
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 ```
