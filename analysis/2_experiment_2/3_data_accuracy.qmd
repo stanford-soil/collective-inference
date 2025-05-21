@@ -484,19 +484,44 @@ p <- ggplot(heatmap_combined, aes(x = bin, y = errorAvg, color = treatment, grou
     axis.text.x = element_text(angle = 15, hjust = 1)  
   )
 
-# Then save with a decent width
-ggsave(
-  "marginals.png",
-  plot = p,
-  width = 3.5,  
-  height = 10,
-  units = "in",
-  device = "png",
-  dpi      = 300 
-)
+```
 
-p
+```{r}
+d.all_plt <-d.all %>% filter(!is.na(error))
 
+ggplot(d.all_plt, aes(x = nCritters, y = error, color = treatment, group = treatment)) +
+  #geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+ # geom_hline(yintercept = c(0), linetype = 'dotted') +
+  scale_color_brewer(palette = 'Accent') +
+  theme_few() +
+  labs(x = "ncritters", y = "Error", color = "") +
+  theme(
+    legend.position = 'top',
+    axis.text.x = element_text(angle = 15, hjust = 1)  
+  )
+ggplot(d.all_plt, aes(x = entropy, y = error, color = treatment, group = treatment)) +
+  #geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+ # geom_hline(yintercept = c(0), linetype = 'dotted') +
+  scale_color_brewer(palette = 'Accent') +
+  theme_few() +
+  labs(x = "entropy", y = "Error", color = "") +
+  theme(
+    legend.position = 'top',
+    axis.text.x = element_text(angle = 15, hjust = 1)  
+  )
+ggplot(d.all_plt, aes(x = representation, y = error, color = treatment, group = treatment)) +
+  #geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+ # geom_hline(yintercept = c(0), linetype = 'dotted') +
+  scale_color_brewer(palette = 'Accent') +
+  theme_few() +
+  labs(x = "representation", y = "Error", color = "") +
+  theme(
+    legend.position = 'top',
+    axis.text.x = element_text(angle = 15, hjust = 1)  
+  )
 ```
 
 representation = round(abs(mleEstimate - mleGame)
@@ -681,6 +706,15 @@ ggplot(d.all, aes(x = abs((mleEstimate*100)-mleGame*100), y = error, group = idx
        x = "mleDifference",
        y = "Error") +
   theme_minimal() 
+
+```
+
+```{r}
+conflicts_prefer(lmerTest::lmer)
+d.all %>%
+  lmer(error ~ scale(outlierPercent) * scale(idx) + (1 + scale(outlierPercent) + scale(idx) | gameID), 
+       data = .) %>% 
+  summary()
 ```
 
 # change from previous guess

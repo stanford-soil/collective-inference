@@ -558,3 +558,10 @@ games_with_4_players <- games_with_4_players %>%
 treatment_count <- as.data.frame(table(games_with_4_players$treatmentName))
 print(treatment_count)
 ```
+
+```{r}
+d.guesses %>% 
+  ungroup() %>%
+  summarise(unique_games = n_distinct(gameID))
+
+```

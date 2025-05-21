@@ -672,3 +672,10 @@ d.guesses.collapsed %>%
    # labs(title = "Critters ") +
     theme_few()
 ```
+
+```{r}
+d.guesses %>% 
+  ungroup() %>%
+  summarise(unique_games = n_distinct(gameID))
+
+```

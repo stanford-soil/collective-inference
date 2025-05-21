@@ -45,12 +45,7 @@ d.guesses <- bind_rows(d.guesses, unique_rows)
 ## Implement exclusions
 
 ```{r}
-confused <- d.guesses %>%
-  filter(idx == 1) %>%
-  mutate(mleEstimate = floor((nRabbits / (nRabbits + nSquirrels)) * 100)) %>%
-  mutate(discrepency = abs(guess - mleEstimate)) %>% 
-  filter(discrepency > 70) %>% 
-  pull(playerID)
+
 
 persistentnoClick <- c()  
 for (i in 1:11) {
@@ -67,40 +62,29 @@ persistentnoClick <- unique(persistentnoClick)
 
 
 games_with_4_players <- d.guesses %>%
-    filter(!(playerID %in% persistentnoClick)) %>%
+   # filter(!(playerID %in% persistentnoClick)) %>%
   group_by(gameID) %>%
   summarise(unique_players = n_distinct(playerID)) %>% 
   filter(unique_players == 4)
 
-d.guesses <- left_join(d.guesses, games_with_4_players, by = "gameID")
+NCritterCount <- d.guesses %>%  distinct(playerID, gameID, .keep_all = TRUE) %>%group_by(gameID) %>%
+  summarise(
+    nRabbitsGame = sum(nRabbits, na.rm = TRUE),
+    nSquirrelsGame = sum(nSquirrels, na.rm = TRUE),
+    nCrittersGame = nRabbitsGame+nSquirrelsGame
+  )
+d.guesses <-left_join(d.guesses, NCritterCount, by = "gameID")
 
+d.guesses <- semi_join(d.guesses, games_with_4_players, by = "gameID") %>% filter(!(gameID %in% persistentnoClick))
 
-games_with_4_players <- games_with_4_players %>%
-      #filter(!(gameID %in% confused)) %>%
-  left_join(d.guesses, by = "gameID") %>%
-  select(gameID, treatmentName) %>%
-  distinct()
-treatment_count <- as.data.frame(table(games_with_4_players$treatmentName))
-print(treatment_count)
+count <- d.guesses %>% 
+  distinct(gameID, treatmentName) %>% 
+  count(treatmentName, name = "n_games")
 
-d.guesses <- d.guesses %>% filter(!(gameID %in% persistentnoClick))
-#%>%  
- # filter(idx != 1) 
+print(count)
 ```
 
 ### Game-level distribution
-
-```{r}
-gameCounts <- d.guesses %>%
-    filter(!(gameID %in% persistentnoClick)) %>%
-  filter(idx == 1) %>%
-  group_by(gameID, playerID, nRabbits, nSquirrels) %>%
-  tally() %>% 
-  group_by(gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits),
-         nSquirrelsGame = sum(nSquirrels)) 
-  
-```
 
 ```{r}
 
@@ -117,7 +101,6 @@ d.guesses <- d.guesses %>%
   separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
   left_join(gameCounts) %>%
   mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100), 
-         nCrittersGame = nRabbitsGame+nSquirrelsGame,
          mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
          mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv))  %>%
   arrange(playerID, idx)
@@ -131,8 +114,7 @@ d.guesses %>%
   group_by(gameID, treatment) %>%
   summarize(mleEstimate = mean(mleEstimateGame)) %>%
   ggplot(aes(x = mleEstimate, fill = treatment)) +
-    geom_density(binwidth = 10, alpha = 0.5) +
-    theme_few()
+    geom_density(binwidth = 30, alpha = 0.5) 
 ```
 
 ```{r}
@@ -168,13 +150,20 @@ d.guesses %>%
 
 ```{r}
 
+model <- lmer(guess ~ treatment * idx + (1 | gameID/playerID), data = d.guesses)
+summary(model)
+```
+
+```{r}
+
 d.guesses %>%
   ungroup() %>%
   mutate(condition = fct_relevel(condition, 'slider', 'unidirectional', 'interactive')) %>%
+   { print(contrasts(.$condition)); . } %>%
   mutate(error = abs(guess - mleEstimateGame)) %>%
-  lmer(scale(error) ~ poly(idx, 2) + condition + (1 + poly(idx, 2) || gameID/playerID),
+  lmer(scale(error) ~ poly(idx, 2) + condition + (1 + poly(idx, 1) || gameID/playerID),
        data = .,
-       contrasts = list(condition = contr.sum(3)),
+       contrasts = list(condition = contr.sum(3)), #each condition is being compared to all of them
        control = lmerControl(optimizer = 'bobyqa')) %>%
   summary()
 ```
@@ -213,14 +202,17 @@ error_data <- d.guesses %>%
 model <- lmer(error ~ condition * idx + (1 | gameID/playerID), data = error_data, control = lmerControl(optCtrl = list(maxfun = 100000)))
 #summary(model)
 
-model2 <- lmer(error ~ idx + (1 | gameID/playerID), data = error_data)
-#summary(model2)
+model2 <- lmer((error) ~ idx + (1+idx | gameID/playerID), data = error_data)
+summary(model2)
 
 model3 <- lmer(error ~ condition  + (1 | idx) + (1 | gameID/playerID), data = error_data)
 #summary(model3)
 
-model4 <- lmer(error ~ idx + condition + (1 | gameID/playerID), data = error_data)
+model4 <- lmer((error) ~ idx + condition + (1+idx |gameID/playerID), data = error_data)
 #summary(model4)
+
+anova(model2, model4)
+
 
 #bonferroni adjusts for multiple comparisons
 pairwise_results <- model %>%
@@ -255,11 +247,10 @@ summary(model_with_condition)
 ```{r}
 d.guesses %>%
   ungroup() %>%
-  group_by(condition, gameID, idx) %>%
-  summarize(gameError = abs(mean(mleEstimateGame) - mean(guess, na.rm= T)),
-            nCrittersGame = mean(nCrittersGame)) %>%
+  group_by(condition, gameID,nCrittersGame, idx) %>%
+  summarize(gameError = abs(mean(mleEstimateGame) - mean(guess))) %>%
   ggplot(aes(x = nCrittersGame, y = log1p(gameError), color = condition)) +
-      geom_point(alpha = 0.25) +
+      geom_point() +
     geom_smooth(method = 'lm', formula = y ~ poly(x, 1)) +
     theme_few() +
     scale_color_brewer(palette = 'Accent') +
@@ -271,24 +262,8 @@ d.guesses %>%
 ```
 
 ```{r}
-m1 <- d.guesses %>%
-  ungroup() %>%
-  mutate(condition = fct_relevel(condition, 'slider', 'unidirectional', 'interactive')) %>%
-  mutate(nCrittersGame = nRabbitsGame + nSquirrelsGame,
-         error = abs(guess - mleEstimateGame)) %>%
-  lmer(scale(error) ~ condition + poly(nCrittersGame, 2) + idx +  (1 + idx | playerID),
-       data = .) 
 
-m2 <- d.guesses %>%
-  ungroup() %>%
-  mutate(condition = fct_relevel(condition,'unidirectional', 'slider',  'interactive')) %>%
-  mutate(nCrittersGame = nRabbitsGame + nSquirrelsGame,
-         error = abs(guess - mleEstimateGame)) %>%
-  lmer(scale(error) ~ condition * poly(nCrittersGame, 2) + idx + (1 + idx | playerID),
-       data = .) 
 
-anova(m1, m2)
-summary(m2)
 ```
 
 # Results #4: Self-weighing
@@ -319,14 +294,19 @@ d.guesses %>%
 
 ```{r}
 m1 <- d.guesses %>% 
-  group_by(playerID) %>%
+  mutate(condition = factor(condition)) %>%        
+  group_by(playerID) %>% 
   mutate(prevGuess = lag(guess)) %>% 
-  arrange(playerID, idx) %>%
-  mutate(distToSelf = abs(guess - prevGuess)) %>%
-  group_by(idx, condition) %>% 
-  filter(idx>1) %>%
-  lmer(distToSelf ~ poly(idx,2) + condition + (1+ poly(idx,2) | gameID/playerID), 
-       data = .)
+  arrange(playerID, idx) %>% 
+  mutate(distToSelf = abs(guess - prevGuess)) %>% 
+  filter(idx > 1) %>%
+  mutate(condition = fct_relevel(condition, 'slider', 'unidirectional', 'interactive')) %>%
+   { print(contrasts(.$condition)); . } %>%
+  lmer(
+    distToSelf ~ idx + condition + (1 + idx | gameID / playerID),
+    data = .,
+    contrasts = list(condition = contr.sum)
+  )
 
 m2 <- d.guesses %>% 
   group_by(playerID) %>%
@@ -335,11 +315,12 @@ m2 <- d.guesses %>%
   mutate(distToSelf = abs(guess - prevGuess)) %>%
   group_by(idx, condition) %>% 
   filter(idx>1) %>%
-  lmer(distToSelf ~ poly(idx,2) * condition + (1+ poly(idx,2) | gameID/playerID), 
+  lmer(distToSelf ~ idx * condition + (1+ idx | gameID/playerID), 
        data = .) 
 
-anova(m1,m2)
+#anova(m1,m2)
 summary(m1)
+#summary(m2)
 ```
 
 ### games with incomplete information
@@ -361,85 +342,6 @@ print(nrow(reducedInfo))
 
 print(nrow(reducedPlayers))
    #games with incomplete information (less that 20 samples/less than 4 players
-```
-
-```{r}
-reducedInfo %>%
-  mutate(nCrittersGroup = case_when(
-    nCrittersGame >= 1 & nCrittersGame <= 10 ~ 10,
-    nCrittersGame >= 11 & nCrittersGame <= 15 ~ 15,
-    nCrittersGame >= 16 & nCrittersGame <= 20 ~ 20,
-    TRUE ~ NA_real_
-  )) %>%
-  filter(!is.na(nCrittersGroup)) %>%
-  group_by(treatment, condition, idx, gameID, mleEstimateGame, nCrittersGroup) %>%
-  summarize(error = mean(abs(guess - mleEstimateGame), na.rm = TRUE), .groups = 'drop') %>%
-  group_by(condition, idx, nCrittersGroup) %>%
-  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
-  filter(condition == 'interactive') %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup, group = nCrittersGroup, linetype = 'interactive')) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
-  geom_hline(yintercept = 0, linetype = 'dotted') +
-  theme_few() +
-  scale_color_gradient(low = "lightgreen", high = "darkgreen") +
-  guides(linetype = 'none') +
-  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
-  labs(y = 'average error', x = 'round #', color = 'nCrittersGroup',   title = 'Interactive'
-) +
-  theme(aspect.ratio = 1, legend.position = 'top')
-```
-
-```{r}
-reducedInfo %>%
-  mutate(nCrittersGroup = case_when(
- nCrittersGame >= 1 & nCrittersGame <= 10 ~ 10,
-    nCrittersGame >= 11 & nCrittersGame <= 15 ~ 15,
-    nCrittersGame >= 16 & nCrittersGame <= 20 ~ 20,
-    TRUE ~ NA_real_
-  )) %>%
-  filter(!is.na(nCrittersGroup))  %>%
-  group_by(treatment, condition, idx, gameID, mleEstimateGame, nCrittersGroup) %>%
-  summarize(error = mean(abs(guess - mleEstimateGame), na.rm = TRUE), .groups = 'drop') %>%
-  group_by(condition, idx, nCrittersGroup) %>%
-  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
-  filter(condition == 'slider') %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup, group = nCrittersGroup, linetype = 'slider')) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
-  geom_hline(yintercept = 0, linetype = 'dotted') +
-  theme_few() +
-  scale_color_gradient(low = "lightpink", high = "darkorchid4") +
-  guides(linetype = 'none') +
-  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
-  labs(y = 'average error', x = 'round #', color = 'nCrittersGroup',title = 'Slider') +
-  theme(aspect.ratio = 1, legend.position = 'top')
-```
-
-```{r}
-reducedInfo %>%
-  mutate(nCrittersGroup = case_when(
- nCrittersGame >= 1 & nCrittersGame <= 10 ~ 10,
-    nCrittersGame >= 11 & nCrittersGame <= 15 ~ 15,
-    nCrittersGame >= 16 & nCrittersGame <= 20 ~ 20,
-    TRUE ~ NA_real_
-  )) %>%
-  filter(!is.na(nCrittersGroup)) %>%
-  group_by(treatment, condition, idx, gameID, mleEstimateGame, nCrittersGroup) %>%
-  summarize(error = mean(abs(guess - mleEstimateGame), na.rm = TRUE), .groups = 'drop') %>%
-  group_by(condition, idx, nCrittersGroup) %>%
-  tidyboot::tidyboot_mean(error, na.rm = TRUE) %>%
-  filter(condition == 'unidirectional') %>%
-  ggplot(aes(x = idx, y = empirical_stat, color = nCrittersGroup, group = nCrittersGroup, linetype = 'unidirectional')) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE) +
-  geom_hline(yintercept = 0, linetype = 'dotted') +
-  theme_few() +
-scale_color_gradient(low = "#FFDAB9", high = "#FF4500")+
-  guides(linetype = 'none') +
-  scale_x_continuous(breaks = c(1, 3, 5, 7, 9, 11)) +
-  labs(y = 'average error', x = 'round #', color = 'nCrittersGroup',title = 'Unidirectional') +
-  theme(aspect.ratio = 1, legend.position = 'top')
 ```
 
 ### confidence

@@ -69,20 +69,21 @@ games_with_4_players <- d.guesses %>%
   summarise(unique_players = n_distinct(playerID)) %>% 
   filter(unique_players == 4)
 
-d.guesses <- left_join(d.guesses, games_with_4_players, by = "gameID")
+NCritterCount <- d.guesses %>%  distinct(playerID, gameID, .keep_all = TRUE) %>%group_by(gameID) %>%
+  summarise(
+    nRabbitsGame = sum(nRabbits, na.rm = TRUE),
+    nSquirrelsGame = sum(nSquirrels, na.rm = TRUE),
+    nCrittersGame = nRabbitsGame+nSquirrelsGame
+  )
+d.guesses <-left_join(d.guesses, NCritterCount, by = "gameID")
 
+d.guesses <- semi_join(d.guesses, games_with_4_players, by = "gameID") %>% filter(!(gameID %in% persistentnoClick))
 
-games_with_4_players <- games_with_4_players %>%
-      #filter(!(gameID %in% confused)) %>%
-  left_join(d.guesses, by = "gameID") %>%
-  select(gameID, treatmentName) %>%
-  distinct()
-treatment_count <- as.data.frame(table(games_with_4_players$treatmentName))
-print(treatment_count)
+count <- d.guesses %>% 
+  distinct(gameID, treatmentName) %>% 
+  count(treatmentName, name = "n_games")
 
-d.guesses <- d.guesses %>% filter(!(gameID %in% persistentnoClick))
-#%>%  
- # filter(idx != 1) 
+print(count)
 ```
 
 ```{r}
@@ -107,10 +108,10 @@ There is a 6% skew towards squirrels on the slider because of the way the slider
 ```{r}
 truePs <- d.guesses %>% 
   filter(idx == 1) %>%
-  group_by(treatmentName, gameID, nSquirrelsGame, nRabbitsGame) %>%
+  group_by(treatmentName, gameID, nSquirrelsGame.y, nRabbitsGame.y) %>%
   tally() %>%
   group_by(treatmentName) %>%
-  summarize(p = mean(nRabbitsGame / (nSquirrelsGame + nRabbitsGame)))
+  summarize(p = mean(nRabbitsGame.y / (nSquirrelsGame.y + nRabbitsGame.y)))
 
 unidirectionals %>%
  filter(!(playerID %in% confused)) %>%
@@ -139,12 +140,6 @@ unidirectionals %>%
 ```
 
 ```{r}
-truePs <- d.guesses %>% 
-  filter(idx == 1) %>%
-  group_by(treatmentName, gameID, nSquirrelsGame, nRabbitsGame) %>%
-  tally() %>%
-  group_by(treatmentName) %>%
-  summarize(p = mean(nRabbitsGame / (nSquirrelsGame + nRabbitsGame)))
 
 sliders %>%
  filter(!(playerID %in% confused)) %>%
@@ -171,12 +166,6 @@ sliders %>%
 ```
 
 ```{r}
-truePs <- d.guesses %>% 
-  filter(idx == 1) %>%
-  group_by(treatmentName, gameID, nSquirrelsGame, nRabbitsGame) %>%
-  tally() %>%
-  group_by(treatmentName) %>%
-  summarize(p = mean(nRabbitsGame / (nSquirrelsGame + nRabbitsGame)))
 
 interactives %>%
  filter(!(playerID %in% confused)) %>%
@@ -343,7 +332,7 @@ d.MLE <- d.guesses %>%
 
 ```{r}
 # Assuming you have a linear model fit earlier
-ggplot(d.MLE, aes(x = outlierPercent, y = (error), color = idx)) +
+ggplot(d.MLE, aes(x = outlierPercent, y = abs(error), color = idx)) +
   geom_jitter(alpha = 0.1) +
   labs(y = "average error", x = "outlier degree", color= "round") +
   geom_smooth(aes(group = idx), method = "lm", se = FALSE, alpha = 0.3) +
@@ -362,7 +351,7 @@ ggplot(d.MLE, aes(x = outlierPercent, y = (error), color = idx)) +
 library(lmerTest)
 conflicts_prefer(lmerTest::lmer)
 d.MLE %>%
-  lmer(error ~ scale(outlierPercent) * scale(idx) + (1 + scale(outlierPercent) + scale(idx) | gameID), 
+  lmer(abs(error) ~ scale(outlierPercent) * scale(idx) + (1 + scale(outlierPercent) + scale(idx) | gameID), 
        data = .) %>% 
   summary()
 ```

@@ -162,3 +162,8 @@ d
 levels(d.all_minmax2$group)
 unique(d.all_minmax2$group)
 ```
+
+```{r}
+combined_df %>% 
+  summarise(unique_games = n_distinct(gameID))
+```
