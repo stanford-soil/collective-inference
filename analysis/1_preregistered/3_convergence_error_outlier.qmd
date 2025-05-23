@@ -350,10 +350,7 @@ ggplot(d.MLE, aes(x = outlierPercent, y = abs(error), color = idx)) +
 ```{r}
 library(lmerTest)
 conflicts_prefer(lmerTest::lmer)
-d.MLE %>%
-  lmer(abs(error) ~ scale(outlierPercent) * scale(idx) + (1 + scale(outlierPercent) + scale(idx) | gameID), 
-       data = .) %>% 
-  summary()
+
 ```
 
 ## 
