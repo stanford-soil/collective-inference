@@ -140,13 +140,19 @@ for (i in 1:7) {
 }
 persistentnoClick <- distinct(persistentnoClick)
 
+games_with_4_players <- d.all %>%
+  group_by(gameID) %>%
+  summarise(unique_players = n_distinct(playerID)) %>% 
+  filter(unique_players == 4)
+
 gameIDs_to_remove <- persistentnoClick %>%
   count(gameID) %>%
   filter(n >= 2) %>%
   pull(gameID)
 
 d.all <- d.all %>%
-  filter(!(gameID %in% gameIDs_to_remove)) 
+  filter(!(gameID %in% gameIDs_to_remove)) %>% 
+  filter(gameID %in% games_with_4_players$gameID)
 
 d.allnovel <-d.all %>%
   filter(is.na(designatedGame))%>%
@@ -242,6 +248,18 @@ summary_data_long_proportions %>%
        fill = "message type") +
   theme(aspect.ratio = 1, legend.position = "top") +
   guides(fill = guide_legend(nrow = 2))
+
+```
+
+```{r}
+summary_data_long <- summary_data_long %>%                    # make sb the reference
+  mutate(message_type = fct_relevel(message_type, 'sb_count',
+                                    'pn_count', 'pb_count', 'sn_count'))
+
+m <- lmer(factor(decile) ~ message_type + (1 | gameID),            # mixed model
+          data = summary_data_long)
+
+emmeans(m, pairwise ~ message_type, adjust = "tukey") 
 ```
 
 # preregistered data only
@@ -249,7 +267,7 @@ summary_data_long_proportions %>%
 ```{r}
 summary_data <- d.allmsg_exp1 %>%
   filter(!coding == 'o') %>%
-    filter(treatment== 'interactive') %>%
+    filter(!treatment== 'slider') %>%
   group_by(gameID) %>%
   summarize(
    # exitSurvey = if_else(any(str_detect(exitSurvey, 'yes')), "yes", "no"),

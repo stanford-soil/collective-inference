@@ -50,13 +50,21 @@ for (i in 1:7) {
 }
 persistentnoClick <- distinct(persistentnoClick)
 
+games_with_4_players <- d.all %>% # isn't necessary because it's in the inital processing (we made sure all the data was good before we stopped collecting) but done for visibility 
+    filter(!(playerID %in% persistentnoClick)) %>%
+  group_by(gameID) %>%
+  summarise(unique_players = n_distinct(playerID)) %>% 
+  filter(unique_players == 4)
+
 gameIDs_to_remove <- persistentnoClick %>%
   count(gameID) %>%
-  filter(n >= 2) %>%
+  filter(n >=2 ) %>%
   pull(gameID)
 
 d.all <- d.all %>%
-  filter(!(gameID %in% gameIDs_to_remove)) 
+  filter(!(gameID %in% gameIDs_to_remove)) %>% 
+  filter(gameID %in% games_with_4_players$gameID)
+
 
 d.allnovel <-d.all %>%
   filter(is.na(designatedGame))%>%
@@ -70,7 +78,10 @@ d.all <- d.all %>%
     nCrittersGame_bin = str_remove_all(nCrittersGame_bin, "[\\[\\]()]"),
     entropy_bin = str_remove_all(entropy_bin, "[\\[\\]()]"),
     representation_bin = str_remove_all(representation_bin, "[\\[\\]()]")
-  )
+  )#%>%
+#filter(!guess %in% c(50, 0, 100)) #filtering magnet values here
+
+
 ```
 
 # count of games in each information condition
@@ -89,9 +100,9 @@ ggplot(heatmap_test, aes(x = representation_bin, y = nCrittersGame_bin)) +
   theme(
     aspect.ratio = 1,
     axis.text.x = element_text(angle = 45, hjust = 1)
-  ) +
-  facet_wrap(~treatment #+ direction
-             )
+  ) #+
+ # facet_wrap(~treatment #+ direction
+    #         )
 heatmap_test <- d.allgame %>%
   group_by(treatment, direction, entropy_bin, representation_bin) %>%
   summarise(count = n()) %>%
@@ -104,9 +115,9 @@ ggplot(heatmap_test, aes(x = entropy_bin, y = representation_bin)) +
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  ) +
-  facet_wrap(~treatment #+ direction
-            )
+  )# +
+#  facet_wrap(~treatment #+ direction
+     #       )
 
 nCritters_entropy_heatmap_new <- d.allgame %>%
   group_by(treatment, direction, nCrittersGame_bin, entropy_bin) %>%
@@ -120,9 +131,9 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
   theme_few() +
   theme(
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
-  ) +
-  facet_wrap(~treatment #+ direction
-            )
+  ) #+
+ # facet_wrap(~treatment #+ direction
+      #      )
 
 ```
 
@@ -195,6 +206,58 @@ ggplot(heatmap_test_3, aes(x = entropy_bin, y = representation_bin)) +
 ```
 
 # error differences in slider direction
+
+```{r}
+d.all %>%  
+  group_by(treatment, direction, idx, gameID, mleGame) %>%
+  summarize(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100)))) %>%
+  group_by(treatment, idx, direction) %>%
+  tidyboot::tidyboot_mean(error, na.rm = T) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = treatment, linetype = treatment == 'interactive')) +
+    geom_point() +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = F) +
+    geom_hline(yintercept = c(0), linetype = 'dotted') +
+    theme_few() +
+    scale_color_brewer(palette = 'Accent') +
+    guides(linetype = 'none') +
+    scale_x_continuous(breaks = c(1,3,5,7,9,11)) +
+    labs(y = 'average error', x = 'round #', color = '')  +
+    theme(aspect.ratio = 1, legend.position = 'top')
+
+
+```
+
+```{r}
+#library(pbkrtest)
+emm_options(lmerTest.limit = 7826)
+#emm_options(pbkrtest.limit = 7826)
+
+error_data <- d.all %>%  
+  mutate(idx = scale(idx, scale= FALSE)) #center idx
+
+model <- lmer(error ~ treatment * idx + (1 | gameID/playerID), data = error_data, control = lmerControl(optCtrl = list(maxfun = 100000)))
+#summary(model)
+
+model2 <- lmer((error) ~ idx + (1+idx | gameID/playerID), data = error_data)
+summary(model2)
+
+model3 <- lmer(error ~ treatment  + (1 | idx) + (1 | gameID/playerID), data = error_data)
+#summary(model3)
+
+model4 <- lmer((error) ~ idx + treatment + (1+idx |gameID/playerID), data = error_data)
+#summary(model4)
+
+anova(model2, model4)
+
+
+#bonferroni adjusts for multiple comparisons
+pairwise_results <- model %>%
+  emmeans(pairwise ~ treatment, adjust = "bonferroni") %>%
+  pluck("contrasts")
+
+# View the pairwise comparisons
+print(pairwise_results)
+```
 
 ```{r}
 d.all %>%  
@@ -399,7 +462,7 @@ unique(d.all_minmax2$group)
 
 d.all_minmax %>%
   lmerTest::lmer(error ~ group *treatment
-                   + (1 | gameID), 
+                   + (1 | playerID/gameID), 
        data = ., 
        contrasts = list(treatment = contr.sum(2))) %>% 
   summary()
@@ -492,7 +555,8 @@ d.all_plt <-d.all %>% filter(!is.na(error))
 ggplot(d.all_plt, aes(x = nCritters, y = error, color = treatment, group = treatment)) +
   #geom_point() +
   geom_smooth(method = 'lm', se = FALSE) +
- # geom_hline(yintercept = c(0), linetype = 'dotted') +
+  scale_x_reverse()+
+  #geom_hline(yintercept = c(0), linetype = 'dotted') +
   scale_color_brewer(palette = 'Accent') +
   theme_few() +
   labs(x = "ncritters", y = "Error", color = "") +
@@ -503,7 +567,7 @@ ggplot(d.all_plt, aes(x = nCritters, y = error, color = treatment, group = treat
 ggplot(d.all_plt, aes(x = entropy, y = error, color = treatment, group = treatment)) +
   #geom_point() +
   geom_smooth(method = 'lm', se = FALSE) +
- # geom_hline(yintercept = c(0), linetype = 'dotted') +
+  #geom_hline(yintercept = c(0), linetype = 'dotted') +
   scale_color_brewer(palette = 'Accent') +
   theme_few() +
   labs(x = "entropy", y = "Error", color = "") +
@@ -712,6 +776,7 @@ ggplot(d.all, aes(x = abs((mleEstimate*100)-mleGame*100), y = error, group = idx
 ```{r}
 conflicts_prefer(lmerTest::lmer)
 d.all %>%
+  mutate(outlierPercent = abs((mleEstimate*100)-mleGame*100)) %>%
   lmer(error ~ scale(outlierPercent) * scale(idx) + (1 + scale(outlierPercent) + scale(idx) | gameID), 
        data = .) %>% 
   summary()
@@ -751,4 +816,33 @@ d.all %>%
     #xlim(0,100) +
     labs(title = "Distribution of mleEstimate for each treatmentName") +
   theme_few()+facet_wrap(~treatment)
+```
+
+```{r}
+df2 <- d.all %>%
+  filter(!is.na(error)) %>%
+  mutate(magent = error %in% c(25, 75))
+
+mod <- glm(magent ~ treatment, data = df2, family = binomial)
+
+summary(mod)
+exp(coef(mod))
+
+newdata <- df2 %>% distinct(treatment)
+pred <- predict(mod, newdata, type = "link", se.fit = TRUE)
+
+pred_df <- newdata %>%
+  mutate(
+    link       = pred$fit,
+    se         = pred$se.fit,
+    prob       = plogis(link),
+    lower      = plogis(link - 1.96 * se),
+    upper      = plogis(link + 1.96 * se)
+  )
+
+ggplot(pred_df, aes(x = treatment, y = prob)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = .2) +
+  labs(x = "treatment", y = "predicted prob of magent error") +
+  theme_minimal()
 ```

@@ -21,7 +21,7 @@ theme_set(theme_few())
 # Read in simulated data
 
 ```{r}
-d.random <- here('analysis/2_simulations/game_results_fixed_075.csv') %>%
+d.random <- here('analysis/2_simulations/random game generation/game_results_fixed_075.csv') %>%
   read_csv(col_types = 'ccii') %>%
   mutate(
     mleEstimate = nRabbits / (nRabbits + nSquirrels),
