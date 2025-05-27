@@ -254,11 +254,16 @@ summary_data_long_proportions %>%
 ```{r}
 summary_data_long <- summary_data_long %>%                    # make sb the reference
   mutate(message_type = fct_relevel(message_type, 'sb_count',
-                                    'pn_count', 'pb_count', 'sn_count'))
+                                    'pn_count', 'pb_count', 'sn_count')) %>%
+  group_by(gameID) %>%
+  mutate(totalCount = sum(count))
 
-m <- lmer(factor(decile) ~ message_type + (1 | gameID),            # mixed model
-          data = summary_data_long)
+m <- glm(count / totalCount ~ message_type * decile, 
+         weights=totalCount,
+         data = summary_data_long, 
+         family = "binomial")
 
+summary(m)
 emmeans(m, pairwise ~ message_type, adjust = "tukey") 
 ```
 
