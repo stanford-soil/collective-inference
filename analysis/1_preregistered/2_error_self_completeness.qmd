@@ -34,7 +34,6 @@ unique_rows <- d.guesses %>%
   filter(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")) %>%
   distinct(playerID, gameID, guess, roundID, .keep_all = TRUE)
 
-# Remove excess rows from d.guesses
 d.guesses <- d.guesses %>%
   filter(!(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")))
 

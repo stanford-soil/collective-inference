@@ -204,7 +204,7 @@ mutate(exitSurvey = if_else(str_detect(exitSurvey, '"usedCalculator":"yes"'),
 ```
 
 ```{r}
-summary_data <- d.allmsg %>%
+summary_data_3 <- d.allmsg %>%
   filter(!coding == 'o') %>%
   group_by(gameID) %>%
   summarize(
@@ -217,16 +217,16 @@ summary_data <- d.allmsg %>%
   ) 
 
 
-summary_data_long <- summary_data %>%
+summary_data_long_3 <- summary_data_3 %>%
   select(gameID, exitSurvey, avg_error, pn_count, sn_count, pb_count, sb_count) %>%
   pivot_longer(cols = c(pn_count, sn_count, pb_count, sb_count), 
                names_to = "message_type", values_to = "count")
 
-summary_data_long$decile <- cut(summary_data_long$avg_error, 
-                                breaks = quantile(summary_data_long$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
+summary_data_long_3$decile <- cut(summary_data_long_3$avg_error, 
+                                breaks = quantile(summary_data_long_3$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
                                 include.lowest = TRUE, labels = FALSE)
 
-summary_data_long_proportions <- summary_data_long %>%
+summary_data_long_proportions <- summary_data_long_3 %>%
  # filter(exitSurvey == 'no') %>%
   group_by(decile) %>% 
   mutate(total_count = sum(count)) %>% 
@@ -252,25 +252,57 @@ summary_data_long_proportions %>%
 ```
 
 ```{r}
-summary_data_long <- summary_data_long %>%                    # make sb the reference
-  mutate(message_type = fct_relevel(message_type, 'sb_count',
-                                    'pn_count', 'pb_count', 'sn_count')) %>%
+summary_data_long_3 <- summary_data_long_3 %>%   
+  mutate(message_type = fct_relevel(message_type, 
+                                    'pn_count', 'sb_count','pb_count', 'sn_count')) %>%
   group_by(gameID) %>%
   mutate(totalCount = sum(count))
 
 m <- glm(count / totalCount ~ message_type * decile, 
          weights=totalCount,
-         data = summary_data_long, 
+         data = summary_data_long_3, 
          family = "binomial")
 
 summary(m)
-emmeans(m, pairwise ~ message_type, adjust = "tukey") 
+
+```
+
+```{r}
+
+dsummary_data_deciles_3 <- summary_data_long_3 %>% 
+  ungroup()%>%
+  select(-gameID, -avg_error, -exitSurvey)%>%
+  group_by(decile, message_type) %>%
+  summarize(count = sum(count), .groups = "drop") %>%  pivot_wider(names_from = message_type, values_from = count)%>% mutate(d = factor(decile)) 
+
+contrasts(dsummary_data_deciles_3$d) <- contr.sum(length(levels(dsummary_data_deciles_3$d)))
+
+glm_pn <- glm(cbind(pn_count, sn_count +sb_count + pb_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_3)
+
+summary(glm_pn)
+
+glm_pb <- glm(cbind(pb_count, sn_count +sb_count + pn_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_3)
+
+summary(glm_pb)
+
+
+glm_sn <- glm(cbind(sn_count, pn_count +sb_count + pb_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_3)
+summary(glm_sn)
+
+
+glm_sb <- glm(cbind(sb_count, sn_count +pn_count + pb_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_3)
+summary(glm_sb)
+
 ```
 
 # preregistered data only
 
 ```{r}
-summary_data <- d.allmsg_exp1 %>%
+summary_data_2 <- d.allmsg_exp1 %>%
   filter(!coding == 'o') %>%
     filter(!treatment== 'slider') %>%
   group_by(gameID) %>%
@@ -284,22 +316,22 @@ summary_data <- d.allmsg_exp1 %>%
   ) %>% mutate(sb_present = mean(sb_count > 0))
 
 
-summary_data_long <- summary_data %>%
+summary_data_long_2 <- summary_data_2 %>%
   select(gameID, avg_error, pn_count, sn_count, pb_count, sb_count) %>%
   pivot_longer(cols = c(pn_count, sn_count, pb_count, sb_count), 
                names_to = "message_type", values_to = "count")
 
-unique_quantiles <- unique(quantile(summary_data_long$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE))
+unique_quantiles <- unique(quantile(summary_data_long_2$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE))
 print(unique_quantiles)
 
 #summary_data_long$decile <- cut(summary_data_long$avg_error, 
 #                                breaks = quantile(summary_data_long$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
  #                               include.lowest = TRUE, labels = FALSE)
 
-summary_data_long <- summary_data_long %>%
+summary_data_long_2 <- summary_data_long_2 %>%
   mutate(decile = ntile(avg_error, 5)) %>% filter(!is.na(decile))
 
-summary_data_long_proportions <- summary_data_long %>%
+summary_data_long_proportions <- summary_data_long_2 %>%
  # filter(exitSurvey == 'no') %>%
   group_by(decile) %>% 
   mutate(total_count = sum(count)) %>% 
@@ -324,7 +356,44 @@ summary_data_long_proportions %>%
 ```
 
 ```{r}
-ggplot(summary_data, aes(x = avg_error, y =sb_count)) +
+summary_data_long_2 <- summary_data_long_2 %>%   
+  mutate(message_type = fct_relevel(message_type, 
+                                    'pn_count', 'sb_count','pb_count', 'sn_count')) %>%
+  group_by(gameID) %>%
+  mutate(totalCount = sum(count))
+
+dsummary_data_deciles_2 <- summary_data_long_2 %>% 
+  ungroup()%>%
+  select(-gameID, -avg_error)%>%
+  group_by(decile, message_type) %>%
+  summarize(count = sum(count), .groups = "drop") %>%  pivot_wider(names_from = message_type, values_from = count)%>% mutate(d = factor(decile)) 
+
+contrasts(dsummary_data_deciles_2$d) <- contr.sum(length(levels(dsummary_data_deciles_2$d)))
+
+glm_pn <- glm(cbind(pn_count, sn_count +sb_count + pb_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_2)
+
+summary(glm_pn)
+
+glm_pb <- glm(cbind(pb_count, sn_count +sb_count + pn_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_2)
+
+summary(glm_pb)
+
+
+glm_sn <- glm(cbind(sn_count, pn_count +sb_count + pb_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_2)
+summary(glm_sn)
+
+
+glm_sb <- glm(cbind(sb_count, sn_count +pn_count + pb_count) ~ d,
+             family = binomial, data = dsummary_data_deciles_2)
+summary(glm_sb)
+
+```
+
+```{r}
+ggplot(summary_data_3, aes(x = avg_error, y =sb_count)) +
   geom_point() +
   theme_few() +
   theme(
@@ -334,15 +403,50 @@ ggplot(summary_data, aes(x = avg_error, y =sb_count)) +
 
 ```{r}
 
-summary_data %>% mutate(decile = ntile(avg_error, 5)) %>%
- glm(sb_count ~ avg_error, family = "poisson",
-       data = .) %>% summary()
-summary_data %>% mutate(decile = ntile(avg_error, 5)) %>%
- glm(sn_count ~ avg_error, family = "poisson",
-       data = .) %>% summary()
-summary_data %>% mutate(decile = ntile(avg_error, 5)) %>%
+#summary_data_3 %>% mutate(decile = ntile(avg_error, 5)) %>%
+# glm(sb_count ~ avg_error, family = "poisson",
+ #      data = .) %>% summary()
+#summary_data_3 %>% mutate(decile = ntile(avg_error, 5)) %>%
+# glm(sn_count ~ avg_error, family = "poisson",
+ #      data = .) %>% summary()
+summary_data_3 %>% mutate(decile = ntile(avg_error, 5)) %>%
  lm(log(avg_error) ~ sn_count+sb_count+pb_count+pn_count,
        data = .) %>% summary()
+summary_data_2 %>% mutate(decile = ntile(avg_error, 5)) %>%
+ lm(log(avg_error) ~ sn_count+sb_count+pb_count+pn_count,
+       data = .) %>% summary()
+```
+
+# merged summary
+
+```{r}
+summary_data_deciles <- rbind(dsummary_data_deciles_2,dsummary_data_deciles_3)%>% 
+  select(-d)%>%
+  group_by(decile) %>%
+  summarise(across(everything(), ~ sum(.x, na.rm = TRUE)), .groups = "drop")%>% mutate(d = factor(decile)) 
+
+contrasts(summary_data_deciles$d) <- contr.sum(length(levels(summary_data_deciles$d)))
+  
+glm_pn <- glm(cbind(pn_count, sn_count +sb_count + pb_count) ~ d,
+             family = binomial, data = summary_data_deciles)
+
+summary(glm_pn)
+
+glm_pb <- glm(cbind(pb_count, sn_count +sb_count + pn_count) ~ d,
+             family = binomial, data = summary_data_deciles)
+
+summary(glm_pb)
+
+
+glm_sn <- glm(cbind(sn_count, pn_count +sb_count + pb_count) ~ d,
+             family = binomial, data = summary_data_deciles)
+summary(glm_sn)
+
+
+glm_sb <- glm(cbind(sb_count, sn_count +pn_count + pb_count) ~ d,
+             family = binomial, data = summary_data_deciles)
+summary(glm_sb)
+
 ```
 
 # original data by group type
