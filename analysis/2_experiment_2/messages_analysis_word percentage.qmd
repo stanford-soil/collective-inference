@@ -313,12 +313,12 @@ summary(glm_pn)
 glm_pb <- glm(cbind(pb_count, sn_count +sb_count + pn_count) ~ d,
              family = binomial, data = dsummary_data_deciles_3)
 
-summary(glm_pb)
+#summary(glm_pb)
 
 
 glm_sn <- glm(cbind(sn_count, pn_count +sb_count + pb_count) ~ d,
              family = binomial, data = dsummary_data_deciles_3)
-summary(glm_sn)
+#summary(glm_sn)
 
 
 glm_sb <- glm(cbind(sb_count, sn_count +pn_count + pb_count) ~ d,
