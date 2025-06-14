@@ -14,6 +14,7 @@ conflict_prefer("lag", "dplyr")
 library(tidyverse)
 library(tidyboot)
 library(lme4)
+library(lmerTest)
 library(here)
 library(jsonlite)
 library(ggthemes)
@@ -31,15 +32,21 @@ theme_set(theme_few())
 d.allmsg <- read_csv(here('analysis/2_experiment_2/message_data/coded.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y")) %>%
-  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))
+  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))%>% select(-text)
 
+d.allmsg <- d.allmsg %>%
+    group_by(sender.id, round) %>%
+    mutate(coding = paste(coding, collapse = ""))%>% ungroup()
+                           
 d.allmsg <- d.allmsg %>%
   left_join(
     d.allmsg %>%
-      select(round, sender.id, coding) %>%
-      rename(sender.id = sender.id, received_code = coding),
+      group_by(round, recipient) %>%
+      summarise(received_code = paste(coding, collapse = ""), .groups = "drop") %>%
+      rename(sender.id = recipient),
     by = c("round", "sender.id")
-  ) 
+  )
+
 
 persistentnoClick <- data.frame(gameID = character(), playerID = character(), stringsAsFactors = FALSE)
 
@@ -91,26 +98,32 @@ d.allmsg <- d.allmsg %>%
 
 d.allmsg_exp1 <- read_csv(here('analysis/2_experiment_2/message_data/recoded_messages_exp1.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
-  select(-ends_with(".y"))
+  select(-ends_with(".y")) %>% distinct() %>% select(-text)
 
+
+d.allmsg_exp1 <- d.allmsg_exp1 %>%
+    group_by(sender.id, round) %>%
+    mutate(coding = paste(coding, collapse = ""))%>% ungroup()
+                           
 d.allmsg_exp1 <- d.allmsg_exp1 %>%
   left_join(
     d.allmsg_exp1 %>%
-      select(round, sender.id, coding) %>%
-      rename(sender.id = sender.id, received_code = coding),
+      group_by(round, recipient) %>%
+      summarise(received_code = paste(coding, collapse = ""), .groups = "drop") %>%
+      rename(sender.id = recipient),
     by = c("round", "sender.id")
-  ) 
+  )
+
 
 
 d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
-  select(-ends_with(".y"))
-
-#d.guesses <- d.guesses %>%
- # filter(!(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")))
+  select(-ends_with(".y"))%>% select(-'...1')%>%
+  distinct()
 
 
-d.allmsg_exp1  <- merge(d.allmsg_exp1, d.guesses, by.x = c("gameID", "sender.id", "round"), by.y = c("gameID", "playerID", "idx"), all = TRUE)  %>% filter(!is.na(roundID)) %>% mutate (error = abs(mleEstimateGame-guess))%>% unique() 
+
+d.allmsg_exp1  <- merge(d.allmsg_exp1, d.guesses, by.x = c("gameID", "sender.id", "round"), by.y = c("gameID", "playerID", "idx"), all = TRUE)%>% filter(!is.na(roundID)) %>% mutate (error = abs(mleEstimateGame-guess))%>% unique()
 
 persistentnoClick <- c()  
 for (i in 1:11) {
@@ -153,7 +166,7 @@ d.allmsg_exp1 <- merge(
   filter(!is.na(coding)) %>% 
   unique() %>% 
   select(-ends_with(".g")) %>% 
-  filter(gameID != "01HW6JMDRBMZ4QAQ88VVTFKBJ0")
+  filter(gameID != "01HW6JMDRBMZ4QAQ88VVTFKBJ0") 
 
 ```
 
@@ -168,7 +181,7 @@ d.allmsg_exp1 <- d.allmsg_exp1 %>%
    select(-roundID, -time) %>% 
   separate(treatmentName.x, into = c("prefix", "treatment", "direction"), sep = "-") %>%
   mutate(across(c(treatment, direction), trimws)) %>% 
-  select(-prefix, -treatmentName.y, -...1, -mleEstimate, -mleGame, -nRabbitsGame, -nSquirrelsGame)
+  select(-prefix, -treatmentName.y, -mleEstimate, -mleGame, -nRabbitsGame, -nSquirrelsGame)
 
 d.allmsg<-d.allmsg%>%
    select(-sender.name, -designatedGame, -mleGame, -entropy_bin, -representation, -representation_bin, -nCritters, -nCrittersGame_bin, -mleEstimate, -mleGame, -nRabbitsGame, -nSquirrelsGame)
@@ -228,27 +241,66 @@ combined_df <- combined_df %>% left_join(combined_df_binning, by = c("gameID", "
   ungroup()%>%  mutate(error = if_else(direction == "RS", abs((100-guess) - (mleGame*100)), abs(guess - (mleGame*100))))  #%>% filter(!guess == 50)
 ```
 
-# used this to recode miscoded texts - delete
+```{r}
+#d.allmsg_exp1 <- d.allmsg_exp1%>%
+ # filter(treatment != "unidirectional") 
+```
+
+# Error change
 
 ```{r}
-#used this to correct accidental miscodes as pn, as that's essentially the default msg
-compare.msg <- d.allmsg_exp1 %>%
-  filter(str_detect(coding, "pn"), !str_detect(coding, "[sb]"), round != 1) %>%
-  mutate(extracted = str_extract_all(text, "\\d+")) %>%
-  filter(map_lgl(extracted, ~ length(.x) == 2)) %>%
-  mutate(
-    num1 = as.numeric(map_chr(extracted, 1)),
-    num2 = as.numeric(map_chr(extracted, 2))
+error_change_view <- d.allmsg_exp1%>%
+  group_by(sender.id) %>%
+  arrange(round, .by_group = TRUE) %>%
+  summarise(
+    gameID = gameID,
+    merged_code = paste0(received_code, collapse = ""),
+    error_change = last(error)-first(error),
+    .groups = "drop"
   ) %>%
-  filter(
-    !((num1 == nRabbits & num2 == nSquirrels) | (num1 == nSquirrels & num2 == nRabbits)), 
-  ) #%>%
-  #select(-extracted, -sender.name, -recipient, -treatment, -direction, -guess, -confidence)
+  mutate(
+    p_count = stringr::str_count(merged_code, "p"),
+    n_count = stringr::str_count(merged_code, "n"),
+    s_count = stringr::str_count(merged_code, "s"),
+    b_count = stringr::str_count(merged_code, "b")
+  )
+new_df_long <- error_change_view %>%
+  pivot_longer(cols = ends_with("_count"), names_to = "code_type", values_to = "count")
 
-compare.msg <- compare.msg %>%
-  group_by(gameID) %>%
-  filter(n_distinct(sender.id) > 2) %>%
-  ungroup()
+ggplot(new_df_long, aes(x = count, y = error_change, color = code_type)) +
+stat_summary(fun = mean, geom = "point")+
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+
+glm_modps <- glm(
+  error_change ~ p_count+s_count,
+  data = error_change_view,
+  family = gaussian()
+)
+
+summary(glm_modps)
+glm_modnb <- glm(
+  error_change ~ n_count+b_count,
+  data = error_change_view,
+  family = gaussian()
+)
+
+summary(glm_modnb)
+
+modbn <- lmerTest::lmer(
+  error_change ~ b_count + n_count + (1 | gameID),
+  data = error_change_view,
+  REML = FALSE
+)
+
+summary(modbn)
+modps <- lmerTest::lmer(
+  error_change ~ p_count + s_count + (1 | gameID),
+  data = error_change_view,
+  REML = FALSE
+)
+
+summary(modps)
 ```
 
 # analyze s only high complexity
@@ -258,9 +310,11 @@ summary_data_s <- d.allmsg %>%
   filter(!received_code == 'o') %>%
   group_by(gameID) %>%
   summarize(
-    avg_error = mean(error, na.rm = TRUE), #[round == 8]
+    avg_error = mean(error[round == 8], na.rm = TRUE), 
     p_count = sum(str_count(received_code, "p")),
     s_count = sum(str_count(received_code, "s")),
+    b_count = sum(str_count(received_code, "b")),
+    n_count = sum(str_count(received_code, "n")),
   ) 
 
 
@@ -294,9 +348,7 @@ summary_data_long_proportions %>%
        fill = "message type") +
   theme(aspect.ratio = 1, legend.position = "top") +
   guides(fill = guide_legend(nrow = 2))
-```
 
-```{r}
 summary_data_long_s <- summary_data_long_s %>%   
   mutate(message_type = fct_relevel(message_type, 
                                     'p_count', 's_count')) %>%
@@ -318,7 +370,7 @@ summary_data_b <- d.allmsg %>%
   filter(!received_code == 'o') %>%
   group_by(gameID) %>%
   summarize(
-    avg_error = mean(error, na.rm = TRUE), #[round == 8]
+    avg_error = mean(error[round == 8], na.rm = TRUE), #
     n_count = sum(str_count(received_code, "n")),
     b_count = sum(str_count(received_code, "b")),
   ) 
@@ -363,7 +415,7 @@ summary_data_3 <- d.allmsg %>%
   filter(!received_code == 'o') %>%
   group_by(gameID) %>%
   summarize(
-    avg_error = mean(error, na.rm = TRUE), #[round == 8]
+    avg_error = mean(error[round == 8], na.rm = TRUE), #
     pn_count = sum(str_count(received_code, "pn")),
     sn_count = sum(str_count(received_code, "sn")),
     pb_count = sum(str_count(received_code, "pb")),
@@ -387,7 +439,7 @@ summary_data_3 <- d.allmsg %>%
   filter(!received_code == 'o') %>%
   group_by(gameID) %>%
   summarize(
-    avg_error = mean(error, na.rm = TRUE), #[round == 8]
+    avg_error = mean(error[round == 8], na.rm = TRUE), #
     pn_count = sum(str_count(received_code, "pn")),
     sn_count = sum(str_count(received_code, "sn")),
     pb_count = sum(str_count(received_code, "pb")),
@@ -480,6 +532,98 @@ summary(glm_sb)
 
 # prereg
 
+# analyze s only prereg
+
+```{r}
+summary_data_s2 <- d.allmsg_exp1 %>%
+  filter(!received_code == 'o') %>%
+  group_by(gameID) %>%
+  summarize(
+    avg_error = mean(error[round == 8], na.rm = TRUE), 
+    p_count = sum(str_count(received_code, "p")),
+    s_count = sum(str_count(received_code, "s")), 
+    b_count = sum(str_count(received_code, "b")),
+    n_count = sum(str_count(received_code, "n")),
+  ) 
+
+
+summary_data_long_s <- summary_data_s2 %>%
+  select(gameID, avg_error, p_count, s_count) %>%
+  pivot_longer(cols = c(p_count, s_count), 
+               names_to = "message_type", values_to = "count")
+
+summary_data_long_s$decile <- cut(summary_data_long_s$avg_error, 
+                                breaks = quantile(summary_data_long_s$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
+                                include.lowest = TRUE, labels = FALSE)
+
+summary_data_long_proportions <- summary_data_long_s %>%
+ # filter(exitSurvey == 'no') %>%
+  group_by(decile) %>% 
+  mutate(total_count = sum(count)) %>% 
+  group_by(decile, message_type) %>%
+  summarize(proportion = sum(count) / mean(total_count)
+  ) 
+
+# Plotting
+summary_data_long_proportions %>%
+  mutate(message_type = fct_relevel(message_type, "p_count", 's_count')) %>%
+  ggplot(aes(x = factor(decile),  y = proportion, fill = message_type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_brewer(palette = 'Accent', 
+                    labels = c("p_count" = "personal", "s_count" = "social")) +
+  labs(title = "",
+       x = "error (binned)",
+       y = "proportion",
+       fill = "message type") +
+  theme(aspect.ratio = 1, legend.position = "top") +
+  guides(fill = guide_legend(nrow = 2))
+```
+
+# analyze b only prereg
+
+```{r}
+summary_data_b2 <- d.allmsg_exp1 %>%
+  filter(!received_code == 'o') %>%
+  group_by(gameID) %>%
+  summarize(
+    avg_error = mean(error[round == 8], na.rm = TRUE), #
+    n_count = sum(str_count(received_code, "n")),
+    b_count = sum(str_count(received_code, "b")),
+  ) 
+
+
+summary_data_long_b <- summary_data_b2 %>%
+  select(gameID, avg_error, b_count, n_count) %>%
+  pivot_longer(cols = c(b_count, n_count), 
+               names_to = "message_type", values_to = "count")
+
+summary_data_long_b$decile <- cut(summary_data_long_b$avg_error, 
+                                breaks = quantile(summary_data_long_b$avg_error, probs = seq(0, 1, 0.2), na.rm = TRUE), 
+                                include.lowest = TRUE, labels = FALSE)
+
+summary_data_long_proportions <- summary_data_long_b %>%
+ # filter(exitSurvey == 'no') %>%
+  group_by(decile) %>% 
+  mutate(total_count = sum(count)) %>% 
+  group_by(decile, message_type) %>%
+  summarize(proportion = sum(count) / mean(total_count)
+  ) 
+
+# Plotting
+summary_data_long_proportions %>%
+  mutate(message_type = fct_relevel(message_type, "b_count", 'n_count')) %>%
+  ggplot(aes(x = factor(decile),  y = proportion, fill = message_type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_brewer(palette = 'Accent', 
+                    labels = c("b_count" = "belief", "n_count" = "number")) +
+  labs(title = "",
+       x = "error (binned)",
+       y = "proportion",
+       fill = "message type") +
+  theme(aspect.ratio = 1, legend.position = "top") +
+  guides(fill = guide_legend(nrow = 2))
+```
+
 ## basic analysis of prereg sb
 
 ```{r}
@@ -488,7 +632,7 @@ summary_data_2 <- d.allmsg_exp1 %>%
     filter(!treatment== 'slider') %>%
   group_by(gameID) %>%
   summarize(
-    avg_error = mean(error , na.rm = TRUE),#[round == 12]
+    avg_error = mean(error[round == 12], na.rm = TRUE),#
     pn_count = sum(str_count(received_code, "pn")),
     sn_count = sum(str_count(received_code, "sn")),
     pb_count = sum(str_count(received_code, "pb")),
@@ -502,9 +646,11 @@ ggplot(summary_data_2, aes(x = avg_error, y =sb_count)) +
     aspect.ratio = 1, axis.text.x = element_text(angle = 45, hjust = 1)
   ) +geom_smooth(method="lm")
 
-summary_data_2 %>% mutate(decile = ntile(avg_error, 5)) %>%
- lm(log(avg_error) ~ sn_count+sb_count+pb_count+pn_count,
-       data = .) %>% summary()
+summary_data_2 %>%
+  mutate(log_error = log(avg_error + 1e-6)) %>%
+  lm(log_error ~ sn_count + sb_count + pb_count + pn_count, data = .) %>%
+  summary()
+
 ```
 
 ## all message types prereg
@@ -516,7 +662,7 @@ summary_data_2 <- d.allmsg_exp1 %>%
   group_by(gameID) %>%
   summarize(
    # exitSurvey = if_else(any(str_detect(exitSurvey, 'yes')), "yes", "no"),
-    avg_error = mean(error , na.rm = TRUE),#[round == 12]
+    avg_error = mean(error[round == 12] , na.rm = TRUE),#
     pn_count = sum(str_count(received_code, "pn")),
     sn_count = sum(str_count(received_code, "sn")),
     pb_count = sum(str_count(received_code, "pb")),
@@ -603,17 +749,23 @@ summary(glm_sb)
 # comparing all above
 
 ```{r}
-summary_data_3 %>% mutate(decile = ntile(avg_error, 5)) %>%
+summary_data_3  %>%
  lm(log(avg_error) ~ sn_count+sb_count+pb_count+pn_count,
        data = .) %>% summary()
-summary_data_s %>% mutate(decile = ntile(avg_error, 5)) %>%
+summary_data_s  %>%
  lm(log(avg_error) ~ s_count+p_count,
        data = .) %>% summary()
-summary_data_b %>% mutate(decile = ntile(avg_error, 5)) %>%
+summary_data_b  %>%
  lm(log(avg_error) ~ n_count+b_count,
        data = .) %>% summary()
-summary_data_2 %>% mutate(decile = ntile(avg_error, 5)) %>%
- lm(log(avg_error) ~ sn_count+sb_count+pb_count+pn_count,
+summary_data_2  %>%  mutate(log_error = log(avg_error + 1e-6)) %>%
+ lm(log_error ~ sn_count+sb_count+pb_count+pn_count,
+       data = .) %>% summary()
+summary_data_s2  %>%
+ lm(log(avg_error) ~ s_count+p_count,
+       data = .) %>% summary()
+summary_data_b2  %>%
+ lm(log(avg_error) ~ n_count+b_count,
        data = .) %>% summary()
 ```
 
@@ -654,7 +806,25 @@ summary(glm_sb)
 ```{r}
 summary_data_3_2 <- bind_rows(summary_data_3, summary_data_2) %>% 
   select(-sb_present)
+summary_data_s3_2 <- bind_rows(summary_data_s, summary_data_s2)
 ```
+
+```{r}
+summary_data_3_2  %>%
+ lm(log(avg_error + 1e-6) ~ sb_count+pn_count+sn_count+pb_count,
+       data = .) %>% summary()
+summary_data_s2  %>%
+ lm(log(avg_error) ~ s_count+p_count,
+       data = .) %>% summary()
+
+summary(glm(avg_error ~ s_count+p_count, data = summary_data_s3_2))
+summary(glm(avg_error ~ sb_count+pn_count+sn_count+pb_count, data = summary_data_3_2))
+summary(glm(avg_error ~ s_count*p_count+b_count*n_count, data = summary_data_s3_2))
+summary(glm(avg_error ~ s_count*p_count*b_count*n_count, data = summary_data_s3_2))
+
+```
+
+\
 
 ```{r}
 
@@ -705,6 +875,7 @@ m <- glm(count / totalCount ~ message_type * decile,
          family = "binomial")
 
 summary(m)
+
 
 ```
 
@@ -818,11 +989,24 @@ ggplot(nCritters_entropy_heatmap_new, aes(x = entropy_bin, y = nCrittersGame_bin
 # Error change for both
 
 ```{r}
-d.allmsg2 <- d.allmsg2 %>% 
+d.allmsg2 <- d.allmsg %>% filter(!received_code == 'o') %>%
+  group_by(gameID) %>%
+  mutate(
+    p_count = sum(str_count(received_code, "p")),
+    s_count = sum(str_count(received_code, "s")),
+    b_count = sum(str_count(received_code, "b")),
+    n_count = sum(str_count(received_code, "n"))
+  ) %>% ungroup()%>%
 mutate(s_bin = cut(s_count, breaks = seq(min(s_count), max(s_count), length.out = 3), include.lowest = TRUE))
 
-d.allmsg_exp1_2 <- d.allmsg_exp1_2 %>% 
-  filter(!treatment == "unidirectional")%>%
+d.allmsg_exp1_2 <- d.allmsg_exp1 %>% filter(!received_code == 'o') %>%
+  group_by(gameID) %>%
+  mutate(
+    p_count = sum(str_count(received_code, "p")),
+    s_count = sum(str_count(received_code, "s")),
+    b_count = sum(str_count(received_code, "b")),
+    n_count = sum(str_count(received_code, "n"))
+  ) %>% ungroup()%>%
 mutate(s_bin = cut(s_count, breaks = seq(min(s_count), max(s_count), length.out = 3), include.lowest = TRUE))
 
 ggplot(d.allmsg2, aes(x = round, y = error, color = s_bin)) +
@@ -840,7 +1024,7 @@ ggplot(d.allmsg_exp1_2, aes(x = round, y = error, color = s_bin)) +
 stat_summary(fun = mean, geom = "point")+
   theme_minimal()
 
-#lmer(error ~ s_bin + (1 | gameID), data = d.allmsg_exp1_2)
+#summary(lmerTest::lmer(error ~ s_bin + (1 | gameID), data = d.allmsg_exp1_2))
 
 summary(glm((error+0.1) ~ s_count*round, family = "Gamma",
        data = d.allmsg2))
@@ -859,7 +1043,7 @@ ggplot(combined_df2, aes(x = round, y = error, color = s_bin)) +
 geom_smooth(method = "lm", se = FALSE)+
 stat_summary(fun = mean, geom = "point")+
   theme_minimal()
-summary(lmer(error ~ s_bin*round + (1 | gameID), data = combined_df2))
+summary(lmerTest::lmer(error ~ s_bin*round + (1 | gameID), data = combined_df2))
 
 
 combined_df2 <- combined_df2 %>% 
@@ -871,7 +1055,7 @@ ggplot(combined_df2, aes(x = s_count, y = error)) +
   stat_summary(fun = mean, geom = "point") +
   theme_minimal()
 
-summary(lmer(error ~ s_count + (1 | gameID), data = combined_df2))
+summary(lmerTest::lmer(error ~ s_count + (1 | gameID), data = combined_df2))
 
 combined_df2 <- combined_df2 %>% 
   mutate(b_bin = cut(b_count, breaks = seq(min(b_count), max(b_count), length.out = 3), include.lowest = TRUE)) #%>% 
@@ -882,6 +1066,6 @@ ggplot(combined_df2, aes(x = b_count, y = error)) +
   stat_summary(fun = mean, geom = "point") +
   theme_minimal()
 
-summary(lmer(error ~ b_count + (1 | gameID), data = combined_df2))
+#summary(lmerTest::lmer(error ~ b_count + (1 | gameID), data = combined_df2))
 
 ```
