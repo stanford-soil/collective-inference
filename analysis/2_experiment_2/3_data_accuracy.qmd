@@ -221,7 +221,7 @@ d.all %>%
     scale_color_brewer(palette = 'Accent') +
     guides(linetype = 'none') +
     scale_x_continuous(breaks = c(1,3,5,7,9,11)) +
-    labs(y = 'average error', x = 'round #', color = '')  +
+    labs(y = 'error', x = 'round', color = '')  +
     theme(aspect.ratio = 1, legend.position = 'top')
 
 
@@ -440,15 +440,11 @@ d <-d.all_minmax2 %>%
         panel.grid = element_blank())
 d
 
-#ggsave(
-#  "difficulty.png",
-#  plot = d,
- # width = 3.5,  
- # height = 10,
-#  units = "in",
-#  device = "png",
-#  dpi = 300 
-#)
+ggsave(
+  "difficulty.png",
+  plot = d,
+  device = "png",
+)
 
 levels(d.all_minmax2$group)
 unique(d.all_minmax2$group)
@@ -559,10 +555,10 @@ ggplot(d.all_plt, aes(x = nCritters, y = error, color = treatment, group = treat
   #geom_hline(yintercept = c(0), linetype = 'dotted') +
   scale_color_brewer(palette = 'Accent') +
   theme_few() +
-  labs(x = "ncritters", y = "Error", color = "") +
+  labs(x = "critters", y = "error", color = "") +
   theme(
     legend.position = 'top',
-    axis.text.x = element_text(angle = 15, hjust = 1)  
+    axis.text.x = element_text(angle = 15, hjust = 1), aspect.ratio=1
   )
 ggplot(d.all_plt, aes(x = entropy, y = error, color = treatment, group = treatment)) +
   #geom_point() +
@@ -575,17 +571,21 @@ ggplot(d.all_plt, aes(x = entropy, y = error, color = treatment, group = treatme
     legend.position = 'top',
     axis.text.x = element_text(angle = 15, hjust = 1)  
   )
-ggplot(d.all_plt, aes(x = representation, y = error, color = treatment, group = treatment)) +
-  #geom_point() +
-  geom_smooth(method = 'lm', se = FALSE) +
- # geom_hline(yintercept = c(0), linetype = 'dotted') +
-  scale_color_brewer(palette = 'Accent') +
+
+```
+
+```{r}
+ggplot(d.all_plt, aes(representation, error, colour=treatment, group=treatment)) +
+  geom_smooth(method='lm', se=FALSE) +
+  scale_colour_brewer(palette='Accent') +
   theme_few() +
-  labs(x = "representation", y = "Error", color = "") +
+  labs(x='representation', y='error', colour='') +
   theme(
-    legend.position = 'top',
-    axis.text.x = element_text(angle = 15, hjust = 1)  
+    legend.position='top',
+    axis.text.x=element_text(angle=15, hjust=1),
+    aspect.ratio=1      # height = 0.5 × width
   )
+
 ```
 
 representation = round(abs(mleEstimate - mleGame)

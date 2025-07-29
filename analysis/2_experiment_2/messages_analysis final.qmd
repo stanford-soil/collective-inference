@@ -477,7 +477,7 @@ summary_data_long_proportions %>%
        y = "proportion",
        fill = "message type") +
   theme(aspect.ratio = 1, legend.position = "top") +
-  guides(fill = guide_legend(nrow = 2))
+  guides(fill = guide_legend(nrow = 4))
 
 
 ```
@@ -662,7 +662,7 @@ summary_data_2 <- d.allmsg_exp1 %>%
   group_by(gameID) %>%
   summarize(
    # exitSurvey = if_else(any(str_detect(exitSurvey, 'yes')), "yes", "no"),
-    avg_error = mean(error[round == 12] , na.rm = TRUE),#
+    avg_error = mean(error , na.rm = TRUE),#
     pn_count = sum(str_count(received_code, "pn")),
     sn_count = sum(str_count(received_code, "sn")),
     pb_count = sum(str_count(received_code, "pb")),
@@ -705,8 +705,8 @@ summary_data_long_proportions %>%
        x = "error (binned)",
        y = "proportion",
        fill = "message type") +
-  theme(aspect.ratio = 1, legend.position = "top") +
-  guides(fill = guide_legend(nrow = 2))
+  theme(aspect.ratio = 1, legend.position = "left") +
+  guides(fill = guide_legend(nrow = 4))
 ```
 
 ```{r}
@@ -821,6 +821,7 @@ summary(glm(avg_error ~ s_count+p_count, data = summary_data_s3_2))
 summary(glm(avg_error ~ sb_count+pn_count+sn_count+pb_count, data = summary_data_3_2))
 summary(glm(avg_error ~ s_count*p_count+b_count*n_count, data = summary_data_s3_2))
 summary(glm(avg_error ~ s_count*p_count*b_count*n_count, data = summary_data_s3_2))
+summary(glm(avg_error ~ scale(s_count)+scale(p_count)+scale(b_count)+scale(n_count), data = summary_data_s3_2))
 
 ```
 
