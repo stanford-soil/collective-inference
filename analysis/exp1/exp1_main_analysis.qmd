@@ -1,0 +1,363 @@
+---
+title: "Experiment 1: Main Analysis (Individual-Level Exclusions)"
+format: html
+editor: visual
+---
+
+## Import packages
+
+```{r, message=FALSE, warning=FALSE}
+library(conflicted)
+conflict_prefer("filter", "dplyr")
+conflict_prefer("lag", "dplyr")
+library(lmerTest)
+conflicts_prefer(lmerTest::lmer)
+library(tidyverse)
+library(tidyboot)
+library(lme4)
+library(here)
+library(emmeans)
+library(ggthemes)
+
+theme_set(theme_few())
+```
+
+## Load and prepare data
+
+This analysis uses the merged data file created by `data_preparation.qmd`, which documents:
+- N=973 participants recruited from Prolific
+- N=890 participants provided ≥1 response (in this file)
+- N=83 participants dropped out (8.5% attrition)
+
+```{r, message=FALSE, warning=FALSE}
+# Load merged data file (see data_preparation.qmd for complete pipeline)
+d.raw <- read_csv(here('data/exp1/PreregMergedGuesses.csv'))
+
+cat("Loaded PreregMergedGuesses.csv:\n")
+cat("  Total games:", n_distinct(d.raw$gameID), "\n")
+cat("  Games with valid treatments:", n_distinct(d.raw$gameID[!is.na(d.raw$treatmentName)]), "\n")
+cat("  Participants:", n_distinct(d.raw$playerID), "\n")
+
+# Filter to valid treatments for analysis
+d.guesses <- d.raw %>%
+  filter(!is.na(treatmentName))
+
+# Handle duplicate rows in unidirectional condition
+unique_rows <- d.guesses %>%
+  filter(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")) %>%
+  distinct(playerID, gameID, guess, roundID, .keep_all = TRUE)
+
+d.guesses <- d.guesses %>%
+  filter(!(treatmentName %in% c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3"))) %>%
+  bind_rows(unique_rows)
+
+cat("After cleaning duplicate rows:\n")
+cat("  Participants:", n_distinct(d.guesses$playerID), "participants in",
+    n_distinct(d.guesses$gameID), "games\n")
+```
+
+## Apply individual-level exclusions (Preregistered)
+
+Following our preregistration, exclude participants who failed to respond on >20% of trials (i.e., <80% response rate). Keep all networks regardless of size (intent-to-treat at network level).
+
+```{r}
+# Calculate response rate per participant (preregistered exclusion criterion)
+participant_responses <- d.guesses %>%
+  group_by(playerID) %>%
+  summarise(
+    total_rounds = n_distinct(idx),
+    response_rate = total_rounds / 12,
+    .groups = "drop"
+  )
+
+# Exclude participants with <80% response rate (i.e., >20% missing)
+exclude_prereg <- participant_responses %>%
+  filter(response_rate < 0.80) %>%
+  pull(playerID)
+
+cat("Excluded", length(exclude_prereg), "participants with <80% response rate\n")
+
+# Remove only inattentive individuals (keep all networks)
+d.guesses <- d.guesses %>%
+  filter(!(playerID %in% exclude_prereg))
+
+cat("Final sample:", n_distinct(d.guesses$playerID), "participants in",
+    n_distinct(d.guesses$gameID), "networks\n")
+```
+
+## Compute game-level statistics
+
+```{r}
+# Calculate total critters per game (after exclusions)
+game_stats <- d.guesses %>%
+  distinct(playerID, gameID, .keep_all = TRUE) %>%
+  group_by(gameID) %>%
+  summarise(
+    nRabbitsGame = sum(nRabbits, na.rm = TRUE),
+    nSquirrelsGame = sum(nSquirrels, na.rm = TRUE),
+    nCrittersGame = nRabbitsGame + nSquirrelsGame,
+    n_active_players = n()
+  )
+
+# Join game stats and compute estimates
+d.guesses <- d.guesses %>%
+  left_join(game_stats, by = "gameID") %>%
+  mutate(
+    # Clean treatment names
+    treatmentName = case_when(
+      treatmentName == "rerun-unidirectional- 0.7" ~ 'unidirectional-0.7',
+      treatmentName == "rerun-unidirectional- 0.3" ~ 'unidirectional-0.3',
+      treatmentName == "rerun-interactive-0.3" ~ 'interactive-0.3',
+      treatmentName == "rerun-interactive- 0.7" ~ 'interactive-0.7',
+      treatmentName == "rerun-slider- 0.3" ~ 'slider-0.3',
+      treatmentName == "rerun-slider- 0.7" ~ 'slider-0.7',
+      TRUE ~ treatmentName
+    )
+  ) %>%
+  separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
+  mutate(
+    # Individual MLE estimate (percentage)
+    mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
+    mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv),
+    # Game-level MLE estimate (percentage)
+    mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100),
+    # Calculate error
+    error = abs(guess - mleEstimateGame)
+  ) %>%
+  arrange(playerID, idx)
+
+# Report sample sizes by condition
+sample_summary <- d.guesses %>%
+  filter(idx == 1) %>%
+  group_by(condition, treatment) %>%
+  summarise(
+    n_networks = n_distinct(gameID),
+    n_participants = n_distinct(playerID),
+    .groups = "drop"
+  )
+
+print(sample_summary)
+```
+
+## Analysis 1: Communication improves inferential accuracy
+
+Test whether groups converge toward the true probability over time.
+
+```{r}
+# Model: Does guess converge to truth over time?
+# Note: Using (1 + idx | playerID) - random slopes at participant level
+# This structure has lowest AIC and avoids singular fit issues
+# Using poly(idx, 2) to capture nonlinear convergence (ΔAIC = 47.78)
+mod_convergence <- lmer(
+  guess ~ treatment * poly(idx, 2) + (1 + idx | playerID),
+  data = d.guesses,
+  control = lmerControl(optimizer = "bobyqa")
+)
+
+summary(mod_convergence)
+```
+
+## Analysis 2: Error decreases over time
+
+```{r}
+# Prepare data with empirical baseline (round 0)
+# Slider round 1 = pre-social baseline (used for all conditions)
+slider_data <- d.guesses %>%
+  filter(condition == "slider") %>%
+  mutate(idx = idx - 1) %>%
+  group_by(condition, idx) %>%
+  tidyboot_mean(error, na.rm = TRUE)
+
+slider_baseline <- slider_data %>%
+  filter(idx == 0) %>%
+  select(empirical_stat, ci_lower, ci_upper) %>%
+  summarise(empirical_stat = mean(empirical_stat),
+            ci_lower = mean(ci_lower),
+            ci_upper = mean(ci_upper)) %>%
+  mutate(idx = 0)
+
+other_conditions_round0 <- tibble(
+  condition = factor(c("interactive", "unidirectional"),
+                     levels = c("slider", "unidirectional", "interactive")),
+  idx = 0,
+  empirical_stat = slider_baseline$empirical_stat,
+  ci_lower = slider_baseline$ci_lower,
+  ci_upper = slider_baseline$ci_upper
+)
+
+other_conditions_actual <- d.guesses %>%
+  filter(condition != "slider") %>%
+  group_by(condition, idx) %>%
+  tidyboot_mean(error, na.rm = TRUE)
+
+error_with_baseline <- bind_rows(slider_data, other_conditions_round0, other_conditions_actual) %>%
+  mutate(show_ribbon = (condition == "slider") | (idx > 0),
+         show_smooth = (condition == "slider") | (idx > 0))
+
+# Panel A: Error by condition
+p_error <- ggplot(error_with_baseline, aes(x = idx, y = empirical_stat, color = condition, fill = condition)) +
+    geom_ribbon(data = filter(error_with_baseline, show_ribbon),
+                aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.15, color = NA) +
+    geom_point(size = 2) +
+    geom_line(data = filter(error_with_baseline, idx <= 1, condition != "slider"),
+              linetype = "dashed", linewidth = 0.8) +
+    geom_smooth(data = filter(error_with_baseline, show_smooth),
+                method = 'lm', formula = y ~ poly(x, 2), se = FALSE, linewidth = 1) +
+    scale_color_manual(
+      name = NULL,
+      values = c("slider" = "#E69F00", "unidirectional" = "#56B4E9", "interactive" = "#009E73"),
+      labels = c("Slider", "Unidirectional", "Interactive"),
+      breaks = c("slider", "unidirectional", "interactive"),
+      drop = FALSE
+    ) +
+    scale_fill_manual(
+      name = NULL,
+      values = c("slider" = "#E69F00", "unidirectional" = "#56B4E9", "interactive" = "#009E73"),
+      labels = c("Slider", "Unidirectional", "Interactive"),
+      breaks = c("slider", "unidirectional", "interactive"),
+      drop = FALSE
+    ) +
+    scale_x_continuous(breaks = c(1, 4, 7, 10)) +
+    labs(
+      x = "Round",
+      y = "Mean Absolute Error",
+      tag = "A"
+    ) +
+    theme_few(base_size = 12) +
+    theme(
+      legend.position = c(0.85, 0.85),
+      legend.title = element_blank(),
+      legend.background = element_rect(fill = "white", color = NA),
+      plot.tag = element_text(face = "bold", size = 18),
+      axis.title = element_text(size = 16),
+      axis.text = element_text(size = 14)
+    )
+
+# Model: Does error decrease over time?
+# Note: Using (1 + idx | playerID) - random slopes at participant level
+mod_error <- lmer(
+  error ~ idx * condition + (1 + idx | playerID),
+  data = d.guesses,
+  control = lmerControl(optimizer = "bobyqa")
+)
+
+summary(mod_error)
+```
+
+## Analysis 3: Condition differences
+
+```{r}
+# Compare conditions at final round
+d_final <- d.guesses %>% filter(idx == 12)
+
+mod_condition <- lmer(
+  error ~ condition + (1 | gameID),
+  data = d_final
+)
+
+summary(mod_condition)
+
+# Post-hoc comparisons
+emmeans(mod_condition, pairwise ~ condition)
+```
+
+## Analysis 4: Outlier participants benefit from social information
+
+```{r}
+# Calculate how "outlier" each participant's initial data was
+d.outliers <- d.guesses %>%
+  filter(idx == 1) %>%
+  mutate(
+    outlierPercent = abs(mleEstimateIndiv - mleEstimateGame)
+  ) %>%
+  select(playerID, gameID, outlierPercent)
+
+# Join with full data
+d.guesses <- d.guesses %>%
+  left_join(d.outliers, by = c("playerID", "gameID"))
+
+# Model: Do outliers improve more over time?
+# Simplified random effects to avoid overparameterization
+mod_outlier <- lmer(
+  error ~ scale(outlierPercent) * scale(idx) + (1 + scale(idx) | playerID),
+  data = d.guesses,
+  control = lmerControl(optimizer = "bobyqa")
+)
+
+summary(mod_outlier)
+```
+
+## Analysis 5: Guess stabilization over time
+
+```{r}
+# Calculate change in guess from round to round
+d.stability <- d.guesses %>%
+  arrange(playerID, idx) %>%
+  group_by(playerID) %>%
+  mutate(
+    distToSelf = abs(guess - lag(guess))
+  ) %>%
+  filter(!is.na(distToSelf))
+
+# Panel B: Guess stabilization with polynomial smooth
+p_stability <- d.stability %>%
+  group_by(condition, idx) %>%
+  tidyboot_mean(distToSelf, na.rm = TRUE) %>%
+  ggplot(aes(x = idx, y = empirical_stat, color = condition, fill = condition)) +
+    geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.15, color = NA) +
+    geom_point(size = 2) +
+    geom_smooth(method = 'lm', formula = y ~ poly(x, 2), se = FALSE, linewidth = 1) +
+    scale_color_manual(
+      name = NULL,
+      values = c("slider" = "#E69F00", "unidirectional" = "#56B4E9", "interactive" = "#009E73"),
+      labels = c("Slider", "Unidirectional", "Interactive"),
+      breaks = c("slider", "unidirectional", "interactive"),
+      drop = FALSE
+    ) +
+    scale_fill_manual(
+      name = NULL,
+      values = c("slider" = "#E69F00", "unidirectional" = "#56B4E9", "interactive" = "#009E73"),
+      labels = c("Slider", "Unidirectional", "Interactive"),
+      breaks = c("slider", "unidirectional", "interactive"),
+      drop = FALSE
+    ) +
+    scale_x_continuous(breaks = c(1, 4, 7, 10)) +
+    labs(
+      x = "Round",
+      y = "Change in Guess from Previous Round",
+      tag = "B"
+    ) +
+    theme_few(base_size = 12) +
+    theme(
+      legend.position = "none",
+      plot.tag = element_text(face = "bold", size = 18),
+      axis.title = element_text(size = 16),
+      axis.text = element_text(size = 14)
+    )
+
+# Combine panels (legend only in panel A, upper-right)
+combined_fig <- p_error + p_stability
+
+# Save combined figure
+ggsave(here("figures/exp1_fig2.pdf"), combined_fig, width = 12, height = 5)
+
+combined_fig
+
+# Model: Do guesses stabilize over time?
+# Using (1 + idx | playerID) random effects structure
+# Polynomial model is better than linear (ΔAIC = 59.69)
+mod_stability <- lmer(
+  distToSelf ~ poly(idx, 2) * condition + (1 + idx | playerID),
+  data = d.stability,
+  control = lmerControl(optimizer = "bobyqa")
+)
+
+summary(mod_stability)
+```
+
+## Save cleaned data for figures
+
+```{r}
+write_csv(d.guesses, here("analysis/1_preregistered/exp1_clean_data.csv"))
+cat("Saved cleaned data to exp1_clean_data.csv\n")
+```
