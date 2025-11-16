@@ -33,7 +33,7 @@ d.all <- read_csv(here('analysis/2_experiment_2/exp2_clean_data_jan17.csv'))
 d.allmsg_exp1 <- read_csv(here('analysis/2_experiment_2/message_data/recoded_messages_exp1.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y"))
-d.guesses <- read_csv(here('data/PreregMergedGuesses.csv'))%>%
+d.guesses <- read_csv(here('data/exp1/PreregMergedGuesses.csv'))%>%
   rename_with(~ gsub("\\.x$", "", .x), ends_with(".x")) %>%
   select(-ends_with(".y"))
 
@@ -51,8 +51,8 @@ d.allmsg_exp1 <- d.allmsg_exp1 %>%
 d.allmsg<-d.allmsg%>%
    select(-sender.name, -designatedGame, -mleGame, -entropy_bin, -representation, -representation_bin, -nCritters, -nCrittersGame_bin, -mleEstimate, -mleGame, -nRabbitsGame, -nSquirrelsGame)
    
-d.oldest <- read_csv(here('data/0_experiment2_exploratory/messages/recoded.csv'))
-d.oldest.error <- read_csv(here('data/merged_data_exp.csv')) %>% filter(!is.na(guess))
+d.oldest <- read_csv(here('data/pilot/exp2/messages/recoded.csv'))
+d.oldest.error <- read_csv(here('data/merged/merged_data_exp.csv')) %>% filter(!is.na(guess))
 
 d.oldest <- d.oldest %>% inner_join(d.oldest.error, by = c("gameID", "round" = "idx", "sender.id" = "playerID"))%>%
    select(-"...1", -"treatmentName.x",-"roundID")%>% unique()%>%
