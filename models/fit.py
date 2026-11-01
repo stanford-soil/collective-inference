@@ -114,7 +114,31 @@ def prepare_transitions(beliefs: pd.DataFrame,
             # Relative sample size for this player
             relative_size = own_n / game_total_n if game_total_n > 0 else 1/n_players
 
-            # Track cumulative evidence from unique partners
+            # Timing of social information.
+            # Slider: the estimate at round t+1 is made after seeing the belief
+            #   that the round-t sender submitted at round t.
+            # Message conditions: the chat for round t+1 happens before the
+            #   round-(t+1) estimate, so the relevant sender is the one who sent
+            #   to this player in round t+1. Their most recent numerical belief
+            #   available beforehand is their round-t estimate. (Fixed in the
+            #   2026 revision; the original code used the round-t sender here.)
+            msg_condition = condition != 'slider'
+
+            # Cumulative evidence from unique senders, by round.
+            # For message conditions, precompute counts from every distinct
+            # sender this player received from in rounds 1..r.
+            cum_by_round = {}
+            if msg_condition:
+                seen, cr, cs = set(), 0, 0
+                for rr in range(1, int(max(rounds)) + 2):
+                    q = partner_lookup.get((game_id, player_id, rr))
+                    if q is not None and q not in seen and (game_id, q) in samples:
+                        seen.add(q)
+                        cr += samples[(game_id, q)][0]
+                        cs += samples[(game_id, q)][1]
+                    cum_by_round[rr] = (cr, cs)
+
+            # Track cumulative evidence from unique partners (slider)
             seen_partners = set()
             cumulative_r, cumulative_s = 0, 0
 
@@ -124,7 +148,8 @@ def prepare_transitions(beliefs: pd.DataFrame,
                 actual_next = player_beliefs[t_idx + 1]
 
                 # Get partner info
-                partner_key = (game_id, player_id, t)
+                partner_round = t + 1 if msg_condition else t
+                partner_key = (game_id, player_id, partner_round)
                 partner_id = partner_lookup.get(partner_key)
                 if partner_id is None:
                     continue
@@ -144,7 +169,9 @@ def prepare_transitions(beliefs: pd.DataFrame,
                 partner_belief = partner_at_t['belief'].values[0]
 
                 # Update cumulative evidence (only count new partners)
-                if partner_id not in seen_partners:
+                if msg_condition:
+                    cumulative_r, cumulative_s = cum_by_round.get(partner_round, (0, 0))
+                elif partner_id not in seen_partners:
                     seen_partners.add(partner_id)
                     cumulative_r += partner_r
                     cumulative_s += partner_s
