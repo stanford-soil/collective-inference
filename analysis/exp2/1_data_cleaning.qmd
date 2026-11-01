@@ -18,6 +18,13 @@ library(lme4)
 library(here)
 library(jsonlite)
 library(ggthemes)
+
+# The critter counts below are parsed from emoji strings. Under a non-UTF-8
+# locale the emoji do not match and every player silently gets 0 critters,
+# so stop early instead.
+if (!isTRUE(l10n_info()$`UTF-8`)) {
+  stop("Run this script under a UTF-8 locale (e.g. LC_ALL=en_US.UTF-8 or C.UTF-8).")
+}
 ```
 
 ## Read in data
@@ -265,6 +272,8 @@ d.all <-merge(d.playerstageround,d.59, by = c("playerID", "gameID"), all = T)%>%
     nCritters = nSquirrels + nRabbits,
     mleEstimate = nRabbits / (nRabbits + nSquirrels)
   ) 
+
+stopifnot("No critters parsed; check the locale" = sum(d.all$nCritters, na.rm = TRUE) > 0)
 
 rm(d.59, d.playerstageround)
 ```
