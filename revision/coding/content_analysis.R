@@ -1,3 +1,4 @@
+if (Sys.getenv("SUBSET")=="") Sys.setenv(SUBSET="SR")  # analysed networks; set SUBSET=ALL for all chat games
 suppressMessages(source("../exp2_sr_primary/prep.R"))
 run <- function(msgs, label) {
   mc <- msgs %>% group_by(gameID) %>% summarise(total=n(),

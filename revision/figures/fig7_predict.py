@@ -102,6 +102,9 @@ treat_col = 'treatmentName.x' if 'treatmentName.x' in exp2.columns else 'treatme
 exp2['condition'] = exp2[treat_col].apply(lambda x: 'interactive' if 'interactive' in str(x) else 'slider')
 exp2['direction'] = exp2[treat_col].apply(lambda x: 'RS' if str(x).startswith('RS_') else 'SR')
 
+SUBSET = os.environ.get('SUBSET', 'SR')  # primary analysis uses SR games only; set SUBSET=ALL for all games
+if SUBSET != 'ALL':
+    exp2 = exp2[exp2['direction'] == SUBSET]
 print(f"Loaded Exp 2: {exp2['gameID'].nunique()} games")
 
 # Get game-level data
