@@ -6,3 +6,4 @@ partner_schedule/exp1_extracted_sched.csv
 partner_schedule/exp2_*_raw.csv
 partner_schedule/relay_round2.csv
 __pycache__/
+coding/review_items.json
