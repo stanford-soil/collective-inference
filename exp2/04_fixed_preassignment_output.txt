@@ -15,7 +15,7 @@ Agreement of config file with clean-data columns (190 matched games): max |diff|
 
 Games whose active-participant statistic differs from the pre-assigned one (of 192 games with >= 1 active player):
   critters: 13; entropy: 13; representation: 0
-  (prep.R takes representation_actual from the existing clean-data column 'representation',
+  (lib/exp2_data.R takes representation_actual from the existing clean-data column 'representation',
    so representativeness is the pre-assigned value in both versions.)
   Correlation active vs pre-assigned: critters r = 0.9578, entropy r = 0.9782
 
