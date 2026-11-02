@@ -1,0 +1,206 @@
+Revision analyses in revision/extra/ (branch revision-2026)
+============================================================
+
+Scripts (run from this folder):
+  01_first_encounter.R      -> 01_first_encounter_output.txt, 01_first_encounter_coefs.csv,
+                               01_exp1_transitions.csv, 01_exp2_transitions.csv
+  02_fixed_preassignment.R  -> 02_fixed_preassignment_output.txt, 02_fixed_preassignment_coefs.csv
+All numbers below are copied from these output files.
+
+
+ANALYSIS 1 (Reviewer 2, point 3): first vs later encounters with a sender
+--------------------------------------------------------------------------
+
+What was computed. For each focal player and each round in which they
+received information, update = the player's estimate after receiving minus
+their estimate before, and dist = the sender's information minus the
+player's estimate before. The slope of update on dist is the weight placed
+on the sender's information (0 = ignored, 1 = adopted). first = 1 if the
+player had not received from this sender in any earlier round (partner
+tables in revision/partner_schedule/).
+
+Timing.
+  slider: estimate at t -> t+1; sender = who the player received from in
+    round t; sender's information = the sender's round-t estimate (what
+    was transmitted).
+  message conditions: estimate at t-1 -> t; sender = who the player
+    received from in round t (the chat precedes the round-t estimate).
+    Two codings of the sender's information: (a) the sender's round-(t-1)
+    estimate; (b) the sender's private-sample MLE.
+
+Model (fitted separately for each condition and coding):
+  update ~ dist * first + dist * round_c + (1 | player) + (1 | network)
+dist:first is the extra weight on a first encounter (positive = more
+weight on first-encounter information). dist:round_c lets the weight
+change linearly across rounds, so the first-encounter term is not simply
+the early rounds. A random slope of dist by player was tried in every
+model; all of these fits were singular, so all reported models use random
+intercepts for player and network.
+
+Samples. Exp 1: focal players from analysis/exp1/exp1_clean_data.csv;
+sender estimates and samples from all responders in
+data/exp1/PreregMergedGuesses.csv (transitions where the sender had no
+estimate for the required round are dropped). Exp 2: SR games only (193
+games; the guess is the rabbit share).
+
+Primary results (dist:first, with weights at the mean round):
+
+Exp 1
+  slider (transmitted estimate), N = 1963 transitions (412 first), 220 players, 64 networks
+    dist:first b = -0.028, SE = 0.031, t(1775.5) = -0.88, p = .381
+    weight: first = 0.269, later = 0.297
+  unidirectional (sender's previous estimate), N = 2082 (293 first), 237 players, 69 networks
+    dist:first b = -0.088, SE = 0.042, t(2038.3) = -2.07, p = .039
+    weight: first = 0.164, later = 0.251
+  unidirectional (sender's sample MLE), N = 2302 (360 first)
+    dist:first b = -0.055, SE = 0.033, t(2129.5) = -1.66, p = .097
+    weight: first = 0.279, later = 0.335
+  interactive (sender's previous estimate), N = 2429 (333 first), 273 players, 83 networks
+    dist:first b = 0.086, SE = 0.038, t(2423.0) = 2.25, p = .025
+    weight: first = 0.285, later = 0.199
+  interactive (sender's sample MLE), N = 2717 (427 first), 275 players, 85 networks
+    dist:first b = 0.106, SE = 0.029, t(2607.9) = 3.67, p < .001 (.0003)
+    weight: first = 0.317, later = 0.211
+  Pooled Exp 1 model (previous-estimate coding; dist*first*condition +
+  dist*round_c*condition): dist:first:condition F(2, 6248.7) = 5.02, p = .007.
+  Relative to slider: interactive b = 0.102, t(6210.6) = 1.87, p = .062;
+  unidirectional b = -0.069, t(6221.2) = -1.32, p = .188.
+
+Exp 2, SR games
+  slider (transmitted estimate), N = 1754 (587 first), 353 players, 93 networks
+    dist:first b = 0.159, SE = 0.042, t(1748.0) = 3.78, p < .001 (.0002)
+    weight: first = 0.378, later = 0.219
+  interactive (sender's previous estimate), N = 2089 (469 first), 382 players, 99 networks
+    dist:first b = 0.006, SE = 0.043, t(2083.0) = 0.14, p = .890
+    weight: first = 0.263, later = 0.257
+  interactive (sender's sample MLE), N = 2342 (584 first), 385 players, 99 networks
+    dist:first b = 0.021, SE = 0.033, t(2336.0) = 0.64, p = .520
+    weight: first = 0.213, later = 0.192
+
+Robustness checks (dist:first; b, t(df), p):
+                                   +dist:mutual-round   +dist:round^2         drop round-2 estimates   "first" = no earlier contact either direction
+  Exp1 slider                      -0.066, t(1727.9)=-2.00, p=.046 | 0.027, t(1865.2)=0.62, p=.535 | -0.027, t(1726.0)=-0.85, p=.397 | -0.027, t(1785.6)=-0.81, p=.418
+  Exp1 unidirectional (estimate)   -0.118, t(1951.2)=-2.51, p=.012 | 0.013, t(1961.9)=0.20, p=.839 | -0.028, t(1961.0)=-0.56, p=.575 | -0.155, t(1994.3)=-2.99, p=.003
+  Exp1 unidirectional (MLE)        -0.034, t(2044.5)=-0.95, p=.344 | -0.027, t(2069.2)=-0.55, p=.583 | -0.039, t(2004.4)=-1.02, p=.307 | -0.061, t(2116.3)=-1.51, p=.131
+  Exp1 interactive (estimate)       0.108, t(2421.0)=2.61, p=.009 | 0.094, t(2421.0)=1.70, p=.089 | 0.103, t(2293.0)=2.37, p=.018 | 0.030, t(2423.0)=0.64, p=.523
+  Exp1 interactive (MLE)            0.088, t(2429.9)=2.81, p=.005 | 0.111, t(2497.7)=2.65, p=.008 | 0.092, t(2524.0)=2.87, p=.004 | 0.097, t(2639.9)=2.70, p=.007
+  Exp2 SR slider                    0.137, t(1746.0)=3.04, p=.002 | 0.167, t(1746.0)=3.76, p<.001 | 0.162, t(1594.0)=4.00, p<.001 | -0.007, t(1659.5)=-0.20, p=.842
+  Exp2 SR interactive (estimate)    0.014, t(2081.0)=0.27, p=.784 | 0.084, t(2081.0)=1.25, p=.212 | 0.028, t(1873.0)=0.59, p=.552 | -0.043, t(2083.0)=-0.96, p=.339
+  Exp2 SR interactive (MLE)         0.020, t(2334.0)=0.55, p=.583 | 0.063, t(2334.0)=1.28, p=.202 | 0.029, t(2065.0)=0.86, p=.393 | -0.015, t(2336.0)=-0.46, p=.649
+
+Summary of Analysis 1.
+  - Participants gave more weight to a first-encounter sender only in the
+    real-time messaging (interactive) condition of Exp 1. There, the weight
+    was about 0.29-0.32 on a first encounter versus about 0.20-0.21 on a
+    later encounter, with either coding of the sender's information. This
+    held under all four robustness checks for the sample-MLE coding and
+    under two of four for the estimate coding (it held with the mutual-round
+    control and when round-2 estimates were dropped; with the quadratic
+    round term p = .089; under the either-direction definition p = .523).
+  - In the Exp 1 slider condition there was no difference in the primary
+    model (weights 0.27 vs 0.30).
+  - In the Exp 1 delayed messaging (unidirectional) condition, the
+    previous-estimate coding gave LESS weight to first encounters (p = .039).
+    This was not robust: it was absent with the sample-MLE coding, with a
+    quadratic round term, and when round-2 estimates were dropped.
+  - In Exp 2 (SR games), first encounters received more weight in the slider
+    condition (0.38 vs 0.22, p < .001; robust to the mutual-round, quadratic
+    and drop-round-2 checks). This effect depends on treating the round-3
+    sender as new. Under the stricter definition (no earlier contact in either
+    direction), that sender counts as known, because the player sent to them
+    in round 2, and the effect disappears. In the slider condition, sending
+    does not reveal anything about the recipient, so the primary definition
+    is the relevant one there.
+    There was no first-encounter effect in Exp 2 real-time messaging.
+  - Limitation. In 4-player networks, first encounters are always the
+    first rounds (received in rounds 1-3), so first-encounter status is
+    separated from round mainly by the round controls (and, in Exp 1, by the
+    few networks of other sizes). The estimates should be read as "a change in
+    weight when the senders start repeating, beyond a smooth trend over
+    rounds", not as a cleanly identified source effect.
+
+
+ANALYSIS 2 (Reviewer 3, point 4): fixed pre-assigned game statistics
+--------------------------------------------------------------------
+
+Source of the pre-assigned statistics. The generated game configurations in
+stimuli/exp2_combined_generation/generated_files_used/games_dontoverwrite.json
+and games_2_dontoverwrite.json (fields totalCritters, entropy,
+representation). Played games are matched to configurations with the
+clean-data column designatedGame. This covers 190 of the 193 SR games. For
+these 190, the config values agree with the clean-data game-level columns
+nCrittersGame, entropy and representation. Those columns are computed in
+1_data_cleaning.qmd from all four assigned players' samples. The maximum
+absolute differences are 0 for critters, 0.0004 for entropy and 0.0001 for
+representation; these are rounding differences. The other 3 SR games have
+designatedGame = 0. Their configuration (10120) is listed in the file with
+five players, one of them duplicated, but the games were played with four.
+For these 3 games, the clean-data columns were used, which are computed from
+all four assigned players.
+
+How much the two versions differ. In the 193 SR games, 179 had 4 active
+participants (players with at least one estimate), 13 had 3, and 1 had none.
+The game with none contributes no data. All four assigned players finished
+each game, but in 13 games only three of them ever submitted an estimate.
+So the active-participant critters and entropy differ from the pre-assigned
+values in 13 games: r = 0.958 for critters and r = 0.978 for entropy. In
+prep.R, representation_actual is taken from the clean-data column
+'representation', which is the pre-assigned value. Representativeness is
+therefore the same in both versions, and the two fits differ only through
+critters, entropy and the shared variance among the predictors. Scaling and
+centering follow prep.R and use the same rows in both versions.
+
+model3_full, SR games, 5107 observations, 192 games, 755 players.
+The active version reproduces revision/exp2_sr_primary/models.R (SUBSET=SR).
+
+  term                      active-participant                 pre-assigned
+  condition_c               b = 1.921, t(179.7) = 1.72, p = .087    b = 1.983, t(178.6) = 1.77, p = .079
+  condition_c:rep_c         b = 12.723, t(181.7) = 2.67, p = .008   b = 10.651, t(178.2) = 2.16, p = .032
+  condition_c:critters_c    b = -3.786, t(185.2) = -0.76, p = .450  b = -0.755, t(177.8) = -0.18, p = .856
+  condition_c:entropy_c     b = -6.581, t(182.0) = -1.34, p = .181  b = -3.307, t(178.0) = -0.69, p = .489
+  rep_c                     b = 20.750, t(178.2) = 8.36, p < .001   b = 21.369, t(178.1) = 8.36, p < .001
+  critters_c                b = -0.291, t(184.9) = -0.11, p = .911  b = -1.374, t(177.5) = -0.64, p = .523
+  entropy_c                 b = 4.370, t(180.4) = 1.70, p = .090    b = 2.937, t(177.5) = 1.19, p = .235
+  entropy_c:rep_c           b = 20.152, t(180.0) = 2.39, p = .018   b = 18.225, t(177.6) = 2.27, p = .025
+  critters_c:entropy_c      b = 0.849, t(185.2) = 0.08, p = .937    b = -1.766, t(175.5) = -0.21, p = .836
+  critters_c:rep_c          b = 0.221, t(186.7) = 0.02, p = .983    b = 1.134, t(175.9) = 0.13, p = .895
+  idx_c                     b = -0.883, t(4390.4) = -10.98, p < .001  b = -0.883, t(4390.1) = -10.98, p < .001
+  (SEs for condition_c:rep_c: active 4.759, pre-assigned 4.934.)
+
+Summary of Analysis 2. With the pre-assigned statistics, the condition x
+representativeness interaction is somewhat smaller but remains reliable:
+b = 10.65, t(178.2) = 2.16, p = .032, compared with b = 12.72,
+t(181.7) = 2.67, p = .008 in the active-participant version. The other
+condition interactions remain non-significant in both versions. The main
+effect of representativeness and the entropy x representativeness
+interaction are also essentially unchanged.
+
+
+LaTeX paragraphs
+----------------
+
+% Analysis 1 (Reviewer 2, point 3)
+We asked whether participants weighted information from a sender they were hearing from for the first time differently from information from a sender they had heard from before.
+For each estimate made after receiving information, we regressed the change in the participant's estimate on the distance between the sender's information and the participant's previous estimate.
+The slope of this regression is the weight given to the sender's information.
+We let the slope differ between first and later encounters with the same sender, and we also let it change linearly across rounds.
+Each model included random intercepts for participants and networks and was fitted separately for each condition.
+In the slider condition, the sender's information was the estimate the sender transmitted.
+In the messaging conditions, we used either the sender's estimate from the previous round or the proportion of rabbits in the sender's private sample.
+In Experiment~1, participants in the real-time messaging condition gave more weight to first-encounter senders (sender's previous estimate: $b = 0.086$, $t(2423.0) = 2.25$, $p = .025$; sender's sample: $b = 0.106$, $t(2607.9) = 3.67$, $p < .001$).
+The estimated weight was 0.32 for first encounters and 0.21 for later encounters (sample coding).
+There was no such difference in the slider condition ($b = -0.028$, $t(1775.5) = -0.88$, $p = .381$).
+In the delayed messaging condition, first encounters received slightly less weight with the previous-estimate coding ($b = -0.088$, $t(2038.3) = -2.07$, $p = .039$), but not with the sample coding ($b = -0.055$, $t(2129.5) = -1.66$, $p = .097$).
+This difference was not robust to a quadratic round term or to excluding round-2 estimates.
+In Experiment~2 (SR games), first encounters received more weight in the slider condition ($b = 0.159$, $t(1748.0) = 3.78$, $p < .001$) but not in the real-time messaging condition (sender's previous estimate: $b = 0.006$, $t(2083.0) = 0.14$, $p = .890$; sender's sample: $b = 0.021$, $t(2336.0) = 0.64$, $p = .520$).
+Because first encounters always occur in the first rounds of a four-person network, these comparisons depend on the round controls.
+We therefore read them as limited evidence that new senders received more weight, and only in some conditions.
+
+% Analysis 2 (Reviewer 3, point 4)
+In the main analysis of Experiment~2, game difficulty was computed from the participants who were active in each game.
+To check that this choice did not drive the results, we refit the model using each game's pre-assigned configuration as generated: total number of critters, entropy and representativeness, computed from all four assigned samples.
+These values were taken from the stimulus configuration files.
+For the three games whose configuration was not matched in the files, they were computed from the four assigned samples in the data.
+In 13 of the 192 SR games with data, only three of the four participants submitted estimates, so the two versions differ only in these games.
+With the pre-assigned statistics, the interaction between condition and representativeness was slightly smaller but remained significant ($b = 10.65$, $t(178.2) = 2.16$, $p = .032$; active-participant version: $b = 12.72$, $t(181.7) = 2.67$, $p = .008$).
+The interactions of condition with the number of critters ($b = -0.75$, $t(177.8) = -0.18$, $p = .856$) and with entropy ($b = -3.31$, $t(178.0) = -0.69$, $p = .489$) remained non-significant.
