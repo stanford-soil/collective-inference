@@ -1,12 +1,26 @@
-# Shared data preparation for Exp 1, copied verbatim (logic) from
-# analysis/exp1/exp1_main_analysis.qmd. Sourced by the other scripts.
-suppressPackageStartupMessages({
-  library(dplyr); library(tidyr); library(readr); library(stringr)
-  library(lme4); library(lmerTest)
-})
-REPO <- "../.."
+# Experiment 1 clean data: removes duplicated unidirectional rows, applies the
+# preregistered exclusion (< 80% of rounds answered) and computes error.
+# Input: data/exp1/PreregMergedGuesses.csv (prep/01_exp1_merge_raw.R).
+# Output: data/derived/exp1_clean_data.csv (analysed sample) and
+#   data/derived/exp1_responders.csv (all responders, before the exclusion).
+# Run from prep/. Logic from the original analysis/exp1/exp1_main_analysis.qmd.
+source("../lib/common.R")
+source("../lib/exp1_data.R")
+dir.create(repo_path("data", "derived"), showWarnings = FALSE)
 
+d.raw <- read_csv(EXP1_MERGED, show_col_types = FALSE)
+cat("PreregMergedGuesses.csv: games", n_distinct(d.raw$gameID),
+    "| games with valid treatments", n_distinct(d.raw$gameID[!is.na(d.raw$treatmentName)]),
+    "| participants", n_distinct(d.raw$playerID), "\n")
+
+# Valid treatments only; unidirectional games have duplicated rows
 uni <- c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")
+d.pre <- d.raw %>% filter(!is.na(treatmentName))
+ur <- d.pre %>% filter(treatmentName %in% uni) %>% distinct(playerID, gameID, guess, roundID, .keep_all = TRUE)
+d.pre <- d.pre %>% filter(!(treatmentName %in% uni)) %>% bind_rows(ur)
+cat("After removing duplicate rows:", n_distinct(d.pre$playerID), "participants in",
+    n_distinct(d.pre$gameID), "games\n")
+
 clean_names <- function(d) {
   d %>%
     mutate(treatmentName = case_when(
@@ -19,50 +33,21 @@ clean_names <- function(d) {
       TRUE ~ treatmentName)) %>%
     separate(treatmentName, into = c('condition', 'treatment'), sep = '-') %>%
     mutate(error = abs(guess - mleEstimateGame),
-           condition = factor(condition, levels = c("slider", "unidirectional", "interactive"))) %>%
+           condition = factor(condition, levels = condition_breaks)) %>%
     arrange(playerID, idx)
 }
 
-d.raw <- suppressMessages(read_csv(file.path(REPO, 'data/exp1/PreregMergedGuesses.csv'), show_col_types = FALSE))
+# Preregistered exclusion: fewer than 80% of the 12 rounds answered
+exclude_prereg <- exp1_response_rates(d.pre) %>% filter(response_rate < 0.80) %>% pull(playerID)
+cat("Excluded", length(exclude_prereg), "participants with <80% response rate\n")
 
-d.pre <- d.raw %>% filter(!is.na(treatmentName))
-ur <- d.pre %>% filter(treatmentName %in% uni) %>% distinct(playerID, gameID, guess, roundID, .keep_all = TRUE)
-d.pre <- d.pre %>% filter(!(treatmentName %in% uni)) %>% bind_rows(ur)
+d.guesses <- d.pre %>% filter(!(playerID %in% exclude_prereg)) %>% clean_names() %>%
+  mutate(idx_c = idx - mean(idx))
+cat("Final sample:", n_distinct(d.guesses$playerID), "participants in",
+    n_distinct(d.guesses$gameID), "networks\n")
+print(d.guesses %>% filter(idx == 1) %>% group_by(condition, treatment) %>%
+        summarise(n_networks = n_distinct(gameID), n_participants = n_distinct(playerID), .groups = "drop"))
 
-response_rates <- d.pre %>% group_by(playerID) %>%
-  summarise(response_rate = n_distinct(idx) / 12, .groups = "drop")
-
-# d.pre = all responders with valid treatment, before the 80% exclusion
-d.pre.clean <- clean_names(d.pre)
-
-exclude_prereg <- response_rates %>% filter(response_rate < 0.80) %>% pull(playerID)
-d.guesses <- d.pre %>% filter(!(playerID %in% exclude_prereg)) %>% clean_names()
-
-make_shifted <- function(d) {
-  d %>% mutate(
-    idx_shifted = if_else(condition == "slider", idx - 1, idx),
-    idx_final_centered = if_else(condition == "slider", idx_shifted - 11, idx_shifted - 12),
-    condition_interactive = relevel(condition, ref = "interactive"))
-}
-d.shifted <- make_shifted(d.guesses)
-
-d.guesses <- d.guesses %>% mutate(idx_c = idx - mean(idx))
-
-# Adaptive-weighting data
-d.revisions <- d.guesses %>%
-  group_by(playerID, gameID) %>% mutate(sample_size = nRabbits + nSquirrels) %>% ungroup() %>%
-  group_by(gameID, idx) %>%
-  mutate(others_mean_estimate = (sum(guess) - guess) / (n() - 1),
-         social_discrepancy = abs(guess - others_mean_estimate)) %>% ungroup() %>%
-  arrange(playerID, idx) %>% group_by(playerID) %>%
-  mutate(belief_revision = abs(guess - lag(guess)),
-         prior_social_discrepancy = lag(social_discrepancy)) %>% ungroup() %>%
-  filter(!is.na(belief_revision), !is.na(prior_social_discrepancy))
-
-# Stabilization data
-d.stabilization <- d.shifted %>% filter(idx_shifted >= 1) %>%
-  arrange(playerID, idx_shifted) %>% group_by(playerID) %>%
-  mutate(abs_change = abs(guess - lag(guess))) %>% ungroup() %>%
-  filter(!is.na(abs_change))
-
-ctrl <- lmerControl(optimizer = "bobyqa")
+write_csv(d.guesses, EXP1_CLEAN)
+write_csv(clean_names(d.pre), EXP1_RESPONDERS)
+cat("Wrote", EXP1_CLEAN, "and", EXP1_RESPONDERS, "\n")

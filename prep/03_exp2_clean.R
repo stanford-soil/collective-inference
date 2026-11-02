@@ -1,23 +1,13 @@
----
-title: "Experiment1"
-format: html
-editor: visual
----
-
-# Import packages
-
-```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
-
-library(conflicted)  
-conflict_prefer("filter", "dplyr")
-conflict_prefer("lag", "dplyr")
-
-library(tidyverse)
-library(tidyboot)
-library(lme4)
-library(here)
+# Experiment 2 clean data: merges the raw Empirica exports, parses each player's
+# critter sample from the emoji string, keeps games with four players who all
+# finished, computes game-level statistics and matches each game to its generated
+# configuration (designatedGame).
+# Input: data/exp2/raw/<batch>/, stimuli/exp2_combined_generation/generated_files_used/*.json.
+# Output: data/derived/exp2_clean_data.csv (all games, SR and RS; the SR restriction
+#   is applied when the data are loaded, see lib/exp2_data.R).
+# Run from prep/ under a UTF-8 locale. Logic from the original analysis/exp2/1_data_cleaning.qmd.
+source("../lib/common.R")
 library(jsonlite)
-library(ggthemes)
 
 # The critter counts below are parsed from emoji strings. Under a non-UTF-8
 # locale the emoji do not match and every player silently gets 0 critters,
@@ -25,210 +15,35 @@ library(ggthemes)
 if (!isTRUE(l10n_info()$`UTF-8`)) {
   stop("Run this script under a UTF-8 locale (e.g. LC_ALL=en_US.UTF-8 or C.UTF-8).")
 }
-```
 
-## Read in data
+# Batches, in the order used for the original clean data file
+batches <- c("11-22-2101", "11-20-2234", "11-20-2246", "11-21-0329", "11-22-1731", "11-26-1646", "01-02-1848", "01-02-2022", "01-02-2134", "01-02-2211", "01-03-2051", "01-03-2201", "01-03-2348", "01-04-0302", "01-04-0431", "01-10-0257", "01-10-0433", "01-11-2206", "01-14-2139", "01-17-2124", "01-17-2245", "01-19-0217", "01-19-0243")
+read_batches <- function(file) {
+  suppressMessages(bind_rows(lapply(batches, function(b)
+    read_csv(repo_path("data", "exp2", "raw", b, file), show_col_types = FALSE))))
+}
 
-```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
-d.1 <- bind_rows(
-  read_csv(here('data/exp2/raw/11-22-2101/playerStage.csv')),
-  read_csv(here('data/exp2/raw/11-20-2234/playerStage.csv')),
-  read_csv(here('data/exp2/raw/11-20-2246/playerStage.csv')),
-  read_csv(here('data/exp2/raw/11-21-0329/playerStage.csv')),
-  read_csv(here('data/exp2/raw/11-22-1731/playerStage.csv')),
- read_csv(here('data/exp2/raw/11-26-1646/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-02-1848/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-02-2022/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-02-2134/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-02-2211/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-03-2051/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-03-2201/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-03-2348/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-04-0302/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-04-0431/playerStage.csv')),
- read_csv(here('data/exp2/raw/01-10-0257/playerStage.csv')),
-  read_csv(here('data/exp2/raw/01-10-0433/playerStage.csv')),
-  read_csv(here('data/exp2/raw/01-11-2206/playerStage.csv')),
-  read_csv(here('data/exp2/raw/01-14-2139/playerStage.csv')),
-  read_csv(here('data/exp2/raw/01-17-2124/playerStage.csv')),
-  read_csv(here('data/exp2/raw/01-17-2245/playerStage.csv')),
-  read_csv(here('data/exp2/raw/01-19-0217/playerStage.csv')),
-  read_csv(here('data/exp2/raw/01-19-0243/playerStage.csv'))
-)
-
-d.2 <- bind_rows(
-  read_csv(here('data/exp2/raw/11-22-2101/round.csv')),
-  read_csv(here('data/exp2/raw/11-20-2234/round.csv')),
-  read_csv(here('data/exp2/raw/11-20-2246/round.csv')),
-  read_csv(here('data/exp2/raw/11-21-0329/round.csv')),
-  read_csv(here('data/exp2/raw/11-22-1731/round.csv')),
-  read_csv(here('data/exp2/raw/11-26-1646/round.csv')),
- read_csv(here('data/exp2/raw/01-02-1848/round.csv')),
- read_csv(here('data/exp2/raw/01-02-2022/round.csv')),
- read_csv(here('data/exp2/raw/01-02-2134/round.csv')),
- read_csv(here('data/exp2/raw/01-02-2211/round.csv')),
- read_csv(here('data/exp2/raw/01-03-2051/round.csv')),
- read_csv(here('data/exp2/raw/01-03-2201/round.csv')),
- read_csv(here('data/exp2/raw/01-03-2348/round.csv')),
- read_csv(here('data/exp2/raw/01-04-0302/round.csv')),
- read_csv(here('data/exp2/raw/01-04-0431/round.csv')),
- read_csv(here('data/exp2/raw/01-10-0257/round.csv')),
-  read_csv(here('data/exp2/raw/01-10-0433/round.csv')),
-  read_csv(here('data/exp2/raw/01-11-2206/round.csv')),
-  read_csv(here('data/exp2/raw/01-14-2139/round.csv')),
-  read_csv(here('data/exp2/raw/01-17-2124/round.csv')),
-  read_csv(here('data/exp2/raw/01-17-2245/round.csv')),
-  read_csv(here('data/exp2/raw/01-19-0217/round.csv')),
-  read_csv(here('data/exp2/raw/01-19-0243/round.csv'))
-)%>% 
-  rename(roundID = id) 
-
-d.3 <- bind_rows(
-  read_csv(here('data/exp2/raw/11-22-2101/stage.csv')),
-  read_csv(here('data/exp2/raw/11-20-2234/stage.csv')),
-  read_csv(here('data/exp2/raw/11-20-2246/stage.csv')),
-  read_csv(here('data/exp2/raw/11-21-0329/stage.csv')),
-  read_csv(here('data/exp2/raw/11-22-1731/stage.csv')),
-  read_csv(here('data/exp2/raw/11-26-1646/stage.csv')),
- read_csv(here('data/exp2/raw/01-02-1848/stage.csv')),
- read_csv(here('data/exp2/raw/01-02-2022/stage.csv')),
- read_csv(here('data/exp2/raw/01-02-2134/stage.csv')),
- read_csv(here('data/exp2/raw/01-02-2211/stage.csv')),
- read_csv(here('data/exp2/raw/01-03-2051/stage.csv')),
- read_csv(here('data/exp2/raw/01-03-2201/stage.csv')),
- read_csv(here('data/exp2/raw/01-03-2348/stage.csv')),
- read_csv(here('data/exp2/raw/01-04-0302/stage.csv')),
- read_csv(here('data/exp2/raw/01-04-0431/stage.csv')),
- read_csv(here('data/exp2/raw/01-10-0257/stage.csv')),
-  read_csv(here('data/exp2/raw/01-10-0433/stage.csv')),
-  read_csv(here('data/exp2/raw/01-11-2206/stage.csv')),
-  read_csv(here('data/exp2/raw/01-14-2139/stage.csv')),
-  read_csv(here('data/exp2/raw/01-17-2124/stage.csv')),
-  read_csv(here('data/exp2/raw/01-17-2245/stage.csv')),
-  read_csv(here('data/exp2/raw/01-19-0217/stage.csv')),
-  read_csv(here('data/exp2/raw/01-19-0243/stage.csv'))
-)%>% 
-  rename(stageID = id)%>%
-  rename(stageName = name)
-
-d.5 <- bind_rows(
-  read_csv(here('data/exp2/raw/11-22-2101/playerGame.csv')),
-  read_csv(here('data/exp2/raw/11-20-2234/playerGame.csv')),
-  read_csv(here('data/exp2/raw/11-20-2246/playerGame.csv')),
-  read_csv(here('data/exp2/raw/11-21-0329/playerGame.csv')),
-  read_csv(here('data/exp2/raw/11-22-1731/playerGame.csv')),
-  read_csv(here('data/exp2/raw/11-26-1646/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-02-1848/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-02-2022/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-02-2134/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-02-2211/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-03-2051/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-03-2201/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-03-2348/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-04-0302/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-04-0431/playerGame.csv')),
- read_csv(here('data/exp2/raw/01-10-0257/playerGame.csv')),
-  read_csv(here('data/exp2/raw/01-10-0433/playerGame.csv')),
-  read_csv(here('data/exp2/raw/01-11-2206/playerGame.csv')),
-  read_csv(here('data/exp2/raw/01-14-2139/playerGame.csv')),
-  read_csv(here('data/exp2/raw/01-17-2124/playerGame.csv')),
-  read_csv(here('data/exp2/raw/01-17-2245/playerGame.csv')),
-  read_csv(here('data/exp2/raw/01-19-0217/playerGame.csv')),
-  read_csv(here('data/exp2/raw/01-19-0243/playerGame.csv'))
-)
-
-
-d.6 <- bind_rows(
-  read_csv(here('data/exp2/raw/11-22-2101/player.csv')),
-  read_csv(here('data/exp2/raw/11-20-2234/player.csv')),
-  read_csv(here('data/exp2/raw/11-20-2246/player.csv')),
-  read_csv(here('data/exp2/raw/11-21-0329/player.csv')),
-  read_csv(here('data/exp2/raw/11-22-1731/player.csv')),
-  read_csv(here('data/exp2/raw/11-26-1646/player.csv')),
- read_csv(here('data/exp2/raw/01-02-1848/player.csv')),
- read_csv(here('data/exp2/raw/01-02-2022/player.csv')),
- read_csv(here('data/exp2/raw/01-02-2134/player.csv')),
- read_csv(here('data/exp2/raw/01-02-2211/player.csv')),
- read_csv(here('data/exp2/raw/01-03-2051/player.csv')),
- read_csv(here('data/exp2/raw/01-03-2201/player.csv')),
- read_csv(here('data/exp2/raw/01-03-2348/player.csv')),
- read_csv(here('data/exp2/raw/01-04-0302/player.csv')),
- read_csv(here('data/exp2/raw/01-04-0431/player.csv')),
- read_csv(here('data/exp2/raw/01-10-0257/player.csv')),
-  read_csv(here('data/exp2/raw/01-10-0433/player.csv')),
-  read_csv(here('data/exp2/raw/01-11-2206/player.csv')),
-  read_csv(here('data/exp2/raw/01-14-2139/player.csv')),
-  read_csv(here('data/exp2/raw/01-17-2124/player.csv')),
-  read_csv(here('data/exp2/raw/01-17-2245/player.csv')),
-  read_csv(here('data/exp2/raw/01-19-0217/player.csv')),
-  read_csv(here('data/exp2/raw/01-19-0243/player.csv'))
-)%>% 
-  rename(playerID = id) %>% 
+d.1 <- read_batches("playerStage.csv")
+d.2 <- read_batches("round.csv") %>% rename(roundID = id)
+d.3 <- read_batches("stage.csv") %>% rename(stageID = id) %>% rename(stageName = name)
+d.5 <- read_batches("playerGame.csv")
+d.6 <- read_batches("player.csv") %>%
+  rename(playerID = id) %>%
   select(-contains("LastChangedAt")) %>%
   filter(ended == "game ended")
+d.8 <- read_batches("game.csv") %>% rename(gameID = id)
+d.9 <- read_batches("batch.csv") %>% rename(batchID = id)
 
-d.8 <- bind_rows(
-  read_csv(here('data/exp2/raw/11-22-2101/game.csv')),
-  read_csv(here('data/exp2/raw/11-20-2234/game.csv')),
-  read_csv(here('data/exp2/raw/11-20-2246/game.csv')),
-  read_csv(here('data/exp2/raw/11-21-0329/game.csv')),
-  read_csv(here('data/exp2/raw/11-22-1731/game.csv')),
-  read_csv(here('data/exp2/raw/11-26-1646/game.csv')),
- read_csv(here('data/exp2/raw/01-02-1848/game.csv')),
- read_csv(here('data/exp2/raw/01-02-2022/game.csv')),
- read_csv(here('data/exp2/raw/01-02-2134/game.csv')),
- read_csv(here('data/exp2/raw/01-02-2211/game.csv')),
- read_csv(here('data/exp2/raw/01-03-2051/game.csv')),
- read_csv(here('data/exp2/raw/01-03-2201/game.csv')),
- read_csv(here('data/exp2/raw/01-03-2348/game.csv')),
- read_csv(here('data/exp2/raw/01-04-0302/game.csv')),
- read_csv(here('data/exp2/raw/01-04-0431/game.csv')),
- read_csv(here('data/exp2/raw/01-10-0257/game.csv')),
-  read_csv(here('data/exp2/raw/01-10-0433/game.csv')),
-  read_csv(here('data/exp2/raw/01-11-2206/game.csv')),
-  read_csv(here('data/exp2/raw/01-14-2139/game.csv')),
-  read_csv(here('data/exp2/raw/01-17-2124/game.csv')),
-  read_csv(here('data/exp2/raw/01-17-2245/game.csv')),
-  read_csv(here('data/exp2/raw/01-19-0217/game.csv')),
-  read_csv(here('data/exp2/raw/01-19-0243/game.csv'))
-)%>% 
-  rename(gameID = id)
-
-d.9 <- bind_rows(
-  read_csv(here('data/exp2/raw/11-22-2101/batch.csv')),
-  read_csv(here('data/exp2/raw/11-20-2234/batch.csv')),
-  read_csv(here('data/exp2/raw/11-20-2246/batch.csv')),
-  read_csv(here('data/exp2/raw/11-21-0329/batch.csv')),
-  read_csv(here('data/exp2/raw/11-22-1731/batch.csv')),
-  read_csv(here('data/exp2/raw/11-26-1646/batch.csv')),
- read_csv(here('data/exp2/raw/01-02-1848/batch.csv')),
- read_csv(here('data/exp2/raw/01-02-2022/batch.csv')),
- read_csv(here('data/exp2/raw/01-02-2134/batch.csv')),
- read_csv(here('data/exp2/raw/01-02-2211/batch.csv')),
- read_csv(here('data/exp2/raw/01-03-2051/batch.csv')),
- read_csv(here('data/exp2/raw/01-03-2201/batch.csv')),
- read_csv(here('data/exp2/raw/01-03-2348/batch.csv')),
- read_csv(here('data/exp2/raw/01-04-0302/batch.csv')),
- read_csv(here('data/exp2/raw/01-04-0431/batch.csv')),
- read_csv(here('data/exp2/raw/01-10-0257/batch.csv')),
-  read_csv(here('data/exp2/raw/01-10-0433/batch.csv')),
-  read_csv(here('data/exp2/raw/01-11-2206/batch.csv')),
-  read_csv(here('data/exp2/raw/01-14-2139/batch.csv')),
-  read_csv(here('data/exp2/raw/01-17-2124/batch.csv')),
-  read_csv(here('data/exp2/raw/01-17-2245/batch.csv')),
-  read_csv(here('data/exp2/raw/01-19-0217/batch.csv')),
-  read_csv(here('data/exp2/raw/01-19-0243/batch.csv'))
-)%>% 
-  rename(batchID = id)
-
-decode1 <- read_json(here('stimuli/exp2_combined_generation/generated_files_used/games_dontoverwrite.json'), simplifyVector = TRUE) %>%
+# Generated game configurations (configuration 10120 is listed with five players;
+# its games were played with four and are handled below)
+decode1 <- read_json(repo_path('stimuli', 'exp2_combined_generation', 'generated_files_used', 'games_dontoverwrite.json'), simplifyVector = TRUE) %>%
   as_tibble() %>%
   rename(nCrittersGame = totalCritters) %>%
   rename(designatedGame = gameID)%>%
    filter(designatedGame != 10120) %>%
   mutate(representation = as.character(representation))
 
-decode3 <- read_json(here('stimuli/exp2_combined_generation/generated_files_used/games_2_dontoverwrite.json'), simplifyVector = TRUE) %>%
+decode3 <- read_json(repo_path('stimuli', 'exp2_combined_generation', 'generated_files_used', 'games_2_dontoverwrite.json'), simplifyVector = TRUE) %>%
   as_tibble() %>%
   rename(nCrittersGame = totalCritters) %>%
   rename(designatedGame = gameID)%>%
@@ -237,11 +52,7 @@ decode3 <- read_json(here('stimuli/exp2_combined_generation/generated_files_used
 
 decode <- bind_rows(decode1, decode3)
 
-```
-
-## Merge files
-
-```{r}
+# Merge games, batches, players and guesses
 d.gamebatch <- merge(d.8, d.9, by = c("batchID"), all=T)%>%
   select(-contains("LastChangedAt"))
 
@@ -276,11 +87,8 @@ d.all <-merge(d.playerstageround,d.59, by = c("playerID", "gameID"), all = T)%>%
 stopifnot("No critters parsed; check the locale" = sum(d.all$nCritters, na.rm = TRUE) > 0)
 
 rm(d.59, d.playerstageround)
-```
 
-## Filter for relevant rows
-
-```{r}
+# Keep games with four players who all finished; one row per observe stage
 d.all <- d.all %>%
   distinct() %>%
   group_by(gameID) %>%
@@ -290,11 +98,7 @@ d.all <- d.all %>%
   filter(ended.x == 'game ended') %>%
   filter(stageName == 'observe')
 
-```
-
-## calculations to merge desired with played games
-
-```{r}
+# Game-level statistics from all four assigned players
 d.allgameplayers <- d.all %>%
    distinct(playerID, gameID, .keep_all = TRUE) %>%
   group_by(gameID) %>%
@@ -309,37 +113,11 @@ d.allgameplayers <- d.all %>%
   ) %>%
   ungroup()
 
-
-
-d.gamelist <- d.allgameplayers%>%
-  group_by(gameID) %>%
-  slice(1) %>% 
-  ungroup()
-
-```
-
-```{r}
-n_unique <- nrow(unique(decode[c("nCritters", "mleGame")]))
-n_unique
-
-dup_rows <- decode  %>%
-  group_by(nCrittersGame, mleGame) %>%
-  filter(n() > 1) %>%
-  count(designatedGame) %>%
-  filter (n==1)
-
-duplicated_rows <-decode %>%
-  filter(designatedGame %in% dup_rows$designatedGame)
-
-# Print the rows
-print(dup_rows)
-
-#looks like 10297 and 3627 are randomly generated identical pairs and 16039 only differs by one (so representation is different)
+# Match played games to generated configurations. Configurations 10297 and 3627 are
+# identical random draws; keep the first entry of each designatedGame.
 d.decode <- decode%>%
   distinct(designatedGame, .keep_all = TRUE)
-```
 
-```{r}
 d.allgameplayers <- d.allgameplayers %>%
   mutate(across(c(nCrittersGame, representation, entropy), as.character))
 
@@ -370,95 +148,8 @@ d.all <- d.all %>%
     by = c("gameID")
   )
 
-#d.allgameplayers <- d.allgameplayers %>%
-#  filter(!is.na(designatedGame))
-#removes the one w 5 players
-```
-
-## Preemptive filter for games we'll end up excluding
-
-```{r}
-persistentnoClick <- data.frame(gameID = character(), playerID = character(), stringsAsFactors = FALSE)
-
-for (i in 1:7) {
-  idx_pair <- c(i + 1, i + 2)
-    filtered_players <- d.all %>%
-    group_by(gameID, playerID) %>%
-    filter(all(is.na(guess[idx_pair]))) %>%
-    select(gameID, playerID) %>%
-    distinct()
-    persistentnoClick <- bind_rows(persistentnoClick, filtered_players)
-}
-persistentnoClick <- distinct(persistentnoClick)
-
-gameIDs_to_remove <- persistentnoClick %>%
-  count(gameID) %>%
-  filter(n >= 2) %>%
-  pull(gameID)
-
-```
-
-## Count which games are present
-
-```{r}
-decode <- decode %>%
-  mutate(across(c(nCrittersGame, representation, designatedGame), as.character))
-
-d.allgameplayers <- d.allgameplayers %>%
-  mutate(across(c(nCrittersGame, representation, designatedGame, treatmentName.x), as.character))%>%
-  filter(!(gameID %in% gameIDs_to_remove))
-
-d.count.chat <- d.allgameplayers %>%
-  filter(str_ends(treatmentName.x, "interactive"))
-
-d.count.slider <- d.allgameplayers %>%
-  filter(str_ends(treatmentName.x, "slider"))
-
-
-# Count the occurrences of each designatedGame in decode
-decode_counts <- decode %>%
-  count(designatedGame, name = "decode_count")
-
-# Count the occurrences of each designatedGame in d.count.chat
-chat_counts <- d.count.chat %>%
-  count(designatedGame, name = "chat_count")
-
-# Count the occurrences of each designatedGame in d.count.slider
-slider_counts <- d.count.slider %>%
-  count(designatedGame, name = "slider_count")
-
-# Join counts to compare
-missing_chat <- decode_counts %>%
-  left_join(chat_counts, by = "designatedGame") %>%
-  filter(is.na(chat_count) | decode_count > chat_count)
-
-missing_slider <- decode_counts %>%
-  left_join(slider_counts, by = "designatedGame") %>%
-  filter(is.na(slider_count) | decode_count > slider_count)
-
-# Print missing games for each
-cat("Missing or insufficient games in d.count.chat:\n")
-print(missing_chat)
-
-cat("\nMissing or insufficient games in d.count.slider:\n")
-print(missing_slider)
-
-```
-
-```{r}
-d.allnovel <- d.all %>%
-  filter(is.na(designatedGame)) %>%
-  group_by(gameID) %>%
-  distinct(playerID, .keep_all = TRUE) %>%
-  mutate(
-    countRabbits = list(nRabbits),
-    countSquirrels = list(nSquirrels)
-  ) %>%
-  ungroup()
-
-#10120 turns out to be the problem. generated 5 players (?)
-#games ran with 4, making them novel
-#filtered out above
+# Games without a matching configuration were generated from configuration 10120
+# (listed with five players, played with four): designatedGame = 0
 d.modified <- d.all %>%
   filter(is.na(designatedGame))%>%
   mutate(
@@ -470,57 +161,24 @@ d.modified <- d.all %>%
 d.all$designatedGame <- as.character(d.all$designatedGame)
 d.modified$designatedGame <- as.character(d.modified$designatedGame)
 
-
-d.allExperimental <- d.all %>% 
-  bind_rows(d.modified)
-
-
 d.all <- d.all %>% 
   filter(!is.na(designatedGame))%>%
   bind_rows(d.modified)
-```
 
-# save
-
-```{r}
-decode_missing_chat <- decode %>%
-  filter(designatedGame %in% missing_chat$designatedGame) %>%
-  mutate(treatment = "interactive")
-
-decode_missing_slider <- decode %>%
-  filter(designatedGame %in% missing_slider$designatedGame) %>%
-  mutate(treatment = "slider")
-
-decode_combined <- bind_rows(decode_missing_slider, decode_missing_chat)
-
-write_json(decode_combined, "missing_both_games_jan17.json", pretty = TRUE)
-
-
-```
-
-```{r}
-
+# Write the clean data (list columns collapsed to strings)
 list_cols <- sapply(d.all, is.list)
 d.all[list_cols] <- lapply(d.all[list_cols], function(col) {
   sapply(col, paste, collapse = ";") # Collapse lists into strings
 })
-d.messages <- d.all %>% select (chat, gameID, playerID, idx, participantID)
 d.all <- d.all %>%
   select(-messages, -emojiArray, -treatment.x, -num_players, -chat)
-write.csv(d.all, "exp2_clean_data.csv", row.names = FALSE)
+dir.create(repo_path("data", "derived"), showWarnings = FALSE)
+write.csv(d.all, EXP2_CLEAN, row.names = FALSE)
+cat("Wrote", EXP2_CLEAN, ":", n_distinct(d.all$gameID), "games,", n_distinct(d.all$playerID), "players\n")
 
-
-```
-
-```{r}
-messages.df <- d.messages %>%
-  mutate(json_data = map(chat, ~ tryCatch(fromJSON(.x), error = function(e) NULL)))
-
-# flatten json, keeping rows with valid data
-messages.df <- messages.df %>%
-  unnest_wider(json_data)%>%
-  distinct()%>%
-  select(-chat, -round, -time, -likes)
-
-write.csv(messages.df, "exp2_messages.csv", row.names = FALSE)
-```
+# The analysed Experiment 2 networks are listed in lib/exp2_sr_games.csv (the SR
+# treatments in both conditions). Check that the list matches the clean data.
+sr_list <- read_csv(EXP2_SR_GAMES, show_col_types = FALSE)$gameID
+sr_data <- unique(d.all$gameID[grepl("^SR_", d.all$treatmentName.x)])
+stopifnot(setequal(sr_list, sr_data))
+cat("SR networks:", length(sr_list), "(matches lib/exp2_sr_games.csv)\n")
