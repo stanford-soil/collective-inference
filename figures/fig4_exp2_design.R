@@ -1,10 +1,12 @@
 # Figure 4 (Experiment 2 design): every game configuration in the three-dimensional
 # difficulty space, shown as three pairwise projections. Statistics are computed over
 # active participants, as in the analysis (nCrittersGame_actual, entropy_actual,
-# representation_actual from revision/exp2_sr_primary/prep.R). SR games only (the analysed networks).
-# Usage: Rscript revision/figures/fig4_exp2_design.R
+# representation_actual from lib/exp2_data.R). SR networks only (the analysed networks).
+# Input: data/derived/exp2_clean_data.csv. Output: figures/fig4_exp2_design.pdf. Run from figures/.
 
-source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))), "common.R"))
+source("../lib/common.R")
+suppressPackageStartupMessages({ library(ggthemes); library(patchwork) })
+source("../lib/exp2_data.R")
 
 exp2 <- load_exp2("SR")
 games <- exp2$d.all %>%

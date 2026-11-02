@@ -1,7 +1,22 @@
+"""Same-round relaying in Experiment 1, round 2 (a one-way round): for each player
+who received a message from someone other than their own recipient, whether the
+player's own messages in that round contain the counts of the sender's sample
+(and whether they did so after receiving it). Only players whose sender's sample
+differs from their own and their round-1 partners' samples are counted.
+Inputs: data/derived/exp1_messages_raw.csv, exp1_games_raw.csv (01_load_raw_logs.py),
+data/exp1/PreregMergedGuesses.csv.
+Output: data/derived/exp1_relay_round2.csv (per player; not committed) and printed shares.
+Run from partner_schedule/."""
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
+import common
 import pandas as pd, re, numpy as np
-m=pd.read_csv('../partner_schedule/exp1_msgs_raw.csv').drop_duplicates(['gameID','sender','time','text'])
-G=pd.read_csv('../partner_schedule/exp1_games_raw.csv').rename(columns={'id':'gameID'})
-reg=pd.read_csv('../../data/exp1/PreregMergedGuesses.csv')
+DERIVED=common.repo_path('data','derived')
+m=pd.read_csv(f'{DERIVED}/exp1_messages_raw.csv')
+m=m[m.src=='messages'].drop_duplicates(['gameID','sender','time','text'])
+G=pd.read_csv(f'{DERIVED}/exp1_games_raw.csv').rename(columns={'id':'gameID'})
+reg=pd.read_csv(common.EXP1_MERGED)
 samp=reg.groupby(['gameID','playerID'])[['nRabbits','nSquirrels']].first()
 samp={k:(int(v.nRabbits),int(v.nSquirrels)) for k,v in samp.iterrows()}
 cond=G.drop_duplicates('gameID').set_index('gameID').treatmentName
@@ -39,6 +54,6 @@ for (g,rd),x in m[m['round']==2].groupby(['gameID','round']):
             relayed_after=any(has(t,samp[(g,ip)]) for t in after.text)))
 r=pd.DataFrame(rows)
 print(r.groupby('cond').agg(players=('sender','size'),games=('game','nunique'),relayed=('relayed','mean'),relayed_after=('relayed_after','mean'),any_after=('n_after',lambda s:(s>0).mean())).round(3))
-r.to_csv('relay_round2.csv',index=False)
+r.to_csv(f'{DERIVED}/exp1_relay_round2.csv',index=False)
 for c in r.cond.unique():
     print(c, r[(r.cond==c)].relayed.sum())

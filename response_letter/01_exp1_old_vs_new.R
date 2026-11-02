@@ -1,36 +1,24 @@
-# Task 1: refit every Exp 1 mixed model with an added network (gameID) random intercept.
-# Task 3: complete-network robustness of the main condition model.
-source("00_prep_exp1.R")
+# Response letter: every Experiment 1 mixed model fitted without (original
+# submission, "old") and with (revised paper, "new") a network (gameID) random
+# intercept, plus the exclusion-threshold and complete-network robustness checks
+# under both versions. The revised paper reports the "new" models (exp1/).
+# Input: data/derived/exp1_clean_data.csv, exp1_responders.csv (prep/).
+# Output: exp1_coefs_old_vs_new.csv, exp1_model_diagnostics.csv,
+#   exp1_threshold_robustness.csv, exp1_complete_network_robustness.csv.
+# Run from response_letter/.
+source("../lib/common.R")
+source("../lib/exp1_data.R")
 options(width = 200)
 
-# Fit a model, capturing warnings/messages, singularity, and gameID variance
-fit <- function(formula, data, label) {
-  w <- character(0)
-  m <- withCallingHandlers(
-    lmer(formula, data = data, control = ctrl),
-    warning = function(cond) { w <<- c(w, conditionMessage(cond)); invokeRestart("muffleWarning") },
-    message = function(cond) { w <<- c(w, conditionMessage(cond)); invokeRestart("muffleMessage") })
-  conv_msgs <- m@optinfo$conv$lme4$messages
-  vc <- as.data.frame(VarCorr(m))
-  list(model = m, label = label, warnings = unique(c(w, conv_msgs)),
-       singular = isSingular(m), vc = vc, nobs = nobs(m),
-       ngroups = ngrps(m))
-}
+e1 <- load_exp1()
+d.guesses <- e1$d.guesses; d.shifted <- e1$d.shifted
+d.revisions <- e1$d.revisions; d.stabilization <- e1$d.stabilization
+d.pre.clean <- load_exp1_responders()
+response_rates <- exp1_response_rates(d.pre.clean)
 
-tab <- function(f) {
-  s <- coef(summary(f$model))
-  tibble(model = f$label, term = rownames(s), b = s[, "Estimate"], se = s[, "Std. Error"],
-         df = s[, "df"], t = s[, "t value"], p = s[, "Pr(>|t|)"])
-}
-
-report <- function(f) {
-  cat("\n==== ", f$label, " ====\n", sep = "")
-  cat("nobs:", f$nobs, " groups:", paste(names(f$ngroups), f$ngroups, collapse = ", "), "\n")
-  cat("singular:", f$singular, "\n")
-  cat("warnings/convergence messages:", if (length(f$warnings)) paste(f$warnings, collapse = " | ") else "none", "\n")
-  print(f$vc[, c("grp", "var1", "var2", "vcov", "sdcor")])
-  print(coef(summary(f$model)))
-}
+fit <- fit_lmer
+report <- report_fit
+tab <- tidy_fit
 
 models <- list()
 
@@ -54,6 +42,12 @@ lin3_new <- lmer(update(f3_new, . ~ . - poly(idx_final_centered, 2):condition_in
 lin3_newF <- lmer(f3_new, data = d.shifted, control = ctrl, REML = FALSE)
 cat("\n==== M3 LRT: condition x time interaction (4 df) ====\nOLD:\n"); print(anova(lin3_old, lin3_oldF))
 cat("NEW (+network):\n"); print(anova(lin3_new, lin3_newF))
+# Original notebook (Analysis 3): linear vs quadratic time trend, old version only
+mod_condition_linear <- lmer(error ~ idx_final_centered * condition_interactive + (1 + idx_final_centered | playerID),
+                             data = d.shifted, control = ctrl)
+cat("\n==== M3 linear vs quadratic time trend (original notebook, OLD) ====\n")
+mod_condition_poly <- lmer(f3_old, data = d.shifted, control = ctrl)
+print(anova(mod_condition_linear, mod_condition_poly))
 cat("\nLRT for network random intercept in M3 (REML fits, refit=FALSE):\n")
 print(anova(models$M3_old$model, models$M3_new$model, refit = FALSE))
 

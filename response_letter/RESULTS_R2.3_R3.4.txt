@@ -1,10 +1,9 @@
-Revision analyses in revision/extra/ (branch revision-2026)
-============================================================
+Revision analyses for Reviewer 2, point 3 and Reviewer 3, point 4
+=================================================================
 
-Scripts (run from this folder):
-  01_first_encounter.R      -> 01_first_encounter_output.txt, 01_first_encounter_coefs.csv,
-                               01_exp1_transitions.csv, 01_exp2_transitions.csv
-  02_fixed_preassignment.R  -> 02_fixed_preassignment_output.txt, 02_fixed_preassignment_coefs.csv
+Scripts:
+  partner_schedule/09_first_encounter.R -> 09_first_encounter_output.txt, 09_first_encounter_coefs.csv
+  exp2/04_fixed_preassignment.R         -> 04_fixed_preassignment_output.txt, 04_fixed_preassignment_coefs.csv
 All numbers below are copied from these output files.
 
 
@@ -17,7 +16,7 @@ their estimate before, and dist = the sender's information minus the
 player's estimate before. The slope of update on dist is the weight placed
 on the sender's information (0 = ignored, 1 = adopted). first = 1 if the
 player had not received from this sender in any earlier round (partner
-tables in revision/partner_schedule/).
+tables in partner_schedule/).
 
 Timing.
   slider: estimate at t -> t+1; sender = who the player received from in
@@ -37,7 +36,7 @@ the early rounds. A random slope of dist by player was tried in every
 model; all of these fits were singular, so all reported models use random
 intercepts for player and network.
 
-Samples. Exp 1: focal players from analysis/exp1/exp1_clean_data.csv;
+Samples. Exp 1: focal players from the Exp 1 clean data (prep/02_exp1_clean.R);
 sender estimates and samples from all responders in
 data/exp1/PreregMergedGuesses.csv (transitions where the sender had no
 estimate for the required round are dropped). Exp 2: SR games only (193
@@ -130,7 +129,7 @@ representation). Played games are matched to configurations with the
 clean-data column designatedGame. This covers 190 of the 193 SR games. For
 these 190, the config values agree with the clean-data game-level columns
 nCrittersGame, entropy and representation. Those columns are computed in
-1_data_cleaning.qmd from all four assigned players' samples. The maximum
+prep/03_exp2_clean.R from all four assigned players' samples. The maximum
 absolute differences are 0 for critters, 0.0004 for entropy and 0.0001 for
 representation; these are rounding differences. The other 3 SR games have
 designatedGame = 0. Their configuration (10120) is listed in the file with
@@ -144,14 +143,14 @@ The game with none contributes no data. All four assigned players finished
 each game, but in 13 games only three of them ever submitted an estimate.
 So the active-participant critters and entropy differ from the pre-assigned
 values in 13 games: r = 0.958 for critters and r = 0.978 for entropy. In
-prep.R, representation_actual is taken from the clean-data column
+lib/exp2_data.R, representation_actual is taken from the clean-data column
 'representation', which is the pre-assigned value. Representativeness is
 therefore the same in both versions, and the two fits differ only through
 critters, entropy and the shared variance among the predictors. Scaling and
-centering follow prep.R and use the same rows in both versions.
+centering follow lib/exp2_data.R and use the same rows in both versions.
 
 model3_full, SR games, 5107 observations, 192 games, 755 players.
-The active version reproduces revision/exp2_sr_primary/models.R (SUBSET=SR).
+The active version reproduces exp2/01_models.R.
 
   term                      active-participant                 pre-assigned
   condition_c               b = 1.921, t(179.7) = 1.72, p = .087    b = 1.983, t(178.6) = 1.77, p = .079

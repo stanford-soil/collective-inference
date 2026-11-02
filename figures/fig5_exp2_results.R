@@ -1,18 +1,20 @@
-# Figure 5 (Experiment 2 results) on SR games (primary analysis), and Figure S-new,
-# the same figure on the full sample (SR + RS games).
-# Data preparation: revision/exp2_sr_primary/prep.R (SUBSET=SR for the primary figure).
-# Panel A follows the save-fig5 chunk (bootstrapped 95% CIs over observations) of analysis/exp2/exp2_main_analysis.qmd.
-# Panel B shows final-round error (round 8 real-time messaging; shifted round 7 slider,
-# i.e. each condition's last round) by condition within the median-split bins of each
-# difficulty dimension defined in prep.R. Bins are ordered [harder, easier] as in the qmd.
-# 95% CIs are percentile bootstraps over networks (networks resampled with replacement,
-# 2000 resamples), so that participants in the same network are not treated as independent.
-# Usage: Rscript revision/figures/fig5_exp2_results.R
+# Figure 5 (Experiment 2 results) on the SR networks.
+# (A) Mean absolute error by round with bootstrapped 95% CIs over observations, as in
+# the save-fig5 chunk of the original Experiment 2 notebook; the slider's pre-social
+# estimate is shown at round 0.
+# (B) Final-round error (each condition's last round) by condition within the
+# median-split bins of each difficulty dimension (lib/exp2_data.R), bins ordered
+# [harder, easier]. 95% CIs are percentile bootstraps over networks (2000 resamples),
+# so that participants in the same network are not treated as independent.
+# Input: data/derived/exp2_clean_data.csv. Output: figures/fig5_exp2_results.pdf.
+# Run from figures/.
 
-source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))), "common.R"))
+source("../lib/common.R")
+suppressPackageStartupMessages({ library(ggthemes); library(patchwork) })
+source("../lib/exp2_data.R")
 
 # Percentile bootstrap of the mean over observations (same as tidyboot::tidyboot_mean with
-# 1000 resamples, written out here to keep memory use low on the full sample)
+# 1000 resamples, written out here to keep memory use low)
 row_boot <- function(x, n_boot = 1000) {
   x <- x[!is.na(x)]
   b <- vapply(seq_len(n_boot), function(i) mean(x[sample.int(length(x), replace = TRUE)]), numeric(1))
@@ -147,7 +149,4 @@ make_fig5 <- function(subset, sample_label) {
 }
 
 fig5 <- make_fig5("SR", "Experiment 2, SR games (primary analysis)")
-save_fig(fig5, "fig5_exp2_results_SR", width = 11.5, height = 4)
-
-figS <- make_fig5("", "Experiment 2, full sample (SR and RS games)")
-save_fig(figS, "figS_exp2_results_full_sample", width = 11.5, height = 4)
+save_fig(fig5, "fig5_exp2_results", width = 11.5, height = 4)

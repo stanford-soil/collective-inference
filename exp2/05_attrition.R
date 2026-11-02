@@ -8,14 +8,6 @@
 # Run from exp2/.
 source("../lib/common.R")
 options(width = 200)
-rd <- function(dirs, f) map_df(dirs, ~{
-  x <- read_csv(file.path(.x, f), show_col_types = FALSE, col_types = cols(.default = "c"))
-  names(x)[1] <- "id"; x %>% mutate(batch = basename(.x)) })
-cond_of <- function(tn) case_when(str_detect(tn, "interactive") ~ "interactive",
-                                   str_detect(tn, "unidirectional") ~ "unidirectional",
-                                   str_detect(tn, "slider") ~ "slider")
-
-############################ EXP 2 ############################
 dirs2 <- list.files(repo_path("data", "exp2", "raw"), full.names = TRUE)
 rd2 <- function(f) map_df(dirs2, ~read_csv(file.path(.x, f), show_col_types = FALSE, col_types = cols(.default = "c")) %>% mutate(batch = basename(.x)))
 pl2 <- rd2("player.csv"); gm2 <- rd2("game.csv"); ps2 <- rd2("playerStage.csv")

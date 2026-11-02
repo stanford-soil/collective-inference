@@ -1,38 +1,70 @@
-import pandas as pd, json, os
-R='../../data/exp1/raw'
-rows=[];P=[];G=[]
-for b in sorted(d for d in os.listdir(R) if d.startswith('1_prereg_')):
-    g=pd.read_csv(f'{R}/{b}/games.csv',encoding='utf-8-sig'); p=pd.read_csv(f'{R}/{b}/players.csv',encoding='utf-8-sig')
-    p['batch']=b; P.append(p[['id','gameID','name','recipient','batch']]); G.append(g[['id','groupID','treatmentName']].assign(batch=b))
-    for _,r in g.iterrows():
-        if pd.isna(r.get('messages')): continue
-        for k,m in enumerate(json.loads(r.messages)):
-            rows.append(dict(batch=b,gameID=r.id,groupID=r.groupID,k=k,text=m.get('text'),time=m.get('time'),round=m.get('round'),recipient=m.get('recipient'),sender=m['sender']['id'],sender_name=m['sender'].get('name')))
-raw=pd.DataFrame(rows);P=pd.concat(P);G=pd.concat(G)
-print('raw messages', raw.shape, 'games', raw.gameID.nunique())
-print('groupID->games max', G.groupby('groupID').id.nunique().max())
-ex=pd.read_csv(f'{R}/1_extracted_msgs_prereg/extracted_messages.csv')
-print('extracted', ex.shape, 'groups', ex.groupID.nunique())
-key=['groupID','sender.id','round','time','text']
-r2=raw.rename(columns={'sender':'sender.id','recipient':'raw_recipient'})
-m=ex.merge(r2[key+['raw_recipient']].drop_duplicates(key),on=key,how='left',indicator=True)
-print(m._merge.value_counts().to_dict())
-print('extracted recipient == raw message recipient', (m.recipient==m.raw_recipient).sum(), m._merge.eq('both').sum())
-# schedule
-P2=P.dropna(subset=['gameID','name'])
-idx={(r.gameID,r.id):int(r.name.split()[-1])-1 for r in P2.itertuples()}
-n={gid:len(s) for gid,s in P2.groupby('gameID')}
-g2grp=dict(zip(G.id,G.groupID)); grp2g={v:k for k,v in g2grp.items()}
-ex['gameID']=ex.groupID.map(grp2g)
-ex['si']=[idx.get((g,s)) for g,s in zip(ex.gameID,ex['sender.id'])]
-ex['ri']=[idx.get((g,s)) for g,s in zip(ex.gameID,ex.recipient)]
-ex['n']=ex.gameID.map(n)
-def sched(N,i,t):
-    o=[j for j in range(N) if j!=i]; return o[(i+t)%len(o)]
-ok=ex.dropna(subset=['si','ri','n','round'])
-ex['sched_ri']=[sched(int(N),int(i),int(t)) if pd.notna(N) and pd.notna(i) and pd.notna(t) else None for N,i,t in zip(ex.n,ex.si,ex['round'])]
-print('n players dist', ex.n.value_counts(dropna=False).to_dict())
-ex['agree']=ex.ri==ex.sched_ri
-print('extracted recipient == schedule', ex.agree.sum(), ex.sched_ri.notna().sum())
-print(ex.groupby('round').agree.agg(['mean','size']))
-ex.to_csv('exp1_extracted_sched.csv',index=False); raw.to_csv('exp1_msgs_raw.csv',index=False); P.to_csv('exp1_players_raw.csv',index=False); G.to_csv('exp1_games_raw.csv',index=False)
+"""Extracts the message logs and player lists from the raw Empirica exports.
+
+Experiment 1: every message stored in the games.csv columns `messages` and `chat`
+(column `src`), with sender, recorded recipient, round and time; players.csv and
+games.csv rows (player names give the index used by the recipient rule).
+Experiment 2: every chat message in game.csv; player.csv rows.
+
+Inputs: data/exp1/raw/1_prereg_*/, data/exp2/raw/<batch>/.
+Outputs (data/derived/, not committed): exp1_messages_raw.csv, exp1_players_raw.csv,
+exp1_games_raw.csv, exp2_chat_raw.csv, exp2_players_raw.csv.
+Run from partner_schedule/ (any folder works).
+"""
+import json
+import os
+import sys
+import pandas as pd
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
+import common
+
+OUT = common.repo_path('data', 'derived')
+os.makedirs(OUT, exist_ok=True)
+
+# ---- Experiment 1
+rows, P, G = [], [], []
+for b in sorted(d for d in os.listdir(common.EXP1_RAW) if d.startswith('1_prereg_')):
+    g = pd.read_csv(f'{common.EXP1_RAW}/{b}/games.csv', encoding='utf-8-sig')
+    p = pd.read_csv(f'{common.EXP1_RAW}/{b}/players.csv', encoding='utf-8-sig')
+    p['batch'] = b
+    P.append(p[['id', 'gameID', 'name', 'recipient', 'batch']])
+    G.append(g[['id', 'groupID', 'treatmentName']].assign(batch=b))
+    for _, r in g.iterrows():
+        for col in ['messages', 'chat']:
+            v = r.get(col)
+            if pd.isna(v):
+                continue
+            j = json.loads(v)
+            j = j if isinstance(j, list) else [j]       # `chat` holds a single message
+            for k, m in enumerate(j):
+                if isinstance(m, str):
+                    m = json.loads(m)
+                rows.append(dict(batch=b, gameID=r.id, groupID=r.groupID, treatmentName=r.treatmentName,
+                                 src=col, k=k, text=m.get('text'), time=m.get('time'), round=m.get('round'),
+                                 recipient=m.get('recipient'), sender=m['sender']['id'],
+                                 sender_name=m['sender'].get('name')))
+msgs1 = pd.DataFrame(rows)
+msgs1.to_csv(f'{OUT}/exp1_messages_raw.csv', index=False)
+pd.concat(P).to_csv(f'{OUT}/exp1_players_raw.csv', index=False)
+pd.concat(G).to_csv(f'{OUT}/exp1_games_raw.csv', index=False)
+print('Exp 1 messages by column:', msgs1.groupby('src').size().to_dict(), '| games:', msgs1.gameID.nunique())
+
+# ---- Experiment 2
+rows, P = [], []
+for b in sorted(d for d in os.listdir(common.EXP2_RAW) if not d.startswith('.')):
+    g = pd.read_csv(f'{common.EXP2_RAW}/{b}/game.csv')
+    p = pd.read_csv(f'{common.EXP2_RAW}/{b}/player.csv')
+    p['batch'] = b
+    P.append(p[['id', 'gameID', 'name', 'recipient', 'recipientLastChangedAt', 'batch']])
+    for _, r in g.iterrows():
+        if pd.isna(r.get('chat')):
+            continue
+        tr = json.loads(r.treatment) if isinstance(r.treatment, str) else {}
+        for k, m in enumerate(json.loads(r.chat)):
+            rows.append(dict(batch=b, gameID=r.id, condition=tr.get('condition'), k=k, text=m.get('text'),
+                             time=m.get('time'), round=m.get('round'), recipient=m.get('recipient'),
+                             sender=m['sender']['id'], sender_name=m['sender'].get('name')))
+chat2 = pd.DataFrame(rows)
+chat2.to_csv(f'{OUT}/exp2_chat_raw.csv', index=False)
+pd.concat(P).to_csv(f'{OUT}/exp2_players_raw.csv', index=False)
+print('Exp 2 chat messages:', len(chat2), chat2.condition.value_counts().to_dict(), '| games:', chat2.gameID.nunique())

@@ -1,12 +1,15 @@
-# Figure 2 (Experiment 1 results), regenerated with the revised condition labels.
-# Construction follows analysis/exp1/exp1_main_analysis.qmd (Analysis 2 panel A, Analysis 5 panel B).
-# Usage: Rscript revision/figures/fig2_exp1_results.R
+# Figure 2 (Experiment 1 results): (A) mean absolute error by round, (B) change in
+# estimate from the previous round, by condition, with the revised condition labels.
+# Construction follows the original Experiment 1 notebook (Analysis 2 panel A,
+# Analysis 5 panel B). Input: data/derived/exp1_clean_data.csv.
+# Output: figures/fig2_exp1_results.pdf. Run from figures/.
 
-source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE))), "common.R"))
+source("../lib/common.R")
+suppressPackageStartupMessages({ library(ggthemes); library(patchwork) })
 suppressPackageStartupMessages(library(tidyboot))
 set.seed(2026)
 
-d.guesses <- read_csv(file.path(repo_dir, "analysis/exp1/exp1_clean_data.csv"), show_col_types = FALSE) %>%
+d.guesses <- read_csv(EXP1_CLEAN, show_col_types = FALSE) %>%
   mutate(condition = factor(condition, levels = condition_breaks)) %>%
   arrange(playerID, idx)
 

@@ -1,9 +1,22 @@
-import pandas as pd, glob
+"""Agreement between the original codes of the Experiment 2 messages (coded_messages.csv,
+column `coding`) and the second coder's labels for each unique message text
+(second_coder_labels.csv, blind to the original codes): per-code prevalence, percent
+agreement and Cohen's kappa, exact agreement of the code sets, and kappa for any
+social code (sn or sb).
+Inputs: data/exp2/coded_messages.csv, unique_texts.csv, second_coder_labels.csv.
+Output: data/derived/exp2_codes_compared.pkl (messages with both code sets, for
+02_apply_rules.py; not committed) and printed agreement. Run from coding/."""
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
+import common
+DERIVED = common.repo_path('data', 'derived')
+import pandas as pd
 from sklearn.metrics import cohen_kappa_score
-d=pd.read_csv('../../data/exp2/coded_messages.csv')
+d=pd.read_csv(common.EXP2_CODED_MSGS)
 d['text_norm']=d.text.fillna('').str.strip()
 u=pd.read_csv('unique_texts.csv')
-o=pd.concat([pd.read_csv(f) for f in sorted(glob.glob('out_*.csv'))])
+o=pd.read_csv('second_coder_labels.csv')
 print('coded uids',o.uid.nunique(),'of',len(u))
 u=u.merge(o,on='uid',how='left')
 d=d.merge(u[['text_norm','uid','codes']],on='text_norm',how='left')
@@ -32,4 +45,4 @@ print('exact set agreement',d.exact.mean().round(3),' disagreements',(~d.exact).
 # relay (any s code)
 y=d.Y.map(lambda s:bool(s&{'sn','sb'})); k=d.C.map(lambda s:bool(s&{'sn','sb'}))
 print('any-social kappa',round(cohen_kappa_score(y,k),3),' prev Y',y.mean().round(3),'2nd',k.mean().round(3))
-d.to_pickle('merged.pkl')
+d.to_pickle(f'{DERIVED}/exp2_codes_compared.pkl')

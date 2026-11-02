@@ -2,10 +2,10 @@
 Refit of Exp 1 Belief (DeGroot) and Evidence (Count) models with selectable partner timing.
 
 Model definitions, optimizer, bounds, start grids, k and AIC are copied from
-models/fit.py; only the predictions are vectorized (numpy) for speed, and
+models/01_fit.py; only the predictions are vectorized (numpy) for speed, and
 prepare_transitions takes a `timing` argument.
 
-timing='original'  : exact fit.py logic. Transition t -> t+1 uses the round-t
+timing='original'  : logic of fit.py before the 2026 timing correction. Transition t -> t+1 uses the round-t
                      partner (who player received from in round t), that partner's
                      round-t belief, and cumulative evidence over partners of kept
                      transitions up to round t.
@@ -18,23 +18,35 @@ timing='corrected' : SLIDER identical to 'original'. INTERACTIVE: transition
                      received a message from in rounds 1..t+1 (incl. round 1,
                      whose chat preceded the round-1 guess).
 timing='timing_only': INTERACTIVE uses the round-(t+1) partner and their round-t
-                     belief, but keeps fit.py's cumulative bookkeeping (adds a
+                     belief, but keeps 01_fit.py's cumulative bookkeeping (adds a
                      partner only at kept transitions, so the round-1 partner is
                      never counted). Sensitivity check.
 timing='corrected_simbelief': as 'corrected' but partner_belief = partner's
                      round-(t+1) guess (not actually available to receiver;
                      sensitivity only).
 
-Usage: python refit.py <timing> <out_csv> [partner_source=msgs|sched]
+Variants written to timing_all_fits.csv and summarised in timing_delta_aic.csv:
+  original, corrected (slider, chat, unidirectional); timing_only and
+  corrected_simbelief (slider, chat); corrected_schedsource = corrected with the
+  partners taken from the reconstructed schedule (partner_schedule/exp1_partners.csv)
+  instead of the extracted messages (slider, chat).
+
+Usage (from models/): python3 02_timing_variants.py
+Inputs: data/derived/exp1_clean_data.csv (prep/), extracted messages (data/exp1/raw/),
+partner_schedule/exp1_partners.csv. Outputs: timing_all_fits.csv, timing_delta_aic.csv.
 """
+import os
 import sys
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
-CLEAN = '../../analysis/exp1/exp1_clean_data.csv'
-MSGS = '../../data/exp1/raw/1_extracted_msgs_prereg/extracted_messages.csv'
-SCHED = '../partner_schedule/exp1_partners.csv'
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
+import common
+
+CLEAN = common.EXP1_CLEAN
+MSGS = common.EXP1_EXTRACTED_MSGS
+SCHED = common.EXP1_PARTNERS
 
 
 def load(partner_source='msgs'):
@@ -179,17 +191,42 @@ def run(timing, partner_source='msgs', conds=(('slider', 'slider'), ('chat', 'in
     return pd.DataFrame(rows), trans
 
 
+VARIANTS = [  # (name, timing, partner source, conditions)
+    ('original', 'original', 'msgs', ('slider', 'chat', 'unidirectional')),
+    ('corrected', 'corrected', 'msgs', ('slider', 'chat', 'unidirectional')),
+    ('timing_only', 'timing_only', 'msgs', ('slider', 'chat')),
+    ('corrected_simbelief', 'corrected_simbelief', 'msgs', ('slider', 'chat')),
+    ('corrected_schedsource', 'corrected', 'sched', ('slider', 'chat')),
+]
+COND = {'slider': 'slider', 'chat': 'interactive', 'unidirectional': 'unidirectional'}
+
 if __name__ == '__main__':
-    timing = sys.argv[1]
-    out = sys.argv[2]
-    src = sys.argv[3] if len(sys.argv) > 3 else 'msgs'
-    conds = (('slider', 'slider'), ('chat', 'interactive'))
-    if timing != 'original' and len(sys.argv) > 4 and sys.argv[4] == 'uni':
-        conds = conds + (('unidirectional', 'unidirectional'),)
-    res, trans = run(timing, src, conds)
-    res.to_csv(out, index=False)
-    for k, T in trans.items():
-        T.to_csv(out.replace('.csv', f'_transitions_{k}.csv'), index=False)
+    fits = []
+    for name, timing, src, conds in VARIANTS:
+        res, _ = run(timing, src, tuple((c, COND[c]) for c in conds))
+        fits.append(res.assign(variant=name))
+    fits = pd.concat(fits, ignore_index=True)
+    # Row order of timing_all_fits.csv: slider and chat for every variant, then the
+    # unidirectional fits (corrected, original)
+    order = [(v, c) for v, _, _, conds in VARIANTS for c in conds if c != 'unidirectional'] + \
+            [('corrected', 'unidirectional'), ('original', 'unidirectional')]
+    fits['_o'] = [order.index((v, c)) for v, c in zip(fits.variant, fits.condition)]
+    fits = fits.sort_values('_o', kind='stable')
+    cols = ['variant', 'condition', 'model', 'anchor', 'n', 'k', 'mse', 'sigma', 'aic',
+            'alpha', 'delta', 'w_update', 'w_mle', 'w_mid']
+    fits[cols].to_csv('timing_all_fits.csv', index=False)
+
+    # Delta AIC (Evidence - Belief): negative favours the Evidence model
+    rows = []
+    for variant, cond in [(v, c) for v, _, _, conds in VARIANTS for c in conds]:
+        g = fits[(fits.variant == variant) & (fits.condition == cond)]
+        a = {(m, an): v for m, an, v in zip(g.model, g.anchor, g.aic)}
+        rows.append(dict(variant=variant, condition=cond,
+                         belief_base=a[('degroot', False)], evidence_base=a[('count', False)],
+                         dAIC_base=a[('count', False)] - a[('degroot', False)],
+                         belief_full=a[('degroot', True)], evidence_full=a[('count', True)],
+                         dAIC_full=a[('count', True)] - a[('degroot', True)]))
+    d = pd.DataFrame(rows).round(1)
+    d.to_csv('timing_delta_aic.csv', index=False)
     pd.set_option('display.width', 200)
-    print(res[['condition', 'model', 'anchor', 'n', 'aic', 'k', 'sigma', 'alpha', 'delta',
-               'w_update', 'w_mle', 'w_mid']].round(4).to_string(index=False))
+    print(d.to_string(index=False))

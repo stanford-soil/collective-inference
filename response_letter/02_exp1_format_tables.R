@@ -1,3 +1,7 @@
+# Response letter: formats the old-vs-new Experiment 1 tables written by
+# 01_exp1_old_vs_new.R as Markdown (coefficients, exclusion thresholds,
+# complete networks). Input: the three CSV files in this folder. Output: printed.
+# Run from response_letter/ after 01_exp1_old_vs_new.R.
 suppressPackageStartupMessages({library(dplyr);library(readr);library(tidyr);library(stringr)})
 co <- read_csv("exp1_coefs_old_vs_new.csv", show_col_types=FALSE) %>%
   mutate(base = str_remove(model, " \\| .*$"), version = ifelse(str_detect(model, "\\+network"), "new", "old"))

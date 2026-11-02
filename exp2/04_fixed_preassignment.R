@@ -3,7 +3,9 @@
 # from all four assigned players' samples) instead of the statistics
 # recomputed from active participants.
 #
-# Run from this folder:  Rscript 02_fixed_preassignment.R
+# Input: data/derived/exp2_clean_data.csv (prep/), stimulus configuration files.
+# Output: 04_fixed_preassignment_output.txt, 04_fixed_preassignment_coefs.csv.
+# Run from exp2/.
 #
 # Source of the pre-assigned statistics: the generated game configurations in
 # stimuli/exp2_combined_generation/generated_files_used/games_dontoverwrite.json
@@ -13,18 +15,18 @@
 # whose file entry lists five players with one duplicated, and which was played
 # with four). For these, the clean-data game-level columns nCrittersGame,
 # entropy and representation are used; these are computed in
-# analysis/exp2/1_data_cleaning.qmd from the samples of all four players
+# prep/03_exp2_clean.R from the samples of all four players
 # assigned to the game, whether or not they responded.
 
+source("../lib/common.R")
+source("../lib/exp2_data.R")
 suppressPackageStartupMessages({ library(jsonlite) })
-zz <- file("02_fixed_preassignment_output.txt", open = "wt"); sink(zz, split = TRUE)
+zz <- file("04_fixed_preassignment_output.txt", open = "wt"); sink(zz, split = TRUE)
 
-# Data preparation exactly as in revision/exp2_sr_primary/prep.R (SR games)
-Sys.setenv(SUBSET = "SR")
-here_dir <- getwd()
-setwd("../exp2_sr_primary"); invisible(capture.output(suppressMessages(source("prep.R")))); setwd(here_dir)
+# Analysis data for the SR networks (lib/exp2_data.R)
+d.all <- load_exp2("SR")$d.all
 
-gen_dir <- "../../stimuli/exp2_combined_generation/generated_files_used"
+gen_dir <- repo_path("stimuli", "exp2_combined_generation", "generated_files_used")
 cfg <- bind_rows(fromJSON(file.path(gen_dir, "games_dontoverwrite.json")),
                  fromJSON(file.path(gen_dir, "games_2_dontoverwrite.json"))) %>%
   transmute(designatedGame = as.numeric(gameID), cfg_critters = as.numeric(totalCritters),
@@ -56,11 +58,11 @@ cat(sprintf("  critters: %d; entropy: %d; representation: %d\n",
             sum(g2$nCrittersGame_actual != g2$critters_pre),
             sum(abs(g2$entropy_actual - g2$entropy_pre) > 1e-3),
             sum(abs(g2$representation_actual - g2$rep_pre) > 1e-3)))
-cat("  (prep.R takes representation_actual from the existing clean-data column 'representation',\n   so representativeness is the pre-assigned value in both versions.)\n")
+cat("  (lib/exp2_data.R takes representation_actual from the existing clean-data column 'representation',\n   so representativeness is the pre-assigned value in both versions.)\n")
 cat(sprintf("  Correlation active vs pre-assigned: critters r = %.4f, entropy r = %.4f\n",
             cor(g2$nCrittersGame_actual, g2$critters_pre), cor(g2$entropy_actual, g2$entropy_pre)))
 
-# Build pre-assigned predictors with the same scaling and centering as prep.R.
+# Build pre-assigned predictors with the same scaling and centering as lib/exp2_data.R.
 # Centering uses the same rows as the active version (rows of games with at
 # least one active participant; the one game with none contributes no data).
 d.pre <- d.all %>%
@@ -91,7 +93,7 @@ tab <- function(m, lab) {
          df = cf[, "df"], t = cf[, "t value"], p = cf[, "Pr(>|t|)"])
 }
 res <- bind_rows(tab(m.act, "active"), tab(m.pre, "preassigned"))
-write_csv(res, "02_fixed_preassignment_coefs.csv")
+write_csv(res, "04_fixed_preassignment_coefs.csv")
 
 cat(sprintf("\nObservations used: active = %d, pre-assigned = %d; games = %d; players = %d\n",
             nobs(m.act), nobs(m.pre), n_distinct(model.frame(m.pre)$gameID),

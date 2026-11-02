@@ -35,14 +35,23 @@ Output
 
 Usage
 -----
-  python fit.py
+  python3 01_fit.py   (from models/)
+  Inputs: data/derived/exp1_clean_data.csv (prep/), partner assignments from
+  data/exp1/raw/1_extracted_msgs_prereg/extracted_messages.csv.
+  Output: models/fit_results.csv. The message-condition timing was corrected in the
+  2026 revision (see prepare_transitions); models/02_timing_variants.py compares timings.
 """
 
+import os
+import sys
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from dataclasses import dataclass
 from typing import Dict, Tuple
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
+import common
 
 
 # =============================================================================
@@ -51,12 +60,12 @@ from typing import Dict, Tuple
 
 def load_exp1_data():
     """Load Experiment 1 belief data and partner assignments."""
-    beliefs = pd.read_csv('../analysis/exp1/exp1_clean_data.csv')
+    beliefs = pd.read_csv(common.EXP1_CLEAN)
     beliefs['belief'] = beliefs['guess'] / 100.0
     beliefs['nCritters'] = beliefs['nRabbits'] + beliefs['nSquirrels']
 
     # Load partner assignments from messages
-    msgs = pd.read_csv('../data/exp1/raw/1_extracted_msgs_prereg/extracted_messages.csv')
+    msgs = pd.read_csv(common.EXP1_EXTRACTED_MSGS)
     msgs = msgs.dropna(subset=['round', 'recipient', 'sender.id', 'groupID'])
 
     partner_lookup = {}
@@ -536,7 +545,7 @@ Model & Slider & Chat & $k$ \\\\
         rows.append(row)
 
     results = pd.DataFrame(rows)
-    results.to_csv('fit_results.csv', index=False)
+    results.to_csv(common.FIT_RESULTS, index=False)
     print("\nResults saved to fit_results.csv")
 
     # Print best params for manuscript

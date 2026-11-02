@@ -1,7 +1,11 @@
 # Reviewer 2, point 3: do participants weight a sender's information more on
 # the first encounter with that sender than on later encounters?
 #
-# Run from this folder:  Rscript 01_first_encounter.R
+# Inputs: data/derived/exp1_clean_data.csv, exp2_clean_data.csv (prep/),
+# data/exp1/PreregMergedGuesses.csv, exp1_partners.csv, exp2_partners.csv.
+# Outputs: 09_first_encounter_output.txt, 09_first_encounter_coefs.csv, and the
+# transition tables data/derived/exp1_first_encounter_transitions.csv,
+# exp2_first_encounter_transitions.csv (not committed). Run from partner_schedule/.
 #
 # For every focal player and every round in which they received information,
 # we compute
@@ -11,7 +15,7 @@
 # (0 = ignored, 1 = adopted). We let this slope differ between first and later
 # encounters with the same sender, and also let it change linearly with round.
 #
-# Timing (see revision/README.md and models/fit.py):
+# Timing (see README.md and models/01_fit.py):
 #   slider:   transition t -> t+1, sender = who the player received from in
 #             round t, sender information = sender's round-t estimate.
 #   messages: transition t-1 -> t, sender = who the player received from in
@@ -21,34 +25,30 @@
 # first = 1 if the focal player has not received from this sender in any
 # earlier round (from the per-round partner tables).
 #
-# Exp 1: focal players are those in analysis/exp1/exp1_clean_data.csv (>= 80%
+# Exp 1: focal players are those in the clean data (>= 80%
 # response); sender estimates and samples come from all responders in
 # data/exp1/PreregMergedGuesses.csv. Exp 2: SR games only.
 
-suppressPackageStartupMessages({
-  library(dplyr); library(tidyr); library(readr); library(stringr)
-  library(lme4); library(lmerTest)
-})
-REPO <- "../.."
-sink_file <- "01_first_encounter_output.txt"
+source("../lib/common.R")
+sink_file <- "09_first_encounter_output.txt"
 zz <- file(sink_file, open = "wt"); sink(zz, split = TRUE)
 
 # ---------------------------------------------------------------- Exp 1 data
-e.clean <- read_csv(file.path(REPO, "analysis/exp1/exp1_clean_data.csv"), show_col_types = FALSE)
-e.raw   <- read_csv(file.path(REPO, "data/exp1/PreregMergedGuesses.csv"), show_col_types = FALSE) %>%
+e.clean <- read_csv(EXP1_CLEAN, show_col_types = FALSE)
+e.raw   <- read_csv(EXP1_MERGED, show_col_types = FALSE) %>%
   filter(!is.na(treatmentName)) %>%
   distinct(gameID, playerID, idx, .keep_all = TRUE)
-p1 <- read_csv(file.path(REPO, "revision/partner_schedule/exp1_partners.csv"), show_col_types = FALSE)
+p1 <- read_csv(EXP1_PARTNERS, show_col_types = FALSE)
 
 focal1 <- e.clean %>% select(gameID, playerID, condition, round = idx, guess)
 allg1  <- e.raw %>% select(gameID, playerID, round = idx, guess)
 samp1  <- e.raw %>% distinct(gameID, playerID, mle = mleEstimateIndiv)
 
 # ---------------------------------------------------------------- Exp 2 data
-x <- read_csv(file.path(REPO, "analysis/exp2/exp2_clean_data.csv"), show_col_types = FALSE) %>%
-  filter(str_starts(treatmentName.x, "SR_")) %>%
+x <- read_csv(EXP2_CLEAN, show_col_types = FALSE) %>%
+  filter(gameID %in% read_csv(EXP2_SR_GAMES, show_col_types = FALSE)$gameID) %>%
   mutate(condition = ifelse(str_detect(treatmentName.x, "slider"), "slider", "interactive"))
-p2 <- read_csv(file.path(REPO, "revision/partner_schedule/exp2_partners_playerround.csv"), show_col_types = FALSE) %>%
+p2 <- read_csv(EXP2_PARTNERS, show_col_types = FALSE) %>%
   filter(gameID %in% x$gameID)
 
 # SR games: the slider measures the rabbit share, so no conversion is needed.
@@ -93,7 +93,8 @@ build <- function(focal, allg, samp, partners) {
 
 T1 <- build(focal1, allg1, samp1, p1)
 T2 <- build(focal2, allg2, samp2, p2)
-write_csv(T1, "01_exp1_transitions.csv"); write_csv(T2, "01_exp2_transitions.csv")
+write_csv(T1, repo_path("data", "derived", "exp1_first_encounter_transitions.csv"))
+write_csv(T2, repo_path("data", "derived", "exp2_first_encounter_transitions.csv"))
 
 # ------------------------------------------------------------------- models
 # update ~ dist * first + dist * round_c, random intercepts for player and
@@ -183,7 +184,7 @@ cat("  dist:round_c = change in weight per round\n")
 r1 <- run_set(T1, "Exp1", c("slider", "unidirectional", "interactive"))
 r2 <- run_set(T2, "Exp2_SR", c("slider", "interactive"))
 res <- bind_rows(r1, r2)
-write_csv(res, "01_first_encounter_coefs.csv")
+write_csv(res, "09_first_encounter_coefs.csv")
 
 # Pooled Exp 1 test: does the first-encounter effect differ by condition?
 # (primary coding: estimate proxy, first = first time received from)

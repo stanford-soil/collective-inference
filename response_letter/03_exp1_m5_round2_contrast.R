@@ -1,5 +1,9 @@
-# Check: M5 condition coefficients are at idx_shifted = 0; first observed change is idx_shifted = 2.
-source("00_prep_exp1.R"); suppressPackageStartupMessages(library(emmeans))
+# Response letter: the M5 (stabilization) condition coefficients are evaluated at
+# idx_shifted = 0, but the first observed change is at idx_shifted = 2. Prints the
+# condition contrasts vs slider at idx_shifted = 2, old and new (+network) model.
+# Input: data/derived/exp1_clean_data.csv. Output: printed. Run from response_letter/.
+source("../lib/common.R"); source("../lib/exp1_data.R"); suppressPackageStartupMessages(library(emmeans))
+d.stabilization <- load_exp1()$d.stabilization
 emm_options(lmer.df = "satterthwaite")
 cat("min idx_shifted in stabilization data:", min(d.stabilization$idx_shifted), "\n")
 for (v in c("old","new")) {
