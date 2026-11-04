@@ -1,0 +1,13 @@
+variant,condition,belief_base,evidence_base,dAIC_base,belief_full,evidence_full,dAIC_full
+original,slider,-2713.3,-2510.9,202.4,-2800.7,-2541.0,259.8
+original,chat,-2574.0,-2900.5,-326.5,-2794.8,-2917.1,-122.2
+original,unidirectional,-1337.7,-1575.8,-238.2,-1518.7,-1605.3,-86.6
+corrected,slider,-2713.3,-2510.9,202.4,-2800.7,-2541.0,259.8
+corrected,chat,-2629.2,-2851.8,-222.5,-2747.0,-2877.0,-130.0
+corrected,unidirectional,-1595.3,-1755.6,-160.3,-1672.5,-1766.0,-93.5
+timing_only,slider,-2713.3,-2510.9,202.4,-2800.7,-2541.0,259.8
+timing_only,chat,-2629.2,-2884.0,-254.7,-2747.0,-2913.5,-166.5
+corrected_simbelief,slider,-2713.3,-2510.9,202.4,-2800.7,-2541.0,259.8
+corrected_simbelief,chat,-2605.9,-2861.7,-255.8,-2748.2,-2888.1,-139.9
+corrected_schedsource,slider,-2713.3,-2510.9,202.4,-2800.7,-2541.0,259.8
+corrected_schedsource,chat,-2718.2,-2935.3,-217.1,-2836.2,-2961.4,-125.1

@@ -1,7 +1,7 @@
 """
 Experiment 2 Model Predictions
 
-Uses parameters fitted to Experiment 1 (from fit.py) to generate predictions
+Uses parameters fitted to Experiment 1 (from models/01_fit.py) to generate predictions
 for Experiment 2. Simulates full 8-round belief trajectories.
 
 Models (base models without response weights)
@@ -19,23 +19,36 @@ For each Exp2 game:
 
 Output
 ------
-- figures/fig7.pdf: Predicted error across difficulty axes
-- Console: Means and effects by representativeness
+- figures/fig7_model_predictions.pdf: predicted final error for unrepresentative and
+  representative networks (SR networks, as in the analyses)
+- Console: means and effects by representativeness
 
 Usage
 -----
-  python predict.py
+  python3 fig7_model_predictions.py   (from figures/; needs a UTF-8 locale)
+  Inputs: models/fit_results.csv (models/01_fit.py, corrected timing),
+  data/derived/exp2_clean_data.csv (prep/).
+
+This replaces the original models/predict.py. Changes from that script: paths come from
+lib/common.py, the games are the SR networks (SUBSET=ALL for all networks), the
+figure is written to figures/, and the legend sits below the axes with the revised
+condition names and palette. The simulations, parameters and random seed are unchanged.
 """
+
+import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
+import common
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # =============================================================================
-# LOAD FITTED PARAMETERS FROM fit.py (base models, no response weights)
+# LOAD FITTED PARAMETERS FROM models/01_fit.py (base models, no response weights)
 # =============================================================================
 
-fit_results = pd.read_csv('fit_results.csv')
+fit_results = pd.read_csv(common.FIT_RESULTS)
 
 # Base Belief model: slider, degroot, anchor=False (1 param: α)
 belief_fit = fit_results[(fit_results['condition'] == 'slider') &
@@ -76,21 +89,22 @@ plt.rcParams.update({
     'figure.dpi': 150,
 })
 
-EVIDENCE_COLOR = '#2E8B57'    # Sea green (chat)
-BELIEF_COLOR = '#DAA520'      # Goldenrod (slider)
+EVIDENCE_COLOR = common.CONDITION_COLORS['interactive']
+BELIEF_COLOR = common.CONDITION_COLORS['slider']
 
 
 # =============================================================================
 # LOAD AND PREPARE DATA
 # =============================================================================
 
-exp2 = pd.read_csv('../analysis/exp2/exp2_clean_data.csv')
+exp2 = pd.read_csv(common.EXP2_CLEAN)
 
 # Derive condition and direction from treatmentName
 treat_col = 'treatmentName.x' if 'treatmentName.x' in exp2.columns else 'treatmentName'
 exp2['condition'] = exp2[treat_col].apply(lambda x: 'interactive' if 'interactive' in str(x) else 'slider')
 exp2['direction'] = exp2[treat_col].apply(lambda x: 'RS' if str(x).startswith('RS_') else 'SR')
 
+exp2 = common.filter_exp2(exp2)   # SR networks by default (lib/common.py)
 print(f"Loaded Exp 2: {exp2['gameID'].nunique()} games")
 
 # Get game-level data
@@ -326,10 +340,10 @@ evidence_errs = [[evidence_means[i] - evidence_cis[i][0] for i in range(2)],
 # Connected lines with error bars (matching Fig 5B style)
 ax.errorbar(x, evidence_means, yerr=evidence_errs,
             color=EVIDENCE_COLOR, marker='o', markersize=8, linewidth=2, capsize=3,
-            label='Evidence (chat)')
+            label='Evidence model: ' + common.CONDITION_LABELS['interactive'])
 ax.errorbar(x, belief_means, yerr=belief_errs,
             color=BELIEF_COLOR, marker='o', markersize=8, linewidth=2, capsize=3,
-            label='Belief (slider)')
+            label='Belief model: ' + common.CONDITION_LABELS['slider'])
 
 ax.set_xticks(x)
 ax.set_xticklabels(labels, rotation=30, ha='right')
@@ -337,9 +351,8 @@ ax.set_ylabel('Predicted Error')
 ax.set_title('Representativeness')
 ax.set_xlim(-0.4, 1.4)
 ax.set_ylim(0, None)
-ax.legend(loc='upper right', frameon=False)
+ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.38), frameon=False)  # below axes (revision)
 
 plt.tight_layout()
-plt.savefig('../figures/fig7.pdf', bbox_inches='tight')
-plt.savefig('../figures/fig7.png', bbox_inches='tight', dpi=300)
-print("Saved to figures/fig7.pdf")
+plt.savefig(os.path.join(common.FIGURES, 'fig7_model_predictions.pdf'), bbox_inches='tight')
+print("Saved fig7_model_predictions.pdf")

@@ -1,0 +1,13 @@
+model,nobs,n_player,n_game,singular,warnings,var_game
+M1 convergence | old,8384,733,NA,FALSE,,NA
+M1 convergence | +network,8384,733,219,FALSE,,9.36452095507787
+M2 error x condition | old,8384,733,NA,FALSE,,NA
+M2 error x condition | +network,8384,733,219,FALSE,,7.66284043316533
+M3 condition@final | old,8384,733,NA,FALSE,,NA
+M3 condition@final | +network,8384,733,219,FALSE,,7.635581664471768
+M4 adaptive weighting | old,7537,726,NA,FALSE,,NA
+M4 adaptive weighting | +network,7537,726,212,FALSE,,6.712741440373022
+M4b adaptive x condition (RECONSTRUCTED) | old,7537,726,NA,FALSE,,NA
+M4b adaptive x condition (RECONSTRUCTED) | +network,7537,726,212,FALSE,,5.5577196155287485
+M5 belief revision | old,7502,733,NA,FALSE,,NA
+M5 belief revision | +network,7502,733,219,FALSE,,6.697687119145507
