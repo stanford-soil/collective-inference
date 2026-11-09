@@ -2,14 +2,14 @@
 # (<= 5, 6-8, >= 9 critters) and previous-round social discrepancy (median split),
 # with bootstrapped 95% CIs. Prints the cell means and the high-minus-low discrepancy
 # differences for small and large samples.
-# Input: data/derived/exp1_clean_data.csv. Output: figures/fig3_adaptive_weighting.pdf.
-# Run from figures/. Construction from the original Experiment 1 notebook (Analysis 4).
+# Reads   data/derived/exp1_clean_data.csv
+# Writes  figures/fig3_adaptive_weighting.pdf
 source("../lib/common.R")
 source("../lib/exp1_data.R")
 suppressPackageStartupMessages({ library(tidyboot); library(ggthemes) })
 set.seed(2026)
 
-d.revisions <- load_exp1()$d.revisions
+d.revisions <- load_exp1()$revisions
 
 d.plot <- d.revisions %>%
   mutate(

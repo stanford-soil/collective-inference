@@ -1,120 +1,92 @@
-# Experiment 2 analysis data, built from the clean data written by
-# prep/03_exp2_clean.R. Sourced after lib/common.R.
-#   load_exp2(subset) -> list(d.all, d.slider_baseline)
-# subset: "SR" (default; the networks analysed in the paper, listed in
-# lib/exp2_sr_games.csv), "RS" (the excluded networks) or "ALL". The default can be
-# overridden with the environment variable SUBSET. This is the only place where the
-# SR restriction is applied for the R analyses.
-# The derived variables follow the original Experiment 2 notebook
-# (analysis/exp2/exp2_main_analysis.qmd, sections Load Data to Effect Coding).
+# Experiment 2 analysis data, built from the clean data written by prep/02_exp2_clean.R.
+# Source after lib/common.R.
+#
+#   exp2 <- load_exp2()          the analysed networks (slider version "SR", both conditions)
+#   exp2$data                    one row per participant and round with social information
+#   exp2$slider_baseline         the slider condition's first estimate (before any social information)
+#
+# load_exp2("RS") returns the excluded networks and load_exp2("ALL") every network.
+# Networks with the "RS" slider version are excluded from the paper because their
+# slider messages were inverted (see README, correction 2).
 
-exp2_subset <- function(subset = NULL) {
-  if (is.null(subset)) subset <- Sys.getenv("SUBSET", "SR")
-  if (subset == "") subset <- "SR"
-  stopifnot(subset %in% c("SR", "RS", "ALL"))
-  subset
-}
+min_max <- function(x) (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+center  <- function(x) x - mean(x, na.rm = TRUE)
 
-load_exp2 <- function(subset = NULL) {
-  subset <- exp2_subset(subset)
-  d.all <- read_csv(EXP2_CLEAN, show_col_types = FALSE)
+load_exp2 <- function(networks = "SR") {
+  stopifnot(networks %in% c("SR", "RS", "ALL"))
   sr_games <- read_csv(EXP2_SR_GAMES, show_col_types = FALSE)$gameID
-  if (subset == "SR") d.all <- d.all %>% filter(gameID %in% sr_games)
-  if (subset == "RS") d.all <- d.all %>% filter(!(gameID %in% sr_games))
 
-  # Condition and slider direction from the treatment name
-  d.all <- d.all %>%
-    mutate(
-      condition = ifelse(str_detect(treatmentName.x, "interactive"), "interactive", "slider"),
-      direction = ifelse(str_detect(treatmentName.x, "^RS_"), "RS", "SR")
-    )
+  d <- read_csv(EXP2_CLEAN, show_col_types = FALSE)
+  if (networks == "SR") d <- d %>% filter(gameID %in% sr_games)
+  if (networks == "RS") d <- d %>% filter(!(gameID %in% sr_games))
 
-  # Slider round 1 is the estimate made before any social information: shift the
-  # slider rounds so that round 1 is the first round with social information
-  d.all <- d.all %>% mutate(idx_shifted = if_else(condition == "slider", idx - 1, idx))
+  # Condition and slider version from the treatment name (for example "SR_interactive").
+  # In the slider condition the round-1 estimate is made before any social
+  # information, so slider rounds are shifted down by one.
+  d <- d %>% mutate(
+    condition = ifelse(str_detect(treatmentName.x, "interactive"), "interactive", "slider"),
+    direction = ifelse(str_detect(treatmentName.x, "^RS_"), "RS", "SR"),
+    idx_shifted = if_else(condition == "slider", idx - 1, idx))
 
-  # Game-level statistics recomputed over active players (at least one estimate)
-  active_players <- d.all %>%
+  # Network statistics over active participants (those with at least one estimate):
+  # total sample size, proportion of rabbits, and entropy of the split of the
+  # sample across participants.
+  active <- d %>%
     filter(!is.na(guess)) %>%
     distinct(gameID, playerID, nCritters, nRabbits, nSquirrels)
-
-  game_metrics_actual <- active_players %>%
+  network_stats <- active %>%
     group_by(gameID) %>%
-    summarise(
-      n_active_players = n(),
-      nCrittersGame_actual = sum(nCritters),
-      nRabbitsGame_actual = sum(nRabbits),
-      mleGame_actual = nRabbitsGame_actual / nCrittersGame_actual,
-      .groups = "drop"
-    )
+    mutate(share = nCritters / sum(nCritters)) %>%
+    summarise(n_active_players = n(),
+              nCrittersGame_actual = sum(nCritters),
+              nRabbitsGame_actual = sum(nRabbits),
+              mleGame_actual = nRabbitsGame_actual / nCrittersGame_actual,
+              entropy_actual = -sum(share * log(share + 1e-10)),
+              .groups = "drop")
+  # Representativeness is the pre-assigned value in the clean data: the mean distance
+  # between each assigned participant's sample proportion and the network's.
+  # (One network has no active participant; all its statistics are missing.)
+  network_stats <- network_stats %>%
+    left_join(d %>% distinct(gameID, representation_actual = representation), by = "gameID")
+  d <- d %>% left_join(network_stats, by = "gameID")
 
-  entropy_actual <- active_players %>%
-    group_by(gameID) %>%
-    mutate(total_critters = sum(nCritters), p_i = nCritters / total_critters) %>%
-    summarise(entropy_actual = -sum(p_i * log(p_i + 1e-10)), .groups = "drop")
+  # Error: distance of the estimate (0-100) from the network's proportion of rabbits.
+  # RS estimates are proportions of squirrels, so the target is inverted for them.
+  d <- d %>% mutate(
+    mleGame_aligned = ifelse(direction == "RS", 1 - mleGame_actual, mleGame_actual),
+    error = abs(guess - mleGame_aligned * 100))
 
-  # Representativeness: the existing game-level column (mean |individual MLE -
-  # network MLE| over the four assigned players)
-  game_metrics_actual <- game_metrics_actual %>%
-    left_join(entropy_actual, by = "gameID") %>%
-    left_join(
-      d.all %>% distinct(gameID, representation) %>% rename(representation_actual = representation),
-      by = "gameID"
-    )
+  slider_baseline <- d %>% filter(condition == "slider", idx_shifted == 0)
+  d <- d %>% filter(idx_shifted >= 1)
 
-  d.all <- d.all %>% left_join(game_metrics_actual, by = "gameID")
+  # Median splits of each difficulty dimension (used for cell means and Figure 5).
+  d <- d %>% mutate(
+    critters_bin = factor(ifelse(nCrittersGame_actual >= median(nCrittersGame_actual, na.rm = TRUE), "Many", "Few"),
+                          levels = c("Few", "Many")),
+    entropy_bin = factor(ifelse(entropy_actual >= median(entropy_actual, na.rm = TRUE), "High", "Low"),
+                         levels = c("Low", "High")),
+    rep_bin = factor(ifelse(representation_actual <= median(representation_actual, na.rm = TRUE),
+                            "Representative", "Unrepresentative"),
+                     levels = c("Representative", "Unrepresentative")))
 
-  # In RS games the majority was squirrels but participants report % rabbits,
-  # so the network MLE is inverted for RS games
-  d.all <- d.all %>%
-    mutate(mleGame_aligned = ifelse(direction == "RS", 1 - mleGame_actual, mleGame_actual))
+  # Model predictors. Condition is effect coded (-0.5 chat, +0.5 slider). Each
+  # difficulty dimension is scaled to 0-1 with higher = harder, then mean centered.
+  d <- d %>% mutate(
+    condition_c = ifelse(condition == "slider", 0.5, -0.5),
+    idx_c = center(idx_shifted),
+    critters_scaled = 1 - min_max(nCrittersGame_actual),   # fewer critters = harder
+    entropy_scaled  = 1 - min_max(entropy_actual),         # more uneven split = harder
+    rep_scaled      = min_max(representation_actual),      # less representative samples = harder
+    critters_c = center(critters_scaled),
+    entropy_c  = center(entropy_scaled),
+    rep_c      = center(rep_scaled))
 
-  # Absolute error from the aligned network MLE
-  d.all <- d.all %>% mutate(error = abs(guess - mleGame_aligned * 100))
-
-  # Slider pre-social baseline (idx_shifted = 0), kept for plotting
-  d.slider_baseline <- d.all %>% filter(condition == "slider", idx_shifted == 0)
-
-  # Analyses use rounds with social information only
-  d.all <- d.all %>% filter(idx_shifted >= 1)
-
-  # Median splits on each difficulty dimension (active-player statistics)
-  d.all <- d.all %>%
-    mutate(
-      critters_easy = nCrittersGame_actual >= median(nCrittersGame_actual, na.rm = TRUE),
-      entropy_easy = entropy_actual >= median(entropy_actual, na.rm = TRUE),
-      rep_easy = representation_actual <= median(representation_actual, na.rm = TRUE),  # lower = easier
-      difficulty_profile = paste0(
-        ifelse(critters_easy, "E", "H"),
-        ifelse(entropy_easy, "E", "H"),
-        ifelse(rep_easy, "E", "H")
-      ),
-      n_hard = (!critters_easy) + (!entropy_easy) + (!rep_easy),
-      critters_bin = factor(ifelse(critters_easy, "Many", "Few"), levels = c("Few", "Many")),
-      entropy_bin = factor(ifelse(entropy_easy, "High", "Low"), levels = c("Low", "High")),
-      rep_bin = factor(ifelse(rep_easy, "Representative", "Unrepresentative"),
-                       levels = c("Representative", "Unrepresentative"))
-    )
-
-  d.slider_baseline <- d.slider_baseline %>%
-    left_join(d.all %>% distinct(gameID, n_hard, critters_bin, entropy_bin, rep_bin), by = "gameID")
-
-  # Effect coding: condition -0.5 = real-time messaging (interactive), +0.5 = slider.
-  # Difficulty dimensions scaled to 0-1 (higher = harder) and mean-centered.
-  d.all <- d.all %>%
-    mutate(
-      condition_c = ifelse(condition == "slider", 0.5, -0.5),
-      idx_c = idx_shifted - mean(idx_shifted, na.rm = TRUE),
-      critters_scaled = 1 - (nCrittersGame_actual - min(nCrittersGame_actual, na.rm = TRUE)) /
-                            (max(nCrittersGame_actual, na.rm = TRUE) - min(nCrittersGame_actual, na.rm = TRUE)),
-      entropy_scaled = 1 - (entropy_actual - min(entropy_actual, na.rm = TRUE)) /
-                           (max(entropy_actual, na.rm = TRUE) - min(entropy_actual, na.rm = TRUE)),
-      rep_scaled = (representation_actual - min(representation_actual, na.rm = TRUE)) /
-                   (max(representation_actual, na.rm = TRUE) - min(representation_actual, na.rm = TRUE)),
-      critters_c = critters_scaled - mean(critters_scaled, na.rm = TRUE),
-      entropy_c = entropy_scaled - mean(entropy_scaled, na.rm = TRUE),
-      rep_c = rep_scaled - mean(rep_scaled, na.rm = TRUE)
-    )
-
-  list(d.all = d.all, d.slider_baseline = d.slider_baseline, subset = subset)
+  list(data = d, slider_baseline = slider_baseline)
 }
+
+# The difficulty model of the main text: condition by each difficulty dimension,
+# controlling for round and the pairwise interactions between dimensions.
+difficulty_model <- error ~ idx_c +
+  condition_c * critters_c + condition_c * entropy_c + condition_c * rep_c +
+  critters_c * entropy_c + critters_c * rep_c + entropy_c * rep_c +
+  (1 | gameID/playerID)

@@ -1,0 +1,72 @@
+==== Recruitment funnel ====
+Participants assigned to networks: 973 
+  never entered an estimate: 83 
+  in a network without a recorded condition: 4 
+  entered at least one estimate, condition recorded: 886 
+  excluded, fewer than 80% of rounds answered: 153 
+Analysed: 733 participants in 219 networks
+
+==== Attrition by condition (network counts by number of retained participants) ====
+       condition networks_started participants_assigned entered_an_estimate retained networks_analysed networks_with_0 with_1 with_2 with_3 with_4 with_5_or_more share_analysed_with_4_or_more
+1         slider               71                   294                 263      221                65               6      3      6     19     36              1                     0.5692308
+2 unidirectional               76                   303                 290      237                69               7      0      8     23     38              0                     0.5507246
+3    interactive               89                   372                 333      275                85               4      4     10     33     38              0                     0.4470588
+4          Total              236                   969                 886      733               219              17      7     24     75    112              1                     0.5159817
+
+==== Analysed networks that retained at least four participants, by condition ====
+
+	Pearson's Chi-squared test
+
+data:  table(analysed$condition, analysed$complete)
+X-squared = 2.6882, df = 2, p-value = 0.2608
+
+
+	Fisher's Exact Test for Count Data
+
+data:  table(analysed$condition, analysed$complete)
+p-value = 0.2717
+alternative hypothesis: two.sided
+
+
+==== Number of retained participants per analysed network, by condition ====
+
+	Kruskal-Wallis rank sum test
+
+data:  n_retained by condition
+Kruskal-Wallis chi-squared = 2.7465, df = 2, p-value = 0.2533
+
+
+==== Networks lost entirely (no participant retained), by condition ====
+
+	Fisher's Exact Test for Count Data
+
+data:  table(networks$condition, networks$n_retained == 0)
+p-value = 0.4629
+alternative hypothesis: two.sided
+
+
+==== Assigned participants who were retained, by condition ====
+                
+                 FALSE TRUE
+  slider            73  221
+  unidirectional    66  237
+  interactive       97  275
+
+	Pearson's Chi-squared test
+
+data:  table(assigned$condition, assigned$retained)
+X-squared = 1.7222, df = 2, p-value = 0.4227
+
+
+==== Assigned participants who entered at least one estimate, by condition ====
+                
+                 FALSE TRUE
+  slider            31  263
+  unidirectional    13  290
+  interactive       39  333
+
+	Pearson's Chi-squared test
+
+data:  table(assigned$condition, assigned$responded)
+X-squared = 10.289, df = 2, p-value = 0.005833
+

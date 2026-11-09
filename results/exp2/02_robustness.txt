@@ -1,0 +1,69 @@
+
+==== Main analysis (755 participants in 192 networks) ====
+observations: 5107 | groups: playerID:gameID 755, gameID 192  
+                         Estimate  Std. Error        df      t value     Pr(>|t|)
+(Intercept)            19.0231853  0.74389329  185.4108  25.57246527 1.055166e-62
+idx_c                  -0.8826419  0.08040855 4390.3792 -10.97696588 1.125900e-27
+condition_c             1.9210048  1.11502734  179.6667   1.72283199 8.663952e-02
+critters_c             -0.2907729  2.59022196  184.9264  -0.11225792 9.107407e-01
+entropy_c               4.3700377  2.56505486  180.3536   1.70368197 9.016289e-02
+rep_c                  20.7498130  2.48119338  178.2233   8.36283588 1.712103e-14
+condition_c:critters_c -3.7862015  5.00604041  185.1673  -0.75632660 4.504146e-01
+condition_c:entropy_c  -6.5809931  4.90563166  181.9608  -1.34151798 1.814242e-01
+condition_c:rep_c      12.7226285  4.75869312  181.7253   2.67355515 8.188851e-03
+critters_c:entropy_c    0.8491006 10.74676554  185.2372   0.07900988 9.371101e-01
+critters_c:rep_c        0.2211134 10.08941605  186.7333   0.02191538 9.825389e-01
+entropy_c:rep_c        20.1524201  8.42343320  180.0259   2.39242357 1.776680e-02
+
+Participants who answered at least 80% of rounds, by condition:
+             
+              FALSE TRUE
+  interactive    76  324
+  slider        102  270
+
+	Pearson's Chi-squared test with Yates' continuity correction
+
+data:  table(response_rates$condition, response_rates$answered_80)
+X-squared = 7.2342, df = 1, p-value = 0.007153
+
+
+==== Answered at least 80% of rounds (594 participants in 192 networks) ====
+observations: 4330 | groups: playerID:gameID 594, gameID 192  
+                         Estimate  Std. Error        df      t value     Pr(>|t|)
+(Intercept)            18.5799233  0.87846322  173.9201  21.15048511 5.875608e-50
+idx_c                  -0.8649449  0.08586695 3739.6357 -10.07308241 1.447843e-23
+condition_c             2.0936050  1.30007415  162.5421   1.61037355 1.092566e-01
+critters_c             -1.1268393  3.06554142  176.5221  -0.36758248 7.136249e-01
+entropy_c               3.9586373  2.96855402  161.2513   1.33352376 1.842406e-01
+rep_c                  21.8198851  2.87425201  158.4828   7.59150031 2.554467e-12
+condition_c:critters_c -4.1983949  5.93785948  178.0236  -0.70705528 4.804566e-01
+condition_c:entropy_c  -7.0787322  5.67945877  163.5399  -1.24637443 2.144093e-01
+condition_c:rep_c      10.0614401  5.49189359  161.0856   1.83205300 6.879032e-02
+critters_c:entropy_c   -0.1528596 12.40073207  165.1940  -0.01232666 9.901799e-01
+critters_c:rep_c        7.7814553 11.76570434  170.9138   0.66136757 5.092672e-01
+entropy_c:rep_c        22.3882189  9.86836595  164.0220   2.26868551 2.459121e-02
+
+Mean error by representativeness and condition after the exclusion:
+# A tibble: 4 × 3
+  rep_bin          condition   mean_error
+  <fct>            <chr>            <dbl>
+1 Representative   interactive       13.5
+2 Representative   slider            13.8
+3 Unrepresentative interactive       22.1
+4 Unrepresentative slider            28.9
+
+==== Estimates of 0, 50 and 100 removed (727 participants in 192 networks) ====
+observations: 4398 | groups: playerID:gameID 727, gameID 192  
+                         Estimate Std. Error        df    t value     Pr(>|t|)
+(Intercept)            16.1659990 0.65260348  177.1092 24.7715489 1.947600e-59
+idx_c                  -0.5261739 0.07865515 3733.5726 -6.6896309 2.570822e-11
+condition_c             1.1951332 0.97571702  171.8556  1.2248769 2.222978e-01
+critters_c              2.6803229 2.27847102  180.7492  1.1763691 2.409944e-01
+entropy_c               3.7210424 2.26342765  173.5673  1.6439856 1.019893e-01
+rep_c                  13.8799832 2.17994768  171.5152  6.3671176 1.702713e-09
+condition_c:critters_c -0.6063085 4.38642763  178.1179 -0.1382238 8.902197e-01
+condition_c:entropy_c  -8.4457420 4.31968356  173.3692 -1.9551761 5.216999e-02
+condition_c:rep_c      11.7444553 4.18844155  175.0322  2.8040156 5.617234e-03
+critters_c:entropy_c    4.4976302 9.45214677  178.9764  0.4758316 6.347746e-01
+critters_c:rep_c        7.0094756 8.83346205  179.2634  0.7935140 4.285275e-01
+entropy_c:rep_c        18.1300727 7.37286088  171.9468  2.4590282 1.492145e-02

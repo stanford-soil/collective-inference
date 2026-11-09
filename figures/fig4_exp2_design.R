@@ -1,15 +1,15 @@
-# Figure 4 (Experiment 2 design): every game configuration in the three-dimensional
-# difficulty space, shown as three pairwise projections. Statistics are computed over
-# active participants, as in the analysis (nCrittersGame_actual, entropy_actual,
-# representation_actual from lib/exp2_data.R). SR networks only (the analysed networks).
-# Input: data/derived/exp2_clean_data.csv. Output: figures/fig4_exp2_design.pdf. Run from figures/.
+# Figure 4 (Experiment 2 design): the analysed networks in the three-dimensional
+# difficulty space (total sample size, entropy, representativeness), shown as three
+# pairwise projections. Point area is the number of networks. The statistics are
+# those used in the analysis (lib/exp2_data.R).
+# Reads   data/derived/exp2_clean_data.csv
+# Writes  figures/fig4_exp2_design.pdf
 
 source("../lib/common.R")
 suppressPackageStartupMessages({ library(ggthemes); library(patchwork) })
 source("../lib/exp2_data.R")
 
-exp2 <- load_exp2("SR")
-games <- exp2$d.all %>%
+games <- load_exp2()$data %>%
   distinct(gameID, condition, direction, nCrittersGame_actual, entropy_actual, representation_actual) %>%
   filter(!is.na(nCrittersGame_actual)) %>%
   mutate(condition = factor(condition, levels = c("slider", "interactive")),

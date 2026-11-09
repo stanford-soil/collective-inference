@@ -1,0 +1,49 @@
+==== Sample ====
+772 participants in 193 networks; 755 participants entered at least one estimate
+# A tibble: 2 × 2
+  condition   networks
+  <chr>          <int>
+1 interactive      100
+2 slider            93
+
+==== Error over rounds by condition ====
+observations: 5107 | groups: playerID:gameID 755, gameID 192  
+                     Estimate Std. Error       df     t value     Pr(>|t|)
+(Intercept)       19.90738256  0.7544085 189.8973 26.38806777 1.952992e-65
+condition_c        2.57092040  1.5088170 189.8973  1.70393123 9.002966e-02
+idx_c             -0.87605677  0.1131864 191.7775 -7.73994546 5.549965e-13
+condition_c:idx_c  0.01901827  0.2263729 191.7775  0.08401302 9.331337e-01
+
+Mean error by condition (all rounds):
+# A tibble: 2 × 3
+  condition   mean_error sd_error
+  <chr>            <dbl>    <dbl>
+1 interactive       18.1     19  
+2 slider            21.2     20.2
+
+==== Difficulty model ====
+observations: 5107 | groups: playerID:gameID 755, gameID 192  
+                         Estimate  Std. Error        df      t value     Pr(>|t|)
+(Intercept)            19.0231853  0.74389329  185.4108  25.57246527 1.055166e-62
+idx_c                  -0.8826419  0.08040855 4390.3792 -10.97696588 1.125900e-27
+condition_c             1.9210048  1.11502734  179.6667   1.72283199 8.663952e-02
+critters_c             -0.2907729  2.59022196  184.9264  -0.11225792 9.107407e-01
+entropy_c               4.3700377  2.56505486  180.3536   1.70368197 9.016289e-02
+rep_c                  20.7498130  2.48119338  178.2233   8.36283588 1.712103e-14
+condition_c:critters_c -3.7862015  5.00604041  185.1673  -0.75632660 4.504146e-01
+condition_c:entropy_c  -6.5809931  4.90563166  181.9608  -1.34151798 1.814242e-01
+condition_c:rep_c      12.7226285  4.75869312  181.7253   2.67355515 8.188851e-03
+critters_c:entropy_c    0.8491006 10.74676554  185.2372   0.07900988 9.371101e-01
+critters_c:rep_c        0.2211134 10.08941605  186.7333   0.02191538 9.825389e-01
+entropy_c:rep_c        20.1524201  8.42343320  180.0259   2.39242357 1.776680e-02
+
+Correlation between entropy and representativeness across networks: r = -0.5 
+
+Mean error by representativeness (median split) and condition, all rounds:
+# A tibble: 4 × 4
+  rep_bin          condition   mean_error sd_error
+  <fct>            <chr>            <dbl>    <dbl>
+1 Representative   interactive       14.2     15.3
+2 Representative   slider            13.9     12.2
+3 Unrepresentative interactive       21.8     21.3
+4 Unrepresentative slider            29.1     23.9

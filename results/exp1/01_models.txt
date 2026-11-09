@@ -1,0 +1,160 @@
+Sample: 733 participants in 219 networks
+
+==== M1: error over rounds ====
+observations: 8384 | groups: playerID 733, gameID 219  
+               Estimate  Std. Error        df   t value     Pr(>|t|)
+(Intercept) 13.77779643 0.410951518  235.5472 33.526574 1.236609e-91
+idx_c       -0.25123316 0.041730016  719.5469 -6.020443 2.771845e-09
+I(idx_c^2)   0.03646701 0.008336424 7054.8610  4.374419 1.235076e-05
+
+==== M2: error over rounds by condition ====
+observations: 8384 | groups: playerID 733, gameID 219  
+                              Estimate Std. Error       df    t value     Pr(>|t|)
+(Intercept)                 17.9998053 0.85014273 319.8651 21.1726862 8.209286e-63
+idx                         -0.3163963 0.07619217 725.8445 -4.1526087 3.677845e-05
+conditionunidirectional     -2.4747003 1.17955480 319.3015 -2.0979952 3.669117e-02
+conditioninteractive        -3.4936892 1.13809467 326.4507 -3.0697703 2.321942e-03
+idx:conditionunidirectional  0.1408469 0.10573918 721.3316  1.3320222 1.832736e-01
+idx:conditioninteractive     0.0465523 0.10208538 719.2795  0.4560134 6.485180e-01
+
+==== M3: condition differences in the final round ====
+observations: 8384 | groups: playerID 733, gameID 219  
+                                                                   Estimate Std. Error        df    t value     Pr(>|t|)
+(Intercept)                                                       12.709851  0.6346040  217.2625 20.0280042 3.003424e-51
+poly(idx_final_centered, 2)1                                     -83.883021 21.0682176  711.0742 -3.9814958 7.552297e-05
+poly(idx_final_centered, 2)2                                      17.277052 12.7376781 7048.7348  1.3563738 1.750237e-01
+condition_interactiveslider                                        3.197596  0.9538614  208.7811  3.3522653 9.515152e-04
+condition_interactiveunidirectional                                1.647542  0.9351370  210.2652  1.7618184 7.955319e-02
+poly(idx_final_centered, 2)1:condition_interactiveslider         -16.743677 31.6607376  719.4960 -0.5288467 5.970749e-01
+poly(idx_final_centered, 2)2:condition_interactiveslider          41.918489 19.2469572 7064.4438  2.1779281 2.944435e-02
+poly(idx_final_centered, 2)1:condition_interactiveunidirectional  29.568582 30.9953768  713.9600  0.9539675 3.404230e-01
+poly(idx_final_centered, 2)2:condition_interactiveunidirectional  14.896246 18.7716406 7039.3509  0.7935505 4.274839e-01
+
+M3: likelihood-ratio test of the condition x round interaction
+Data: exp1$shifted
+Models:
+m3_no_interaction: error ~ poly(idx_final_centered, 2) + condition_interactive + (1 + idx_final_centered | playerID) + (1 | gameID)
+m3_ml: m3_formula
+                  npar   AIC   BIC logLik deviance  Chisq Df Pr(>Chisq)
+m3_no_interaction   10 60992 61063 -30486    60972                     
+m3_ml               14 60994 61092 -30483    60966 6.7882  4     0.1475
+
+Final-round error by condition:
+# A tibble: 3 × 4
+  condition      mean_error se_error     n
+  <fct>               <dbl>    <dbl> <int>
+1 slider               15.3    0.836   219
+2 unidirectional       14.0    0.893   227
+3 interactive          11.2    0.631   272
+
+==== M4: adaptive weighting ====
+observations: 7537 | groups: playerID 726, gameID 212  
+              Estimate Std. Error        df   t value     Pr(>|t|)
+(Intercept)  9.0379166  0.3146461  205.0245 28.724067 8.407944e-74
+ss          -1.2318080  0.2593982  568.5435 -4.748715 2.594583e-06
+disc         2.2822698  0.1514495 6986.2163 15.069514 1.589859e-50
+round       -0.9734882  0.1389229  738.0798 -7.007400 5.480112e-12
+ss:disc     -0.3656742  0.1450057 6924.2054 -2.521792 1.169812e-02
+
+==== M4b: adaptive weighting by condition, reference = interactive ====
+                                Estimate Std. Error       df t value Pr(>|t|)
+disc                              2.7857     0.2529 7048.354 11.0133   0.0000
+ss:disc                          -0.5090     0.2295 6998.372 -2.2173   0.0266
+disc:conditionslider             -0.7334     0.3699 6717.396 -1.9829   0.0474
+disc:conditionunidirectional     -0.7460     0.3618 6925.079 -2.0621   0.0392
+ss:disc:conditionslider           0.7634     0.3705 6436.143  2.0604   0.0394
+ss:disc:conditionunidirectional  -0.1853     0.3354 6995.218 -0.5524   0.5807
+
+==== M4b: adaptive weighting by condition, reference = slider ====
+                                Estimate Std. Error       df t value Pr(>|t|)
+disc                              2.0523     0.2716 6318.692  7.5562   0.0000
+ss:disc                           0.2544     0.2908 5620.468  0.8748   0.3817
+disc:conditioninteractive         0.7334     0.3699 6717.396  1.9829   0.0474
+disc:conditionunidirectional     -0.0126     0.3747 6689.637 -0.0337   0.9731
+ss:disc:conditioninteractive     -0.7634     0.3705 6436.143 -2.0604   0.0394
+ss:disc:conditionunidirectional  -0.9486     0.3799 6467.053 -2.4968   0.0126
+
+==== M4b: adaptive weighting by condition, reference = unidirectional ====
+                             Estimate Std. Error       df t value Pr(>|t|)
+disc                           2.0397     0.2594 6692.977  7.8640   0.0000
+ss:disc                       -0.6942     0.2445 6937.812 -2.8393   0.0045
+disc:conditioninteractive      0.7460     0.3618 6925.079  2.0621   0.0392
+disc:conditionslider           0.0126     0.3747 6689.637  0.0337   0.9731
+ss:disc:conditioninteractive   0.1853     0.3354 6995.218  0.5524   0.5807
+ss:disc:conditionslider        0.9486     0.3799 6467.053  2.4968   0.0126
+
+M4b: likelihood-ratio tests of the condition interactions
+sample size x discrepancy x condition:
+Data: revisions
+Models:
+m4b_no_three_way: belief_revision ~ ss + disc + condition + round + (1 + round | playerID) + (1 | gameID) + ss:disc + ss:condition + disc:condition
+m4b_ml: m4b_formula
+                 npar   AIC   BIC logLik deviance  Chisq Df Pr(>Chisq)  
+m4b_no_three_way   16 56783 56893 -28375    56751                       
+m4b_ml             18 56780 56904 -28372    56744 6.7263  2    0.03463 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+discrepancy x condition (without the three-way term):
+Data: revisions
+Models:
+m4b_no_two_way: belief_revision ~ ss + disc + condition + round + (1 + round | playerID) + (1 | gameID) + ss:disc + ss:condition
+m4b_no_three_way: belief_revision ~ ss + disc + condition + round + (1 + round | playerID) + (1 | gameID) + ss:disc + ss:condition + disc:condition
+                 npar   AIC   BIC logLik deviance  Chisq Df Pr(>Chisq)  
+m4b_no_two_way     14 56785 56882 -28378    56757                       
+m4b_no_three_way   16 56783 56893 -28375    56751 6.0636  2    0.04823 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+==== M5: change in estimate between rounds ====
+observations: 7502 | groups: playerID 733, gameID 219  
+                                       Estimate Std. Error       df    t value     Pr(>|t|)
+(Intercept)                          9.54223571 0.80798133 503.6603 11.8099705 1.393115e-28
+idx_shifted                         -0.27866251 0.08862699 891.4522 -3.1442174 1.720454e-03
+conditionunidirectional              3.78232318 1.11613859 492.4042  3.3887576 7.584240e-04
+conditioninteractive                 2.77473086 1.07658644 499.7726  2.5773415 1.024185e-02
+idx_shifted:conditionunidirectional -0.09230577 0.11912321 777.9716 -0.7748764 4.386481e-01
+idx_shifted:conditioninteractive    -0.24992098 0.11518256 780.8102 -2.1697814 3.032432e-02
+
+M5: condition contrasts at the first observable change (round 2)
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'pbkrtest.limit = 7502' (or larger)
+[or, globally, 'set emm_options(pbkrtest.limit = 7502)' or larger];
+but be warned that this may result in large computation time and memory use.
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'lmerTest.limit = 7502' (or larger)
+[or, globally, 'set emm_options(lmerTest.limit = 7502)' or larger];
+but be warned that this may result in large computation time and memory use.
+idx_shifted = 2:
+ contrast                     estimate    SE  df z.ratio p.value
+ slider - unidirectional         -3.60 0.966 Inf  -3.723  0.0002
+ slider - interactive            -2.27 0.932 Inf  -2.442  0.0146
+ unidirectional - interactive     1.32 0.912 Inf   1.450  0.1471
+
+Degrees-of-freedom method: asymptotic 
+
+M5: change per round by condition, and differences between conditions
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'pbkrtest.limit = 7502' (or larger)
+[or, globally, 'set emm_options(pbkrtest.limit = 7502)' or larger];
+but be warned that this may result in large computation time and memory use.
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'lmerTest.limit = 7502' (or larger)
+[or, globally, 'set emm_options(lmerTest.limit = 7502)' or larger];
+but be warned that this may result in large computation time and memory use.
+$emtrends
+ condition      idx_shifted.trend     SE  df asymp.LCL asymp.UCL
+ slider                    -0.279 0.0886 Inf    -0.452    -0.105
+ unidirectional            -0.371 0.0796 Inf    -0.527    -0.215
+ interactive               -0.529 0.0736 Inf    -0.673    -0.384
+
+Degrees-of-freedom method: asymptotic 
+Confidence level used: 0.95 
+
+$contrasts
+ contrast                     estimate    SE  df z.ratio p.value
+ slider - unidirectional        0.0923 0.119 Inf   0.775  0.4384
+ slider - interactive           0.2499 0.115 Inf   2.170  0.0300
+ unidirectional - interactive   0.1576 0.108 Inf   1.454  0.1459
+
+Degrees-of-freedom method: asymptotic 
+

@@ -1,0 +1,23 @@
+Networks by condition:
+# A tibble: 2 × 2
+  condition       n
+  <chr>       <int>
+1 interactive    99
+2 slider         93
+Final-round error by bin:
+# A tibble: 12 × 8
+   condition   level            empirical_stat ci_lower ci_upper n_networks n_participants dimension               
+   <fct>       <fct>                     <dbl>    <dbl>    <dbl>      <int>          <int> <fct>                   
+ 1 slider      Few                        21.1     17.4     25.4         45            170 Total sample size       
+ 2 interactive Few                        16       13.4     18.8         49            183 Total sample size       
+ 3 slider      Many                       17.7     14.7     21           48            182 Total sample size       
+ 4 interactive Many                       15.9     13       19           50            188 Total sample size       
+ 5 slider      Low                        23.9     20       28.3         49            183 Information distribution
+ 6 interactive Low                        19       15.9     22.2         47            172 Information distribution
+ 7 slider      High                       14.4     11.9     17           44            169 Information distribution
+ 8 interactive High                       13.3     11.1     15.8         52            199 Information distribution
+ 9 slider      Unrepresentative           26.6     22.7     30.5         45            169 Representativeness      
+10 interactive Unrepresentative           18.6     15.6     21.6         50            190 Representativeness      
+11 slider      Representative             12.7     10.7     14.7         48            183 Representativeness      
+12 interactive Representative             13.2     10.7     15.8         49            181 Representativeness      
+Saved fig5_exp2_results.pdf 

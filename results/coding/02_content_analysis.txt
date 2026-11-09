@@ -1,0 +1,56 @@
+
+==== Final codes, analysed networks: 3010 messages in 88 networks ====
+Share of messages containing
+  own counts (pn):                0.804 
+  own counts and nothing else:    0.755 
+  own belief (pb):                0.065 
+  others' information (sn or sb): 0.087 
+  a question (q):                 0.042 
+Networks in which others' information was relayed: 46 of 88 
+log(final-round error + 1) ~ p_social + p_personal:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)    2.590      0.649   3.993    0.000
+p_social      -1.597      0.728  -2.193    0.031
+p_personal     0.129      0.690   0.186    0.853
+
+==== Final codes, all coded networks: 5453 messages in 158 networks ====
+Share of messages containing
+  own counts (pn):                0.795 
+  own counts and nothing else:    0.739 
+  own belief (pb):                0.06 
+  others' information (sn or sb): 0.089 
+  a question (q):                 0.063 
+Networks in which others' information was relayed: 89 of 158 
+log(final-round error + 1) ~ p_social + p_personal:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)    2.941      0.415   7.094    0.000
+p_social      -0.764      0.453  -1.687    0.094
+p_personal    -0.177      0.447  -0.395    0.693
+
+==== First author's original coding, analysed networks: 3010 messages in 88 networks ====
+Share of messages containing
+  own counts (pn):                0.799 
+  own counts and nothing else:    0.768 
+  own belief (pb):                0.04 
+  others' information (sn or sb): 0.126 
+  a question (q):                 0.022 
+Networks in which others' information was relayed: 53 of 88 
+log(final-round error + 1) ~ p_social + p_personal:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)    2.519      0.656   3.839    0.000
+p_social      -1.329      0.614  -2.165    0.033
+p_personal     0.244      0.697   0.350    0.727
+
+==== First author's original coding, all coded networks: 5455 messages in 158 networks ====
+Share of messages containing
+  own counts (pn):                0.792 
+  own counts and nothing else:    0.754 
+  own belief (pb):                0.038 
+  others' information (sn or sb): 0.126 
+  a question (q):                 0.039 
+Networks in which others' information was relayed: 99 of 158 
+log(final-round error + 1) ~ p_social + p_personal:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)    2.798      0.432   6.474    0.000
+p_social      -0.844      0.409  -2.061    0.041
+p_personal     0.030      0.464   0.064    0.949

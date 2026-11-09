@@ -18,11 +18,10 @@ Rplots.pdf
 **/*_files/
 **/*_cache/
 
-# Derived data and intermediates written by the pipeline (prep/ and later steps)
+# Intermediate data written by prep/ (rebuilt by run_all.sh)
 data/derived/
 data/exp1/PreregMergedGuesses_UNFILTERED.csv
 logs/
-*.pkl
 __pycache__/
 
 # Figures: only the PDFs written by figures/ are committed

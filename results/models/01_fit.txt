@@ -1,0 +1,55 @@
+AIC by model and condition (corrected timing; lower is better)
+condition                    interactive  slider  unidirectional
+model    response_weights k                                     
+belief   False            1      -2629.2 -2713.3         -1595.3
+         True             4      -2747.0 -2800.7         -1672.5
+evidence False            2      -2851.8 -2510.9         -1755.6
+         True             5      -2877.0 -2541.0         -1766.0
+
+Fitted parameters (corrected timing)
+     condition    model  response_weights    n  alpha  delta  w_update  w_mle  w_mid  sigma
+        slider   belief             False 1874  0.765    NaN       NaN    NaN    NaN  0.117
+        slider   belief              True 1874  0.754    NaN     0.871  0.120  0.013  0.114
+        slider evidence             False 1874  0.732  0.432       NaN    NaN    NaN  0.124
+        slider evidence              True 1874  0.836  2.000     0.839  0.101  0.069  0.123
+   interactive   belief             False 2237  0.770    NaN       NaN    NaN    NaN  0.134
+   interactive   belief              True 2237  0.791    NaN     0.828  0.132  0.045  0.131
+   interactive evidence             False 2237  0.576  0.565       NaN    NaN    NaN  0.128
+   interactive evidence              True 2237  0.599  1.241     0.938  0.091 -0.008  0.127
+unidirectional   belief             False 1956  0.760    NaN       NaN    NaN    NaN  0.161
+unidirectional   belief              True 1956  0.800    NaN     0.820  0.107  0.089  0.157
+unidirectional evidence             False 1956  0.579  0.731       NaN    NaN    NaN  0.154
+unidirectional evidence              True 1956  0.581  0.777     0.971  0.012  0.046  0.154
+
+AIC difference (Evidence - Belief) for every timing variant
+  corrected: reported in the paper
+  original: as in the original submission: messaging updates paired with the previous round's sender
+  sender_only: corrected sender, but evidence accumulated as in the original code
+  same_round_estimate: corrected, with the sender's estimate from the same round instead of the previous one
+  schedule: corrected, with senders taken from the reconstructed schedule instead of the message log
+model                                                belief  evidence  evidence_minus_belief
+timing              condition      response_weights                                         
+corrected           slider         False            -2713.3   -2510.9                  202.4
+                                   True             -2800.7   -2541.0                  259.8
+                    interactive    False            -2629.2   -2851.8                 -222.5
+                                   True             -2747.0   -2877.0                 -130.0
+                    unidirectional False            -1595.3   -1755.6                 -160.3
+                                   True             -1672.5   -1766.0                  -93.5
+original            slider         False            -2713.3   -2510.9                  202.4
+                                   True             -2800.7   -2541.0                  259.8
+                    interactive    False            -2574.0   -2900.5                 -326.5
+                                   True             -2794.8   -2917.1                 -122.2
+                    unidirectional False            -1337.7   -1575.8                 -238.2
+                                   True             -1518.7   -1605.3                  -86.6
+sender_only         slider         False            -2713.3   -2510.9                  202.4
+                                   True             -2800.7   -2541.0                  259.8
+                    interactive    False            -2629.2   -2884.0                 -254.7
+                                   True             -2747.0   -2913.5                 -166.5
+same_round_estimate slider         False            -2713.3   -2510.9                  202.4
+                                   True             -2800.7   -2541.0                  259.8
+                    interactive    False            -2605.9   -2861.7                 -255.8
+                                   True             -2748.2   -2888.1                 -139.9
+schedule            slider         False            -2713.3   -2510.9                  202.4
+                                   True             -2800.7   -2541.0                  259.8
+                    interactive    False            -2718.2   -2935.3                 -217.1
+                                   True             -2836.2   -2961.4                 -125.1

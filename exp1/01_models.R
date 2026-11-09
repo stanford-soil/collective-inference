@@ -1,87 +1,88 @@
-# Experiment 1 models reported in the revised paper. Every model includes a network
-# (gameID) random intercept; the versions without it (original submission) are in
-# response_letter/01_exp1_old_vs_new.R.
-#   M1 convergence (Analysis 1), M2 error x condition over rounds (Analysis 2),
-#   M3 condition differences at the final round (Analysis 3), M4 adaptive weighting
-#   (Analysis 4) and its condition follow-up M4b, M5 stabilization (Analysis 5).
-# Input: data/derived/exp1_clean_data.csv (prep/). Output: printed. Run from exp1/.
+# Experiment 1: the models reported in the paper.
+#
+#   M1  error decreases over rounds
+#   M2  error over rounds by condition
+#   M3  condition differences in the final round
+#   M4  adaptive weighting: belief revision by own sample size and social discrepancy
+#   M4b adaptive weighting by condition
+#   M5  stabilization: change in estimate between consecutive rounds, by condition
+#
+# Every model has random intercepts for participants and for networks.
+# Condition names: slider, unidirectional (delayed messaging), interactive (real-time messaging).
+#
+# Reads   data/derived/exp1_clean_data.csv
+# Prints  the fixed effects of each model and the follow-up tests
 source("../lib/common.R")
 source("../lib/exp1_data.R")
 suppressPackageStartupMessages(library(emmeans))
-options(width = 200)
 
-e1 <- load_exp1()
-d.guesses <- e1$d.guesses; d.shifted <- e1$d.shifted
-d.revisions <- e1$d.revisions; d.stabilization <- e1$d.stabilization
-cat("Sample:", n_distinct(d.guesses$playerID), "participants in", n_distinct(d.guesses$gameID), "networks\n")
+exp1 <- load_exp1()
+cat("Sample:", n_distinct(exp1$guesses$playerID), "participants in",
+    n_distinct(exp1$guesses$gameID), "networks\n")
 
-# M1: error decreases over rounds (centered linear and quadratic terms)
-m1 <- fit_lmer(error ~ idx_c + I(idx_c^2) + (1 + idx_c | playerID) + (1 | gameID), d.guesses,
-               "M1 convergence | +network")
-report_fit(m1)
+# ---- M1: error over rounds (centered linear and quadratic terms) ---------------------
+m1 <- fit(error ~ idx_c + I(idx_c^2) + (1 + idx_c | playerID) + (1 | gameID),
+          exp1$guesses, "M1: error over rounds")
 
-# M2: error over rounds by condition
-m2 <- fit_lmer(error ~ idx * condition + (1 + idx | playerID) + (1 | gameID), d.guesses,
-               "M2 error x condition | +network")
-report_fit(m2)
+# ---- M2: error over rounds by condition (slider = reference) --------------------------
+m2 <- fit(error ~ idx * condition + (1 + idx | playerID) + (1 | gameID),
+          exp1$guesses, "M2: error over rounds by condition")
 
-# M3: condition differences at the final round (real-time messaging = reference;
-# idx_final_centered = 0 in each condition's last round)
-f3 <- error ~ poly(idx_final_centered, 2) * condition_interactive + (1 + idx_final_centered | playerID) + (1 | gameID)
-m3 <- fit_lmer(f3, d.shifted, "M3 condition@final | +network")
-report_fit(m3)
-# Omnibus likelihood-ratio test of the condition x time interaction (4 df)
-m3_red <- lmer(update(f3, . ~ . - poly(idx_final_centered, 2):condition_interactive), data = d.shifted, control = ctrl, REML = FALSE)
-m3_full <- lmer(f3, data = d.shifted, control = ctrl, REML = FALSE)
-cat("\n==== M3 LRT: condition x time interaction (4 df) ====\n"); print(anova(m3_red, m3_full))
-cat("\nFinal-round means by condition:\n")
-print(d.shifted %>%
-        filter((condition == "slider" & idx_shifted == 11) | (condition != "slider" & idx_shifted == 12)) %>%
+# ---- M3: condition differences in the final round -------------------------------------
+# idx_final_centered is 0 in each condition's last round, so the condition
+# coefficients are differences in the final round. Real-time messaging = reference.
+m3_formula <- error ~ poly(idx_final_centered, 2) * condition_interactive +
+  (1 + idx_final_centered | playerID) + (1 | gameID)
+m3 <- fit(m3_formula, exp1$shifted, "M3: condition differences in the final round")
+
+cat("\nM3: likelihood-ratio test of the condition x round interaction\n")
+m3_ml <- lmer(m3_formula, data = exp1$shifted, control = ctrl, REML = FALSE)
+m3_no_interaction <- update(m3_ml, . ~ . - poly(idx_final_centered, 2):condition_interactive)
+print(anova(m3_no_interaction, m3_ml))
+
+cat("\nFinal-round error by condition:\n")
+print(exp1$shifted %>%
+        filter(idx_final_centered == 0) %>%
         group_by(condition) %>%
-        summarise(mean_error = mean(error, na.rm = TRUE), se_error = sd(error, na.rm = TRUE) / sqrt(n()), n = n()))
+        summarise(mean_error = mean(error), se_error = sd(error) / sqrt(n()), n = n()))
 
-# M4: adaptive weighting by own sample size and previous-round social discrepancy
-f4 <- belief_revision ~ scale(sample_size) * scale(prior_social_discrepancy) + scale(idx) + (1 + scale(idx) | playerID) + (1 | gameID)
-m4 <- fit_lmer(f4, d.revisions, "M4 adaptive weighting | +network")
-report_fit(m4)
-# M4b: the same with condition interactions. This model is not in the original
-# notebook; it was reconstructed as the full three-way interaction with condition
-# (slider reference).
-f4b <- belief_revision ~ scale(sample_size) * scale(prior_social_discrepancy) * condition + scale(idx) + (1 + scale(idx) | playerID) + (1 | gameID)
-m4b <- fit_lmer(f4b, d.revisions, "M4b adaptive x condition (RECONSTRUCTED) | +network")
-report_fit(m4b)
+# ---- M4: adaptive weighting -------------------------------------------------------------
+# ss = own sample size, disc = previous-round distance from the other members' mean
+# estimate, round = round number; all standardized.
+revisions <- exp1$revisions %>%
+  mutate(ss = as.numeric(scale(sample_size)),
+         disc = as.numeric(scale(prior_social_discrepancy)),
+         round = as.numeric(scale(idx)))
+m4 <- fit(belief_revision ~ ss * disc + round + (1 + round | playerID) + (1 | gameID),
+          revisions, "M4: adaptive weighting")
 
-# M5: stabilization (change in estimate between consecutive rounds)
-f5 <- abs_change ~ idx_shifted * condition + (1 + idx_shifted | playerID) + (1 | gameID)
-m5 <- fit_lmer(f5, d.stabilization, "M5 belief revision | +network")
-report_fit(m5)
-# The M5 condition coefficients are at idx_shifted = 0; the first observed change is
-# at idx_shifted = 2. Condition contrasts vs slider at idx_shifted = 2:
-emm_options(lmer.df = "satterthwaite")
-cat("\n==== M5 contrasts vs slider at idx_shifted = 2 ====\n")
-print(contrast(emmeans(m5$model, ~ condition | idx_shifted, at = list(idx_shifted = 2)), "trt.vs.ctrl", ref = 1, adjust = "none"))
-cat("\n==== M5 pairwise contrasts at idx_shifted = 2 and slopes by condition ====\n")
-print(contrast(emmeans(m5$model, ~ condition | idx_shifted, at = list(idx_shifted = 2)), "pairwise", adjust = "none"))
-print(emtrends(m5$model, pairwise ~ condition, var = "idx_shifted", adjust = "none"))
-
-# M4b follow-ups: condition differences in the weight on social discrepancy with
-# real-time messaging as reference, the sample size x discrepancy interaction within
-# each condition, and likelihood-ratio tests of the condition interactions
-cat("\n==== M4b follow-ups ====\n")
-d.rev <- d.revisions %>%
-  mutate(ss = as.numeric(scale(sample_size)), disc = as.numeric(scale(prior_social_discrepancy)),
-         sidx = as.numeric(scale(idx)))
-f4c <- belief_revision ~ ss * disc * cr + sidx + (1 + sidx | playerID) + (1 | gameID)
-for (ref in c("interactive", "slider", "unidirectional")) {
-  d.rev$cr <- relevel(factor(as.character(d.rev$condition)), ref = ref)
-  s4 <- coef(summary(lmer(f4c, data = d.rev, control = ctrl)))
-  cat("\nReference condition:", ref, "\n")
-  print(round(s4[grepl("^disc|^ss:disc", rownames(s4)), ], 4))
+# ---- M4b: adaptive weighting by condition ----------------------------------------------
+# The same model with condition interactions, fitted once with each condition as the
+# reference. For the reference condition, `disc` is the weight on social discrepancy
+# and `ss:disc` is how that weight changes with sample size; the `:condition` rows
+# are differences from the reference condition.
+m4b_formula <- belief_revision ~ ss * disc * condition + round + (1 + round | playerID) + (1 | gameID)
+for (reference in c("interactive", "slider", "unidirectional")) {
+  d <- revisions %>% mutate(condition = relevel(factor(as.character(condition)), ref = reference))
+  coefs <- coef(summary(lmer(m4b_formula, data = d, control = ctrl)))
+  cat("\n==== M4b: adaptive weighting by condition, reference =", reference, "====\n")
+  print(round(coefs[grepl("^disc|^ss:disc", rownames(coefs)), ], 4))
 }
-d.rev$cr <- relevel(factor(as.character(d.rev$condition)), ref = "interactive")
-m4_full <- lmer(f4c, data = d.rev, control = ctrl, REML = FALSE)
-m4_no3 <- update(m4_full, . ~ . - ss:disc:cr)
-m4_no2 <- update(m4_no3, . ~ . - disc:cr)
-cat("\nLRT: sample size x discrepancy x condition\n"); print(anova(m4_no3, m4_full))
-cat("\nLRT: discrepancy x condition (without the three-way term)\n"); print(anova(m4_no2, m4_no3))
 
+cat("\nM4b: likelihood-ratio tests of the condition interactions\n")
+m4b_ml <- lmer(m4b_formula, data = revisions, control = ctrl, REML = FALSE)
+m4b_no_three_way <- update(m4b_ml, . ~ . - ss:disc:condition)
+m4b_no_two_way <- update(m4b_no_three_way, . ~ . - disc:condition)
+cat("sample size x discrepancy x condition:\n"); print(anova(m4b_no_three_way, m4b_ml))
+cat("discrepancy x condition (without the three-way term):\n"); print(anova(m4b_no_two_way, m4b_no_three_way))
+
+# ---- M5: stabilization -------------------------------------------------------------------
+m5 <- fit(abs_change ~ idx_shifted * condition + (1 + idx_shifted | playerID) + (1 | gameID),
+          exp1$stabilization, "M5: change in estimate between rounds")
+
+# The M5 condition coefficients are evaluated at round 0, but the first change that can
+# be observed is at round 2. Condition contrasts at round 2, and slopes by condition:
+cat("\nM5: condition contrasts at the first observable change (round 2)\n")
+print(contrast(emmeans(m5, ~ condition | idx_shifted, at = list(idx_shifted = 2)), "pairwise", adjust = "none"))
+cat("\nM5: change per round by condition, and differences between conditions\n")
+print(emtrends(m5, pairwise ~ condition, var = "idx_shifted", adjust = "none"))

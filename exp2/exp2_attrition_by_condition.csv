@@ -1,4 +1,0 @@
-condition,networks_started,assigned,responded,networks_final,retained_final,prop_networks_retained,active_final,active3,active4,active_other,pass80,net80_size0,net80_size1,net80_size2,net80_size3,net80_size4
-interactive,200,800,772,180,720,0.9,701,15,164,1,567,1,11,21,74,73
-slider,216,867,841,199,796,0.9212962962962963,787,9,190,0,559,2,19,48,76,54
-Total,416,1667,1613,379,1516,0.9110576923076923,1488,24,354,1,1126,3,30,69,150,127

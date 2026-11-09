@@ -1,0 +1,108 @@
+
+==== M1: error over rounds ====
+observations: 8384 | groups: playerID 733  
+               Estimate  Std. Error        df   t value      Pr(>|t|)
+(Intercept) 13.79386487 0.370080744  836.8869 37.272582 5.656444e-180
+idx_c       -0.25134405 0.041727143  719.5654 -6.023515  2.722168e-09
+I(idx_c^2)   0.03648799 0.008336373 7055.0310  4.376962  1.220798e-05
+
+==== M2: error over rounds by condition ====
+observations: 8384 | groups: playerID 733  
+                               Estimate Std. Error       df    t value     Pr(>|t|)
+(Intercept)                 18.02339942 0.79382618 726.5307 22.7044657 1.162953e-86
+idx                         -0.31653895 0.07618706 725.8493 -4.1547600 3.644211e-05
+conditionunidirectional     -2.46494945 1.10157252 721.7772 -2.2376643 2.554731e-02
+conditioninteractive        -3.54126125 1.06432821 721.8394 -3.3272267 9.215972e-04
+idx:conditionunidirectional  0.14081657 0.10573245 721.3445  1.3318197 1.833401e-01
+idx:conditioninteractive     0.04658328 0.10207870 719.2876  0.4563467 6.482785e-01
+
+==== M3: condition differences in the final round ====
+observations: 8384 | groups: playerID 733  
+                                                                   Estimate Std. Error        df    t value     Pr(>|t|)
+(Intercept)                                                       12.685236  0.5792849  728.8372 21.8980943 4.528098e-82
+poly(idx_final_centered, 2)1                                     -83.917253 21.0668798  711.0866 -3.9833736 7.494130e-05
+poly(idx_final_centered, 2)2                                      17.292900 12.7376267 7048.8522  1.3576234 1.746267e-01
+condition_interactiveslider                                        3.245384  0.8680288  729.4877  3.7387981 1.993824e-04
+condition_interactiveunidirectional                                1.704211  0.8515898  729.3564  2.0012109 4.573972e-02
+poly(idx_final_centered, 2)1:condition_interactiveslider         -16.752687 31.6586520  719.5035 -0.5291662 5.968534e-01
+poly(idx_final_centered, 2)2:condition_interactiveslider          41.948370 19.2467343 7064.6961  2.1795058 2.932703e-02
+poly(idx_final_centered, 2)1:condition_interactiveunidirectional  29.549659 30.9934676  713.9773  0.9534157 3.407021e-01
+poly(idx_final_centered, 2)2:condition_interactiveunidirectional  14.915566 18.7715896 7039.4630  0.7945820 4.268835e-01
+
+==== M4: adaptive weighting ====
+observations: 7537 | groups: playerID 726  
+              Estimate Std. Error        df   t value      Pr(>|t|)
+(Intercept)  9.0526619  0.2747852  724.0641 32.944500 3.811867e-146
+ss          -1.2078721  0.2739055  727.1238 -4.409813  1.190909e-05
+disc         2.3063740  0.1506761 7113.3770 15.306829  4.621636e-52
+round       -0.9716187  0.1389281  737.7181 -6.993680  6.009495e-12
+ss:disc     -0.3562119  0.1457518 7173.8602 -2.443963  1.455086e-02
+
+==== M4b: adaptive weighting by condition (slider = reference) ====
+observations: 7537 | groups: playerID 726  
+                                   Estimate Std. Error        df     t value     Pr(>|t|)
+(Intercept)                      7.66869643  0.4951617  723.2806 15.48725777 6.182285e-47
+ss                              -0.51243965  0.5197865  723.8957 -0.98586561 3.245285e-01
+disc                             2.07342759  0.2705418 6421.4458  7.66398350 2.069303e-14
+conditionunidirectional          2.92250748  0.6851899  722.0864  4.26525211 2.262404e-05
+conditioninteractive             1.27871924  0.6643393  721.4472  1.92479832 5.464750e-02
+round                           -0.97284936  0.1386976  739.6726 -7.01417452 5.228060e-12
+ss:disc                          0.26222466  0.2920709 5772.3635  0.89781163 3.693234e-01
+ss:conditionunidirectional      -1.40264430  0.6945786  724.3275 -2.01941770 4.381165e-02
+ss:conditioninteractive         -0.62911307  0.6778184  722.4794 -0.92814392 3.536429e-01
+disc:conditionunidirectional    -0.01899253  0.3729250 6824.9227 -0.05092857 9.593839e-01
+disc:conditioninteractive        0.73428119  0.3682788 6862.1430  1.99381887 4.621136e-02
+ss:disc:conditionunidirectional -0.95132117  0.3816010 6687.3788 -2.49297369 1.269182e-02
+ss:disc:conditioninteractive    -0.76664887  0.3720246 6614.5193 -2.06074760 3.936614e-02
+
+==== M5: change in estimate between rounds ====
+observations: 7502 | groups: playerID 733  
+                                       Estimate Std. Error       df    t value     Pr(>|t|)
+(Intercept)                          9.54211491 0.76217136 751.3035 12.5196450 8.501744e-33
+idx_shifted                         -0.27886746 0.08865174 891.0349 -3.1456513 1.712161e-03
+conditionunidirectional              3.81751895 1.05246384 729.6144  3.6272210 3.064431e-04
+conditioninteractive                 2.81468787 1.01652765 728.1662  2.7689241 5.767240e-03
+idx_shifted:conditionunidirectional -0.09175574 0.11916022 777.7027 -0.7700199 4.415219e-01
+idx_shifted:conditioninteractive    -0.25021984 0.11521813 780.5268 -2.1717055 3.017836e-02
+
+M5: condition contrasts at the first observable change (round 2)
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'pbkrtest.limit = 7502' (or larger)
+[or, globally, 'set emm_options(pbkrtest.limit = 7502)' or larger];
+but be warned that this may result in large computation time and memory use.
+Note: D.f. calculations have been disabled because the number of observations exceeds 3000.
+To enable adjustments, add the argument 'lmerTest.limit = 7502' (or larger)
+[or, globally, 'set emm_options(lmerTest.limit = 7502)' or larger];
+but be warned that this may result in large computation time and memory use.
+idx_shifted = 2:
+ contrast                     estimate    SE  df z.ratio p.value
+ slider - unidirectional         -3.63 0.890 Inf  -4.083  <.0001
+ slider - interactive            -2.31 0.859 Inf  -2.693  0.0071
+ unidirectional - interactive     1.32 0.842 Inf   1.567  0.1171
+
+Degrees-of-freedom method: asymptotic 
+
+==== Answered at least 0% of rounds: 886 participants in 236 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           2.5712     0.8188 849.9739  3.1403   0.0017
+condition_interactiveunidirectional   1.2987     0.7995 856.4434  1.6245   0.1046
+
+==== Answered at least 50% of rounds: 811 participants in 221 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           2.7375     0.8272 808.5786  3.3094   0.0010
+condition_interactiveunidirectional   1.4212     0.8138 807.9421  1.7464   0.0811
+
+==== Answered at least 80% of rounds: 733 participants in 219 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           3.2454     0.8680 729.4877  3.7388   0.0002
+condition_interactiveunidirectional   1.7042     0.8516 729.3564  2.0012   0.0457
+
+==== Answered at least 100% of rounds: 406 participants in 198 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           4.0412     1.1635 402.9989  3.4732   0.0006
+condition_interactiveunidirectional   2.7222     1.1241 402.9989  2.4217   0.0159
+
+==== Networks with exactly four retained participants: 448 participants in 112 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           2.6435     1.1122 444.5897  2.3768   0.0179
+condition_interactiveunidirectional   1.7090     1.0970 444.4332  1.5579   0.1200

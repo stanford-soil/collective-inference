@@ -1,5 +1,0 @@
-condition,networks_started,assigned,responded,retained,networks_analysed,size0,size1,size2,size3,size4,size5plus,complete,prop_complete_of_started,prop_complete_of_analysed,mean_retained_analysed,median_retained_analysed
-slider,71,294,263,221,65,6,3,6,19,36,1,37,37,0.5692307692307692,3.4,4
-unidirectional,76,303,290,237,69,7,0,8,23,38,0,38,38,0.5507246376811594,3.4347826086956523,4
-interactive,89,372,333,275,85,4,4,10,33,38,0,38,38,0.4470588235294118,3.235294117647059,3
-Total,236,969,886,733,219,17,7,24,75,112,1,113,113,0.5159817351598174,3.34703196347032,4

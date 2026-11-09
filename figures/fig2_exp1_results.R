@@ -1,8 +1,9 @@
 # Figure 2 (Experiment 1 results): (A) mean absolute error by round, (B) change in
 # estimate from the previous round, by condition, with the revised condition labels.
-# Construction follows the original Experiment 1 notebook (Analysis 2 panel A,
-# Analysis 5 panel B). Input: data/derived/exp1_clean_data.csv.
-# Output: figures/fig2_exp1_results.pdf. Run from figures/.
+# 95% CIs are bootstrapped; lines are quadratic fits. The slider condition's first
+# estimate, made before any social information, is shown at round 0.
+# Reads   data/derived/exp1_clean_data.csv
+# Writes  figures/fig2_exp1_results.pdf
 
 source("../lib/common.R")
 suppressPackageStartupMessages({ library(ggthemes); library(patchwork) })

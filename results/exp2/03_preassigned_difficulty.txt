@@ -1,0 +1,35 @@
+Networks with data: 192 
+Networks whose statistic over active participants differs from the pre-assigned one:
+  total sample size: 13 | entropy: 13 
+
+==== Difficulty model, statistics over active participants (main analysis) ====
+observations: 5107 | groups: playerID:gameID 755, gameID 192  
+                         Estimate  Std. Error        df      t value     Pr(>|t|)
+(Intercept)            19.0231853  0.74389329  185.4108  25.57246527 1.055166e-62
+idx_c                  -0.8826419  0.08040855 4390.3792 -10.97696588 1.125900e-27
+condition_c             1.9210048  1.11502734  179.6667   1.72283199 8.663952e-02
+critters_c             -0.2907729  2.59022196  184.9264  -0.11225792 9.107407e-01
+entropy_c               4.3700377  2.56505486  180.3536   1.70368197 9.016289e-02
+rep_c                  20.7498130  2.48119338  178.2233   8.36283588 1.712103e-14
+condition_c:critters_c -3.7862015  5.00604041  185.1673  -0.75632660 4.504146e-01
+condition_c:entropy_c  -6.5809931  4.90563166  181.9608  -1.34151798 1.814242e-01
+condition_c:rep_c      12.7226285  4.75869312  181.7253   2.67355515 8.188851e-03
+critters_c:entropy_c    0.8491006 10.74676554  185.2372   0.07900988 9.371101e-01
+critters_c:rep_c        0.2211134 10.08941605  186.7333   0.02191538 9.825389e-01
+entropy_c:rep_c        20.1524201  8.42343320  180.0259   2.39242357 1.776680e-02
+
+==== Difficulty model, pre-assigned statistics ====
+observations: 5107 | groups: playerID:gameID 755, gameID 192  
+                         Estimate Std. Error        df     t value     Pr(>|t|)
+(Intercept)            18.9718206  0.7909047  179.9667  23.9874932 5.964247e-58
+idx_c                  -0.8825172  0.0804101 4390.1491 -10.9752025 1.147536e-27
+condition_c             1.9828661  1.1216611  178.5942   1.7677944 7.880284e-02
+critters_c             -1.3735562  2.1434206  177.4738  -0.6408244 5.224634e-01
+entropy_c               2.9367942  2.4658159  177.4532   1.1910030 2.352430e-01
+rep_c                  21.3693678  2.5555703  178.1010   8.3618783 1.727468e-14
+condition_c:critters_c -0.7547437  4.1592653  177.7985  -0.1814608 8.562126e-01
+condition_c:entropy_c  -3.3074164  4.7644742  178.0460  -0.6941829 4.884723e-01
+condition_c:rep_c      10.6507165  4.9338192  178.1571   2.1587164 3.220994e-02
+critters_c:entropy_c   -1.7663174  8.5404780  175.5055  -0.2068172 8.363924e-01
+critters_c:rep_c        1.1343698  8.6123103  175.8895   0.1317149 8.953603e-01
+entropy_c:rep_c        18.2246679  8.0311198  177.5989   2.2692561 2.445539e-02

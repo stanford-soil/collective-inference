@@ -1,0 +1,5 @@
+                participants  networks  relayed  share_relayed  relayed_after_receiving
+condition                                                                              
+interactive              241        77        6          0.025                        4
+slider                   169        61        0          0.000                        0
+unidirectional           209        71       10          0.048                        4

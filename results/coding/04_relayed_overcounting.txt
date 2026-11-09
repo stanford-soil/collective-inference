@@ -1,0 +1,10 @@
+messages with relayed counts (sn): 164 in 31 networks
+  with counts that could be extracted: 145 in 29 networks
+messages stating a count above the network total: 35 (24.1%)
+networks with at least one such message: 9 of 29 | above the total by more than one: 7
+
+Distance of the stated proportion from the network proportion (points), messages stating both counts:
+                     size  mean
+above_network_total            
+False                  79   7.1
+True                   29   3.6
