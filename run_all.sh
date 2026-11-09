@@ -51,6 +51,7 @@ run exp2 02_difficulty_profiles.R
 run exp2 03_robustness.R
 run exp2 04_fixed_preassignment.R
 run exp2 05_attrition.R
+run exp2 06_slider_version_check.py
 
 # 5. Message coding and content analysis
 run coding 01_agreement.py

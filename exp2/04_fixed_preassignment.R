@@ -84,8 +84,8 @@ d.pre <- d.all %>%
 
 f3 <- error ~ idx_c + condition_c*critters_c + condition_c*entropy_c + condition_c*rep_c +
   critters_c*entropy_c + critters_c*rep_c + entropy_c*rep_c + (1 | gameID/playerID)
-m.act <- lmer(f3, data = d.all)
-m.pre <- lmer(f3, data = d.pre)
+m.act <- lmer(f3, data = d.all, control = ctrl)
+m.pre <- lmer(f3, data = d.pre, control = ctrl)
 
 tab <- function(m, lab) {
   cf <- coef(summary(m))

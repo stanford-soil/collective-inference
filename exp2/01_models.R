@@ -21,10 +21,10 @@ cat("Active players per game:\n")
 print(d.all %>% filter(!is.na(guess)) %>% distinct(gameID, playerID) %>% count(gameID, name = "n_active") %>% count(n_active))
 
 # ---- Analysis 1: error over rounds
-model1_basic <- lmer(error ~ idx_c + (1 + idx_c | gameID/playerID), data = d.all)
+model1_basic <- lmer(error ~ idx_c + (1 + idx_c | gameID/playerID), data = d.all, control = ctrl)
 cat("\n=== Model 1: Error ~ Round (centered) ===\n"); print(coef(summary(model1_basic)))
 
-model1_condition <- lmer(error ~ condition_c * idx_c + (1 + idx_c | gameID/playerID), data = d.all)
+model1_condition <- lmer(error ~ condition_c * idx_c + (1 + idx_c | gameID/playerID), data = d.all, control = ctrl)
 cat("\n=== Model 2: Error ~ Round x Condition (effect-coded: slider +0.5, real-time messaging -0.5) ===\n")
 print(coef(summary(model1_condition)))
 
@@ -49,7 +49,7 @@ model3_full <- lmer(
     critters_c * rep_c +
     entropy_c * rep_c +
     (1 | gameID/playerID),
-  data = d.all
+  data = d.all, control = ctrl
 )
 cat("\n=== Full factorial model (difficulty scaled 0-1, higher = harder, centered) ===\n")
 coefs <- coef(summary(model3_full)); print(coefs)

@@ -92,6 +92,7 @@ All models include random intercepts for networks.
 | `03_robustness.R` | Condition x representativeness under the 80% response-rate exclusion (full difficulty model: b = 10.07, p = .069) and without estimates of 0, 50 or 100 (b = 11.74, p = .006); the original notebook's reduced models are printed as well |
 | `04_fixed_preassignment.R` | The condition x difficulty model with each game's pre-assigned statistics (Reviewer 3, point 4): b = 10.65, p = .032; `04_fixed_preassignment_output.txt`, `04_fixed_preassignment_coefs.csv` |
 | `05_attrition.R` | Attrition by condition, for all networks and for the SR networks; `exp2_attrition_by_condition.csv`, `exp2_attrition_by_condition_SR.csv`, `exp2_network_sizes.csv` |
+| `06_slider_version_check.py` | Error and apparent scale reversals in first estimates by slider version (SR vs RS) and condition, for all retained networks (Appendix C) | printed |
 
 ### 5. Message coding and content (`coding/`)
 

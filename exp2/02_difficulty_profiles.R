@@ -17,11 +17,11 @@ print(d.all %>% distinct(gameID, difficulty_profile) %>% count(difficulty_profil
 d.extreme <- d.all %>% filter(difficulty_profile %in% c("HHH", "EEE"))
 cat("\nSample sizes for extreme profiles:\n")
 print(d.extreme %>% distinct(gameID, condition, difficulty_profile) %>% count(difficulty_profile, condition))
-model2_extreme <- lmer(error ~ condition * difficulty_profile + (1 | gameID/playerID), data = d.extreme)
+model2_extreme <- lmer(error ~ condition * difficulty_profile + (1 | gameID/playerID), data = d.extreme, control = ctrl)
 cat("\n=== Model: extreme difficulty profiles ===\n"); print(coef(summary(model2_extreme)))
 
 # All eight profiles
-model2_full <- lmer(error ~ condition * difficulty_profile + (1 | gameID/playerID), data = d.all)
+model2_full <- lmer(error ~ condition * difficulty_profile + (1 | gameID/playerID), data = d.all, control = ctrl)
 cat("\n=== Model: all difficulty profiles ===\n"); print(coef(summary(model2_full)))
 cat("\n=== Estimated marginal means ===\n"); print(emmeans(model2_full, ~ condition | difficulty_profile))
 
@@ -37,5 +37,5 @@ subsets <- list(
 for (k in names(subsets)) {
   d.subset <- d.all %>% filter(!!subsets[[k]])
   cat("\n===", k, "===\n")
-  if (nrow(d.subset) > 100) print(coef(summary(lmer(error ~ condition + (1 | gameID/playerID), data = d.subset))))
+  if (nrow(d.subset) > 100) print(coef(summary(lmer(error ~ condition + (1 | gameID/playerID), data = d.subset, control = ctrl))))
 }

@@ -13,7 +13,7 @@ d.all <- e2$d.all; d.slider_baseline <- e2$d.slider_baseline
 
 model3_full <- lmer(error ~ idx_c + condition_c * critters_c + condition_c * entropy_c + condition_c * rep_c +
                       critters_c * entropy_c + critters_c * rep_c + entropy_c * rep_c + (1 | gameID/playerID),
-                    data = d.all)
+                    data = d.all, control = ctrl)
 
 # (1) 80% response rate (8 rounds, including the slider's pre-social round)
 response_rates <- d.all %>% bind_rows(d.slider_baseline) %>% group_by(playerID) %>%
@@ -23,7 +23,7 @@ exclude_low_response <- response_rates %>% filter(response_rate < 0.80) %>% pull
 cat("Participants excluded (response rate < 80%):", length(exclude_low_response), "\n")
 d.robust1 <- d.all %>% filter(!(playerID %in% exclude_low_response))
 cat("Remaining:", n_distinct(d.robust1$playerID), "participants,", n_distinct(d.robust1$gameID), "games\n")
-model_robust1 <- lmer(error ~ condition_c * rep_c + (1 | gameID/playerID), data = d.robust1)
+model_robust1 <- lmer(error ~ condition_c * rep_c + (1 | gameID/playerID), data = d.robust1, control = ctrl)
 cat("\n=== (1) 80% response rate ===\n"); print(coef(summary(model_robust1)))
 
 # (2) Magnet values
@@ -33,7 +33,7 @@ print(d.all %>% mutate(magnet_type = case_when(guess == 0 ~ "0%", guess == 50 ~ 
         count(magnet_type) %>% mutate(pct = round(n / sum(n) * 100, 1)))
 d.robust2 <- d.all %>% filter(!guess %in% c(0, 50, 100))
 cat("After excluding magnet values:", nrow(d.robust2), "observations\n")
-model_robust2 <- lmer(error ~ condition_c * rep_c + (1 | gameID/playerID), data = d.robust2)
+model_robust2 <- lmer(error ~ condition_c * rep_c + (1 | gameID/playerID), data = d.robust2, control = ctrl)
 cat("\n=== (2) No magnet values ===\n"); print(coef(summary(model_robust2)))
 
 # (3) Networks with four participants. As in the original notebook, participants are
@@ -42,13 +42,13 @@ cat("\n=== (2) No magnet values ===\n"); print(coef(summary(model_robust2)))
 games_by_size <- d.all %>% group_by(gameID) %>% summarise(n_active = n_distinct(playerID), .groups = "drop")
 cat("\nGames by number of players:\n"); print(table(games_by_size$n_active))
 d.robust3 <- d.all %>% filter(gameID %in% games_by_size$gameID[games_by_size$n_active == 4])
-model_robust3 <- lmer(error ~ condition_c * rep_c + (1 | gameID/playerID), data = d.robust3)
+model_robust3 <- lmer(error ~ condition_c * rep_c + (1 | gameID/playerID), data = d.robust3, control = ctrl)
 cat("\n=== (3) Four-player networks ===\n"); print(coef(summary(model_robust3)))
 
 # The same subsets with the full difficulty model (the specification of the main analysis)
 f_full <- formula(model3_full)
-model_robust1_full <- lmer(f_full, data = d.robust1)
-model_robust2_full <- lmer(f_full, data = d.robust2)
+model_robust1_full <- lmer(f_full, data = d.robust1, control = ctrl)
+model_robust2_full <- lmer(f_full, data = d.robust2, control = ctrl)
 cat("\n=== (1) 80% response rate, full difficulty model ===\n"); print(coef(summary(model_robust1_full)))
 cat("\n=== (2) No magnet values, full difficulty model ===\n"); print(coef(summary(model_robust2_full)))
 cat("\nParticipants answering at least 80% of rounds, by condition:\n")

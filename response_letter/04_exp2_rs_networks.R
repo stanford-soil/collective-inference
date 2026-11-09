@@ -7,8 +7,8 @@
 source("../lib/common.R"); source("../lib/exp2_data.R")
 if (Sys.getenv("SUBSET") == "") Sys.setenv(SUBSET = "RS")
 d.all <- load_exp2()$d.all
-m1 <- lmer(error ~ condition_c * idx_c + (1 + idx_c | gameID/playerID), data = d.all)
-m3 <- lmer(error ~ idx_c + condition_c*critters_c + condition_c*entropy_c + condition_c*rep_c + critters_c*entropy_c + critters_c*rep_c + entropy_c*rep_c + (1 | gameID/playerID), data = d.all)
+m1 <- lmer(error ~ condition_c * idx_c + (1 + idx_c | gameID/playerID), data = d.all, control = ctrl)
+m3 <- lmer(error ~ idx_c + condition_c*critters_c + condition_c*entropy_c + condition_c*rep_c + critters_c*entropy_c + critters_c*rep_c + entropy_c*rep_c + (1 | gameID/playerID), data = d.all, control = ctrl)
 s <- exp2_subset()
 cat("\n##### SUBSET:", s, " games:", n_distinct(d.all$gameID), " by condition:", paste(capture.output(print(table(distinct(d.all,gameID,condition)$condition))),collapse=" "), "\n")
 k <- c("idx_c","condition_c","condition_c:idx_c"); print(round(coef(summary(m1))[k,],3))
