@@ -58,6 +58,8 @@ run coding 02_apply_rules.py
 run coding 03_merge_final.py
 run coding 04_content_analysis.R
 SUBSET_TAG=_ALL run coding 04_content_analysis.R SUBSET=ALL
+run coding 05_count_reports_auto.py
+run coding 06_relayed_overcounting.py
 
 # 6. Models of Experiment 1 updating
 if [ "${SKIP_FIT:-0}" != "1" ]; then run models 01_fit.py; fi

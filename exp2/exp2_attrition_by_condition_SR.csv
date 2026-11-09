@@ -1,0 +1,4 @@
+condition,networks_started,assigned,responded,networks_final,retained_final,prop_networks_retained,active_final,active3,active4,active_other,pass80,net80_size0,net80_size1,net80_size2,net80_size3,net80_size4
+interactive,108,432,416,100,400,0.9259259259259259,387,9,90,1,324,1,4,8,44,43
+slider,97,388,382,93,372,0.9587628865979382,368,4,89,0,270,0,12,14,38,29
+Total,205,820,798,193,772,0.9414634146341463,755,13,179,1,594,1,16,22,82,72

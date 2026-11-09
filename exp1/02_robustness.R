@@ -50,3 +50,16 @@ for (def in c("exactly4", "atleast4")) {
   print(dd %>% filter(idx_final_centered == 0) %>% group_by(condition) %>%
           summarise(mean_error = mean(error), sd = sd(error), n = n()))
 }
+
+# (3) Networks launched with exactly four players. 17 of the 236 networks were
+# launched with a different number of players (2 to 9), for which the partner
+# schedule differs (partner_schedule/03_check_partner_schedule.py).
+launched <- read_csv(repo_path("partner_schedule", "exp1_partners.csv"), show_col_types = FALSE) %>%
+  distinct(gameID, nPlayers)
+cat("\n==== Networks by number of players at launch (analysed networks) ====\n")
+print(d.guesses %>% distinct(gameID, condition) %>% left_join(launched, by = "gameID") %>% count(nPlayers, condition) %>%
+        pivot_wider(names_from = condition, values_from = n, values_fill = 0))
+d4 <- d.shifted %>% filter(gameID %in% launched$gameID[launched$nPlayers == 4])
+cat("Launched with four players:", n_distinct(d4$playerID), "participants in", n_distinct(d4$gameID), "networks\n")
+report_fit(fit_lmer(f3, d4, "Launched with four players | +network"))
+

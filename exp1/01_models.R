@@ -60,3 +60,28 @@ report_fit(m5)
 emm_options(lmer.df = "satterthwaite")
 cat("\n==== M5 contrasts vs slider at idx_shifted = 2 ====\n")
 print(contrast(emmeans(m5$model, ~ condition | idx_shifted, at = list(idx_shifted = 2)), "trt.vs.ctrl", ref = 1, adjust = "none"))
+cat("\n==== M5 pairwise contrasts at idx_shifted = 2 and slopes by condition ====\n")
+print(contrast(emmeans(m5$model, ~ condition | idx_shifted, at = list(idx_shifted = 2)), "pairwise", adjust = "none"))
+print(emtrends(m5$model, pairwise ~ condition, var = "idx_shifted", adjust = "none"))
+
+# M4b follow-ups: condition differences in the weight on social discrepancy with
+# real-time messaging as reference, the sample size x discrepancy interaction within
+# each condition, and likelihood-ratio tests of the condition interactions
+cat("\n==== M4b follow-ups ====\n")
+d.rev <- d.revisions %>%
+  mutate(ss = as.numeric(scale(sample_size)), disc = as.numeric(scale(prior_social_discrepancy)),
+         sidx = as.numeric(scale(idx)))
+f4c <- belief_revision ~ ss * disc * cr + sidx + (1 + sidx | playerID) + (1 | gameID)
+for (ref in c("interactive", "slider", "unidirectional")) {
+  d.rev$cr <- relevel(factor(as.character(d.rev$condition)), ref = ref)
+  s4 <- coef(summary(lmer(f4c, data = d.rev, control = ctrl)))
+  cat("\nReference condition:", ref, "\n")
+  print(round(s4[grepl("^disc|^ss:disc", rownames(s4)), ], 4))
+}
+d.rev$cr <- relevel(factor(as.character(d.rev$condition)), ref = "interactive")
+m4_full <- lmer(f4c, data = d.rev, control = ctrl, REML = FALSE)
+m4_no3 <- update(m4_full, . ~ . - ss:disc:cr)
+m4_no2 <- update(m4_no3, . ~ . - disc:cr)
+cat("\nLRT: sample size x discrepancy x condition\n"); print(anova(m4_no3, m4_full))
+cat("\nLRT: discrepancy x condition (without the three-way term)\n"); print(anova(m4_no2, m4_no3))
+

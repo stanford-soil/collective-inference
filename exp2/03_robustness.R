@@ -45,9 +45,24 @@ d.robust3 <- d.all %>% filter(gameID %in% games_by_size$gameID[games_by_size$n_a
 model_robust3 <- lmer(error ~ condition_c * rep_c + (1 | gameID/playerID), data = d.robust3)
 cat("\n=== (3) Four-player networks ===\n"); print(coef(summary(model_robust3)))
 
+# The same subsets with the full difficulty model (the specification of the main analysis)
+f_full <- formula(model3_full)
+model_robust1_full <- lmer(f_full, data = d.robust1)
+model_robust2_full <- lmer(f_full, data = d.robust2)
+cat("\n=== (1) 80% response rate, full difficulty model ===\n"); print(coef(summary(model_robust1_full)))
+cat("\n=== (2) No magnet values, full difficulty model ===\n"); print(coef(summary(model_robust2_full)))
+cat("\nParticipants answering at least 80% of rounds, by condition:\n")
+rr_cond <- response_rates %>% left_join(d.all %>% bind_rows(d.slider_baseline) %>% distinct(playerID, condition), by = "playerID")
+print(rr_cond %>% group_by(condition) %>% summarise(n = n(), pass80 = sum(response_rate >= 0.8), prop = mean(response_rate >= 0.8)))
+print(chisq.test(table(rr_cond$condition, rr_cond$response_rate >= 0.8)))
+cat("\nCell means (all rounds) after the 80% exclusion:\n")
+print(d.robust1 %>% group_by(rep_bin, condition) %>% summarise(mean_error = mean(error, na.rm = TRUE), n = n(), .groups = "drop"))
+
 cat("\n=== Summary: condition x representativeness interaction ===\n")
-models <- list("Main (model3_full)" = model3_full, "80% response rate" = model_robust1,
-               "No magnet values" = model_robust2, "Four-player networks" = model_robust3)
+models <- list("Main (model3_full)" = model3_full,
+               "80% response rate, full model" = model_robust1_full, "No magnet values, full model" = model_robust2_full,
+               "80% response rate, reduced model" = model_robust1, "No magnet values, reduced model" = model_robust2,
+               "Four-player networks, reduced model" = model_robust3)
 print(map_dfr(names(models), function(n) {
   s <- coef(summary(models[[n]]))["condition_c:rep_c", ]
   tibble(analysis = n, b = round(s[["Estimate"]], 2), t = round(s[["t value"]], 2), df = round(s[["df"]], 1),

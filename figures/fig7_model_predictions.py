@@ -130,150 +130,101 @@ game_data['rep_bin'] = np.where(
 # =============================================================================
 # MODEL SIMULATIONS
 # =============================================================================
+# Both models are simulated on the partner schedule that actually ran (who each
+# player received from in each round; partner_schedule/exp2_partners.csv), with the
+# timing used in models/01_fit.py:
+#   Belief model (slider timing): the first estimate is the player's own-sample
+#     proportion; each of the 7 later estimates averages the player's previous
+#     estimate with the previous estimate of that round's sender.
+#   Evidence model (messaging timing): messages precede the estimate, so each of the
+#     8 estimates moves toward the pooled proportion of the player's own sample and
+#     the samples of every distinct sender heard up to and including that round.
+# Gaussian noise with the fitted residual SD is added at every update. Predicted
+# error is the mean absolute error of individual final estimates (the measure used
+# for the data). The error of the network's mean estimate without noise, which the
+# original submission reported, is printed for comparison.
 
-def simulate_belief(game_df, alpha=BELIEF_ALPHA, sigma=BELIEF_SIGMA,
-                    n_rounds=8, n_sims=1000):
-    """
-    Belief model: agents average their belief with their partner's belief.
+partners = common.filter_exp2(pd.read_csv(common.EXP2_PARTNERS))
+N_SIMS = 1000
+rng = np.random.default_rng(42)
 
-    belief(t+1) = α * own_belief + (1-α) * partner_belief + N(0, σ)
-    """
-    players = game_df.drop_duplicates('playerID')
-    n_players = len(players)
 
-    if n_players < 2:
+def sender_index(game_id, ids):
+    """sender[t] = array giving, for each player, the index of the player they received from in round t."""
+    idx = {p: i for i, p in enumerate(ids)}
+    sender = {}
+    for rd, sch in partners[partners.gameID == game_id].groupby('round'):
+        a = np.full(len(ids), -1)
+        for pid, sid in zip(sch.playerID, sch.partnerID):
+            if pid in idx and sid in idx:
+                a[idx[pid]] = idx[sid]
+        sender[int(rd)] = a
+    if any(t not in sender or (sender[t] < 0).any() for t in range(1, 9)):
         return None
-
-    player_mles = []
-    for _, row in players.iterrows():
-        mle = row['nRabbits'] / row['nCritters'] if row['nCritters'] > 0 else 0.5
-        player_mles.append(mle)
-
-    all_final_beliefs = []
-    for _ in range(n_sims):
-        beliefs = list(player_mles)
-
-        for round_idx in range(n_rounds):
-            new_beliefs = []
-            for p_idx in range(n_players):
-                other_players = [i for i in range(n_players) if i != p_idx]
-                partner_idx = other_players[round_idx % len(other_players)]
-
-                new_belief = alpha * beliefs[p_idx] + (1 - alpha) * beliefs[partner_idx]
-                new_belief = np.clip(new_belief + np.random.normal(0, sigma), 0, 1)
-                new_beliefs.append(new_belief)
-
-            beliefs = new_beliefs
-
-        all_final_beliefs.append(beliefs)
-
-    return np.mean(all_final_beliefs, axis=0)
+    return sender
 
 
-def simulate_evidence(game_df, delta=EVIDENCE_DELTA, alpha=EVIDENCE_ALPHA,
-                      sigma=EVIDENCE_SIGMA, n_rounds=8, n_sims=1000):
-    """
-    Evidence model: agents pool sample counts to compute a pooled MLE.
-
-    pooled_mle = (own_r + δ * cum_r) / (own_n + δ * cum_n)
-    belief(t+1) = α * own_belief + (1-α) * pooled_mle + N(0, σ)
-    """
+def simulate_game(game_df, truth):
     players = game_df.drop_duplicates('playerID')
-    n_players = len(players)
-
-    if n_players < 2:
+    ids = list(players.playerID)
+    r = players.nRabbits.values.astype(float)
+    n = players.nCritters.values.astype(float)
+    mle = np.where(n > 0, r / np.maximum(n, 1), 0.5)
+    sender = sender_index(game_df.gameID.iloc[0], ids)
+    if sender is None:
         return None
-
-    player_list = []
-    for _, row in players.iterrows():
-        n = int(row['nCritters'])
-        player_list.append({
-            'r': int(row['nRabbits']),
-            's': int(row['nSquirrels']),
-            'n': n,
-            'mle': row['nRabbits'] / n if n > 0 else 0.5
-        })
-
-    # Precompute cumulative evidence for each player (from all others)
-    player_cum_r = []
-    player_cum_s = []
-    for p_idx in range(n_players):
-        cum_r = sum(p['r'] for i, p in enumerate(player_list) if i != p_idx)
-        cum_s = sum(p['s'] for i, p in enumerate(player_list) if i != p_idx)
-        player_cum_r.append(cum_r)
-        player_cum_s.append(cum_s)
-
-    all_final_beliefs = []
-    for _ in range(n_sims):
-        beliefs = [p['mle'] for p in player_list]
-
-        for round_idx in range(n_rounds):
-            new_beliefs = []
-            for p_idx, player in enumerate(player_list):
-                # Pooled MLE (own + discounted partner evidence)
-                pooled_r = player['r'] + delta * player_cum_r[p_idx]
-                pooled_n = player['n'] + delta * (player_cum_r[p_idx] + player_cum_s[p_idx])
-                pooled_mle = pooled_r / pooled_n if pooled_n > 0 else 0.5
-
-                # Self-weight step
-                new_belief = alpha * beliefs[p_idx] + (1 - alpha) * pooled_mle
-
-                # Add noise and clip
-                new_belief = np.clip(new_belief + np.random.normal(0, sigma), 0, 1)
-                new_beliefs.append(new_belief)
-
-            beliefs = new_beliefs
-
-        all_final_beliefs.append(beliefs)
-
-    return np.mean(all_final_beliefs, axis=0)
+    out = {}
+    for noise in (True, False):
+        B = np.tile(mle, (N_SIMS if noise else 1, 1))
+        for t in range(1, 8):
+            B = BELIEF_ALPHA * B + (1 - BELIEF_ALPHA) * B[:, sender[t]]
+            if noise:
+                B = np.clip(B + rng.normal(0, BELIEF_SIGMA, B.shape), 0, 1)
+        E = np.tile(mle, (N_SIMS if noise else 1, 1))
+        heard = [set() for _ in ids]
+        for t in range(1, 9):
+            for i in range(len(ids)):
+                heard[i].add(sender[t][i])
+            cum_r = np.array([sum(r[j] for j in heard[i]) for i in range(len(ids))])
+            cum_n = np.array([sum(n[j] for j in heard[i]) for i in range(len(ids))])
+            pooled = (r + EVIDENCE_DELTA * cum_r) / (n + EVIDENCE_DELTA * cum_n)
+            E = EVIDENCE_ALPHA * E + (1 - EVIDENCE_ALPHA) * pooled
+            if noise:
+                E = np.clip(E + rng.normal(0, EVIDENCE_SIGMA, E.shape), 0, 1)
+        tag = '' if noise else '_netmean_nonoise'
+        if noise:
+            out['belief_error'] = 100 * np.abs(B - truth).mean()
+            out['evidence_error'] = 100 * np.abs(E - truth).mean()
+        else:
+            out['belief_error' + tag] = 100 * abs(B.mean() - truth)
+            out['evidence_error' + tag] = 100 * abs(E.mean() - truth)
+    return out
 
 
 # =============================================================================
 # COMPUTE PREDICTIONS
 # =============================================================================
 
-np.random.seed(42)
 print("\nComputing model predictions...")
-
 model_errors = []
 for _, row in game_data.iterrows():
-    game_id = row['gameID']
-    game_df = exp2[exp2['gameID'] == game_id]
-    round1 = game_df[game_df['idx'] == 1]
-
-    if len(round1) < 2:
+    game_df = exp2[(exp2['gameID'] == row['gameID']) & (exp2['idx'] == 1)]
+    if len(game_df) < 2:
         continue
-
-    direction = row['direction']
-    network_mle_aligned = row['network_mle_aligned']
-
-    # Belief model (slider)
-    belief_beliefs = simulate_belief(round1)
-    if belief_beliefs is None:
+    o = simulate_game(game_df, row['network_mle_aligned'] if row['direction'] == 'SR' else row['network_mle_raw'])
+    if o is None:
         continue
-    if direction == 'RS':
-        belief_beliefs = 1 - belief_beliefs
-    belief_error = np.abs(belief_beliefs.mean() - network_mle_aligned) * 100
-
-    # Evidence model (chat)
-    evidence_beliefs = simulate_evidence(round1)
-    if evidence_beliefs is None:
-        continue
-    if direction == 'RS':
-        evidence_beliefs = 1 - evidence_beliefs
-    evidence_error = np.abs(evidence_beliefs.mean() - network_mle_aligned) * 100
-
-    model_errors.append({
-        'gameID': game_id,
-        'belief_error': belief_error,
-        'evidence_error': evidence_error,
-        'rep_bin': row['rep_bin']
-    })
+    o.update(gameID=row['gameID'], rep_bin=row['rep_bin'])
+    model_errors.append(o)
 
 model_df = pd.DataFrame(model_errors)
 print(f"Model predictions: {len(model_df)} games")
 
+# Observed final-round error (individual estimates) for comparison
+obs = exp2[exp2['idx'] == 8].merge(game_data[['gameID', 'network_mle_aligned', 'rep_bin']], on='gameID')
+obs['error'] = (obs['guess'] - 100 * obs['network_mle_aligned']).abs()
+print("\nObserved final-round error by condition (individual estimates):")
+print(obs.groupby(['condition', 'rep_bin']).error.agg(['mean', 'size']).round(1).to_string())
 
 # =============================================================================
 # COMPUTE AND PRINT RESULTS
@@ -283,19 +234,15 @@ print("\n" + "=" * 70)
 print("PREDICTIONS BY REPRESENTATIVENESS")
 print("=" * 70)
 
-for model_name, col in [('Belief', 'belief_error'), ('Evidence', 'evidence_error')]:
+for model_name, col in [('Belief', 'belief_error'), ('Evidence', 'evidence_error'),
+                        ('Belief, network mean without noise', 'belief_error_netmean_nonoise'),
+                        ('Evidence, network mean without noise', 'evidence_error_netmean_nonoise')]:
     rep = model_df[model_df['rep_bin'] == 'Representative'][col]
     unrep = model_df[model_df['rep_bin'] == 'Unrepresentative'][col]
     print(f"\n{model_name} model:")
     print(f"  Representative:   {rep.mean():.1f} (SD={rep.std():.1f})")
     print(f"  Unrepresentative: {unrep.mean():.1f} (SD={unrep.std():.1f})")
     print(f"  Effect:           {unrep.mean() - rep.mean():.1f}")
-
-belief_effect = (model_df[model_df['rep_bin'] == 'Unrepresentative']['belief_error'].mean() -
-                 model_df[model_df['rep_bin'] == 'Representative']['belief_error'].mean())
-evidence_effect = (model_df[model_df['rep_bin'] == 'Unrepresentative']['evidence_error'].mean() -
-                   model_df[model_df['rep_bin'] == 'Representative']['evidence_error'].mean())
-print(f"\nRatio of effects: {belief_effect / evidence_effect:.1f}x")
 
 
 # =============================================================================
@@ -347,7 +294,7 @@ ax.errorbar(x, belief_means, yerr=belief_errs,
 
 ax.set_xticks(x)
 ax.set_xticklabels(labels, rotation=30, ha='right')
-ax.set_ylabel('Predicted Error')
+ax.set_ylabel('Predicted error (final round)')
 ax.set_title('Representativeness')
 ax.set_xlim(-0.4, 1.4)
 ax.set_ylim(0, None)

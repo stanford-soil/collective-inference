@@ -3,8 +3,8 @@ Exp 2, real-time messaging condition, round 2 (the first one-way round; neither
 the sender nor the recipient had been encountered before). Regresses the change
 in estimate on the distance to the sender's sample (received from) and to the
 recipient's sample (sent to), with standard errors clustered by network.
-Uses all real-time messaging networks with coded messages (SR and RS; RS
-estimates are converted to the rabbit share).
+Uses the SR real-time messaging networks with coded messages by default
+(SUBSET=ALL adds the RS networks, with RS estimates converted to the rabbit share).
 Inputs: data/exp2/coded_messages.csv, data/derived/exp2_clean_data.csv,
 exp2_partners.csv. Output: printed. Run from partner_schedule/."""
 import os
@@ -14,6 +14,8 @@ import common
 import pandas as pd, numpy as np, statsmodels.formula.api as smf
 d=pd.read_csv(common.EXP2_CODED_MSGS)
 x=pd.read_csv(common.EXP2_CLEAN); s=pd.read_csv('exp2_partners.csv')
+d=common.filter_exp2(d); x=common.filter_exp2(x); s=common.filter_exp2(s)   # SR networks by default (SUBSET=ALL for all)
+print('Networks:', common.exp2_subset())
 samp=d.groupby(['gameID','sender.id'])['mleEstimate.x'].first()*100
 orient=d.groupby('gameID').direction.first()
 x=x.dropna(subset=['guess'])

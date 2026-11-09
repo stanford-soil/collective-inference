@@ -67,10 +67,10 @@ Unless a file is named, a step's results are printed (and saved in `logs/` by `r
 | `01_load_raw_logs.py` | Extracts the message logs and player lists from the raw exports | `data/derived/exp1_messages_raw.csv`, `exp1_players_raw.csv`, `exp1_games_raw.csv`, `exp2_chat_raw.csv`, `exp2_players_raw.csv` |
 | `02_build_partner_tables.py` | Applies the recipient rule to every network | `exp1_partners.csv`, `exp2_partners.csv` (per player and round: recipient, sender, mutual or not) |
 | `03_check_partner_schedule.py` | Structure of the rule by network size; agreement of the logged recipients with the tables (all Experiment 1 and Experiment 2 messages); share of mutual exchanges by round and condition | printed |
-| `04_influence_test.py` | Whose sample moved estimates in the first one-way round (Experiment 2, real-time messaging) | printed |
+| `04_influence_test.py` | Whose sample moved estimates in the first one-way round (Experiment 2, real-time messaging, SR networks: toward the sender b = 0.26, toward the recipient b = 0.05, p = .18) | printed |
 | `05_prep_mutual_vs_oneway.py`, `06_mutual_vs_oneway.R` | Change in error in mutual vs one-way rounds, relative to the slider (Experiment 1; Experiment 2 SR) | printed |
 | `07_relay.py` | Same-round relaying of a sender's counts in Experiment 1, round 2 | printed; `data/derived/exp1_relay_round2.csv` |
-| `08_coherence.py` | Apparent question-answer coherence in one-way rounds (Experiment 2 chat) | printed |
+| `08_coherence.py` | Apparent question-answer coherence in one-way and mutual rounds (Experiment 2 chat, SR networks: 49% of 74 vs 51% of 51 questions) | printed |
 | `09_first_encounter.R` | Weight on a sender's information at the first vs later encounters (Reviewer 2, point 3) | `09_first_encounter_output.txt`, `09_first_encounter_coefs.csv` |
 
 ### 3. Experiment 1 (`exp1/`)
@@ -80,7 +80,7 @@ All models include random intercepts for networks.
 | Script | Results |
 |---|---|
 | `01_models.R` | M1 error over rounds; M2 error by round and condition; M3 condition differences at the final round (slider vs real-time messaging b = 3.20, t(208.8) = 3.35; delayed vs real-time messaging b = 1.65, t(210.3) = 1.76, p = .080), its condition x time likelihood-ratio test and final-round means; M4 adaptive weighting and the condition follow-up M4b; M5 stabilization and its contrasts at the first observed change |
-| `02_robustness.R` | M3 under exclusion thresholds of 0%, 50%, 80% and 100%, and in complete networks |
+| `02_robustness.R` | M3 under exclusion thresholds of 0%, 50%, 80% and 100%, in complete networks, and in networks launched with four players (slider vs real-time messaging b = 3.38, p < .001) |
 | `03_attrition.R` | Attrition by condition and its tests; `exp1_attrition_by_condition.csv`, `exp1_network_sizes.csv` |
 
 ### 4. Experiment 2 (`exp2/`, SR networks)
@@ -89,9 +89,9 @@ All models include random intercepts for networks.
 |---|---|
 | `01_models.R` | Error over rounds and by condition (condition b = 2.57, p = .090); condition x difficulty model with centered continuous predictors (condition x representativeness b = 12.72, p = .008); correlation of entropy and representativeness; cell means; final-round error by condition and representativeness half |
 | `02_difficulty_profiles.R` | Condition differences by binned difficulty profile |
-| `03_robustness.R` | Condition x representativeness under the 80% response-rate exclusion, without magnet values, and in four-player networks |
+| `03_robustness.R` | Condition x representativeness under the 80% response-rate exclusion (full difficulty model: b = 10.07, p = .069) and without estimates of 0, 50 or 100 (b = 11.74, p = .006); the original notebook's reduced models are printed as well |
 | `04_fixed_preassignment.R` | The condition x difficulty model with each game's pre-assigned statistics (Reviewer 3, point 4): b = 10.65, p = .032; `04_fixed_preassignment_output.txt`, `04_fixed_preassignment_coefs.csv` |
-| `05_attrition.R` | Attrition by condition, all networks; `exp2_attrition_by_condition.csv`, `exp2_network_sizes.csv` |
+| `05_attrition.R` | Attrition by condition, for all networks and for the SR networks; `exp2_attrition_by_condition.csv`, `exp2_attrition_by_condition_SR.csv`, `exp2_network_sizes.csv` |
 
 ### 5. Message coding and content (`coding/`)
 
@@ -103,6 +103,8 @@ All models include random intercepts for networks.
 | `02_apply_rules.py` | Applies adjudication rules A and B and lists the remaining disagreements |
 | `03_merge_final.py` | `exp2_message_codes_final.csv`: original, second and final code of every message, with how each disagreement was resolved |
 | `04_content_analysis.R` | Share of messages relaying social information and final-round error, with the original and the final codes (final codes, SR networks: b = -1.60, p = .031; `SUBSET=ALL`: b = -0.76, p = .094) |
+| `05_count_reports_auto.py` | Automated detector of messages that report counts, validated against the final codes (SR: sensitivity .96, specificity .91, kappa = .83) and applied to Experiment 1 messages (real-time 81%, delayed 90%) and to the Experiment 2 chat networks missing from the original coding file | printed |
+| `06_relayed_overcounting.py` | Relayed counts that exceed what the whole network saw (SR: 35 of 145 messages, 9 of 29 networks) | `exp2_relayed_overcounts.csv` |
 
 ### 6. Models (`models/`)
 
@@ -120,7 +122,7 @@ All models include random intercepts for networks.
 | `fig4_exp2_design.R` | Figure 4, Experiment 2 design: the SR networks in the three-dimensional difficulty space (total sample size, entropy, representativeness; active-player statistics) as three pairwise projections; point area is the number of networks |
 | `fig5_exp2_results.R` | Figure 5, Experiment 2 results (93 slider and 99 real-time messaging networks): (A) error by round; (B) final-round error by condition within median-split bins of each difficulty dimension, with 95% CIs that resample networks |
 | `fig6_message_content.R` | Figure 6, final-round error by the share of messages relaying social information, and example messages |
-| `fig7_model_predictions.py` | Figure 7, predicted final error of the Evidence model (real-time messaging) and the Belief model (slider) for unrepresentative and representative networks, from `models/fit_results.csv` |
+| `fig7_model_predictions.py` | Figure 7, predicted final-round error (mean absolute error of individual estimates) of the Evidence model and the Belief model for unrepresentative and representative networks, simulated on the partner schedule that ran with the parameters in `models/fit_results.csv`; also prints the observed final-round errors and the network-mean error without noise reported in the original submission |
 
 Colors: slider #E69F00, delayed messaging #56B4E9, real-time messaging #009E73.
 
