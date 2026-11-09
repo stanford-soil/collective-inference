@@ -145,8 +145,8 @@ make_fig5 <- function(subset, sample_label) {
           plot.tag = element_text(face = "bold"))
 
   (p_a | p_b) + plot_layout(widths = c(1, 1.8)) +
-    plot_annotation(title = sample_label, theme = theme(plot.title = element_text(size = 11)))
+    plot_annotation(title = sample_label, theme = theme(plot.title = element_text(size = 11)))  # no title when sample_label is NULL
 }
 
-fig5 <- make_fig5("SR", "Experiment 2, SR games (primary analysis)")
+fig5 <- make_fig5("SR", NULL)
 save_fig(fig5, "fig5_exp2_results", width = 11.5, height = 4)
