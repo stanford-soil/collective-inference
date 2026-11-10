@@ -69,7 +69,7 @@ load_exp2 <- function(networks = "SR") {
                             "Representative", "Unrepresentative"),
                      levels = c("Representative", "Unrepresentative")))
 
-  # Model predictors. Condition is effect coded (-0.5 chat, +0.5 slider). Each
+  # Model predictors. Condition is effect coded (-0.5 messaging, +0.5 slider). Each
   # difficulty dimension is scaled to 0-1 with higher = harder, then mean centered.
   d <- d %>% mutate(
     condition_c = ifelse(condition == "slider", 0.5, -0.5),

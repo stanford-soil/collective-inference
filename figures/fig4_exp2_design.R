@@ -49,7 +49,7 @@ panel <- function(dx, dy, tag) {
     geom_point(alpha = 0.6, stroke = 0) +
     sx + sy +
     scale_color_manual(name = NULL, values = condition_colors[c("slider", "interactive")],
-                       labels = condition_labels[c("slider", "interactive")]) +
+                       labels = exp2_condition_labels) +
     scale_size_area(name = "Networks", max_size = 5, limits = c(1, max_networks), breaks = c(1, 3, 5, 7)) +
     labs(x = dx$lab, y = dy$lab, tag = tag) +
     theme_few(base_size = 11) +

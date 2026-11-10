@@ -27,8 +27,13 @@ EXP2_CODED_MSGS <- repo_path("data", "exp2", "coded_messages.csv")
 condition_breaks <- c("slider", "unidirectional", "interactive")
 condition_labels <- c(
   "slider"         = "Slider (numerical estimates)",
-  "unidirectional" = "Delayed messaging",
-  "interactive"    = "Real-time messaging"
+  "unidirectional" = "Batched messaging",
+  "interactive"    = "Live messaging"
+)
+# Experiment 2 had only the live version of messaging, called "messaging" in the paper.
+exp2_condition_labels <- c(
+  "slider"      = "Slider (numerical estimates)",
+  "interactive" = "Messaging"
 )
 condition_colors <- c(
   "slider"         = "#E69F00",

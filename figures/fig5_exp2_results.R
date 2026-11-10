@@ -23,9 +23,9 @@ row_boot <- function(x, n_boot = 1000) {
 
 exp2_conditions <- c("slider", "interactive")
 color_scale <- scale_color_manual(name = NULL, values = condition_colors[exp2_conditions],
-                                  labels = condition_labels[exp2_conditions], breaks = exp2_conditions)
+                                  labels = exp2_condition_labels, breaks = exp2_conditions)
 fill_scale <- scale_fill_manual(name = NULL, values = condition_colors[exp2_conditions],
-                                labels = condition_labels[exp2_conditions], breaks = exp2_conditions)
+                                labels = exp2_condition_labels, breaks = exp2_conditions)
 
 # Mean of `error` over participants with a percentile bootstrap that resamples networks
 cluster_boot <- function(df, n_boot = 2000) {

@@ -6,7 +6,7 @@ A message is flagged when it contains a number followed by an animal word
 
 1. The detector is validated against the final hand codes of Experiment 2
    (a message reports counts if its final code includes pn or sn).
-2. It is applied to the Experiment 2 chat networks that are missing from the
+2. It is applied to the Experiment 2 messaging networks that are missing from the
    original coding file, to check that they resemble the coded networks.
 3. It is applied to the Experiment 1 messages, which were never coded by hand.
 
@@ -55,7 +55,7 @@ print('1. Validation against the final hand codes of Experiment 2')
 print('   analysed networks: ', validate(analysed.detected, analysed.hand_coded))
 print('   all coded networks:', validate(coded.detected, coded.hand_coded))
 
-# ---- 2. Experiment 2 chat networks missing from the coding file -----------------------------
+# ---- 2. Experiment 2 messaging networks missing from the coding file -----------------------------
 treatment = pd.read_csv(common.EXP2_CLEAN).drop_duplicates('gameID').set_index('gameID')['treatmentName.x']
 chat_networks = set(treatment.index[treatment.str.contains('interactive')])
 
@@ -64,7 +64,7 @@ chat = chat.drop_duplicates(['gameID', 'sender', 'time', 'text'])
 chat = chat[chat.gameID.isin(chat_networks) & chat.gameID.isin(sr_games)].copy()
 chat['hand_coded_network'] = chat.gameID.isin(set(coded.gameID))
 chat['detected'] = chat.text.map(reports_counts)
-print('\n2. Analysed chat networks, by whether the original coding file includes them')
+print('\n2. Analysed messaging networks, by whether the original coding file includes them')
 print(chat.groupby('hand_coded_network').agg(
     networks=('gameID', 'nunique'), messages=('text', 'size'), share_reporting_counts=('detected', 'mean')
 ).round(3).to_string())

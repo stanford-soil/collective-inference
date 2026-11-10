@@ -1,6 +1,6 @@
 """Could participants tell that their partner was not answering them?
 
-Experiment 2 chat. In a one-way round, the messages a participant receives come
+Experiment 2, messaging condition. In a one-way round, the messages a participant receives come
 from someone who never saw the participant's own messages. If conversations in
 one-way rounds had looked incoherent, participants could have noticed the schedule.
 

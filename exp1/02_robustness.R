@@ -12,8 +12,8 @@ source("../lib/exp1_data.R")
 exp1 <- load_exp1()
 responders <- load_exp1_responders()
 
-# Real-time messaging is the reference: the two condition coefficients are the
-# final-round differences slider - real-time and delayed - real-time.
+# Live messaging is the reference: the two condition coefficients are the
+# final-round differences slider - live and batched - live.
 m3_formula <- error ~ poly(idx_final_centered, 2) * condition_interactive +
   (1 + idx_final_centered | playerID) + (1 | gameID)
 

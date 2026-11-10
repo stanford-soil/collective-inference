@@ -5,7 +5,7 @@
 #      on how evenly the sample is split (entropy), or on how representative each
 #      participant's sample is?
 #
-# Condition is effect coded (-0.5 chat, +0.5 slider), so a positive condition
+# Condition is effect coded (-0.5 messaging, +0.5 slider), so a positive condition
 # coefficient means higher error in the slider condition. The difficulty predictors
 # are scaled 0-1 (higher = harder) and centered (see lib/exp2_data.R).
 #

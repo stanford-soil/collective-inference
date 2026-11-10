@@ -1,4 +1,4 @@
-"""Builds the final code of every Experiment 2 chat message from two independent codings.
+"""Builds the final code of every Experiment 2 message from two independent codings.
 
 Codes (see codebook.md): pn own counts, pb own belief, sn others' counts,
 sb others' or the group's belief, q question, o other. A message can have several.

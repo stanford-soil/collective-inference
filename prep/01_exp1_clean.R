@@ -39,11 +39,11 @@ load_batch <- function(batch_dir) {
 batch_dirs <- list.files(repo_path("data", "exp1", "raw"), pattern = "^1_prereg_", full.names = TRUE)
 estimates <- map_df(batch_dirs, load_batch)
 
-# The delayed messaging ("unidirectional") exports contain duplicated rows; keep one of each.
-delayed <- c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")
+# The batched messaging ("unidirectional") exports contain duplicated rows; keep one of each.
+batched <- c("rerun-unidirectional- 0.7", "rerun-unidirectional- 0.3")
 estimates <- bind_rows(
-  estimates %>% filter(!(treatmentName %in% delayed)),
-  estimates %>% filter(treatmentName %in% delayed) %>%
+  estimates %>% filter(!(treatmentName %in% batched)),
+  estimates %>% filter(treatmentName %in% batched) %>%
     distinct(playerID, gameID, guess, roundID, .keep_all = TRUE))
 
 # The target of each estimate: the percentage of rabbits in the network's combined

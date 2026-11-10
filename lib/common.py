@@ -41,8 +41,13 @@ FIGURES = repo_path('figures')
 # The data use the original condition names; the paper uses the labels below.
 CONDITION_LABELS = {
     'slider': 'Slider (numerical estimates)',
-    'unidirectional': 'Delayed messaging',
-    'interactive': 'Real-time messaging',
+    'unidirectional': 'Batched messaging',
+    'interactive': 'Live messaging',
+}
+# Experiment 2 had only the live version of messaging, called "messaging" in the paper.
+EXP2_CONDITION_LABELS = {
+    'slider': 'Slider (numerical estimates)',
+    'interactive': 'Messaging',
 }
 CONDITION_COLORS = {
     'slider': '#E69F00',

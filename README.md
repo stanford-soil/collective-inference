@@ -24,7 +24,7 @@ Each script answers one question. It begins with a comment that states the quest
 | `lib/` | The few things shared between scripts: file paths and condition names (`common.R`, `common.py`), and the functions that load the analysis data of each experiment (`exp1_data.R`, `exp2_data.R`). |
 | `prep/` | From the raw exports to the clean data. |
 | `exp1/`, `exp2/` | The analyses of each experiment. |
-| `coding/` | The coding of the Experiment 2 chat messages and the analyses of message content. |
+| `coding/` | The coding of the Experiment 2 messages and the analyses of message content. |
 | `partner_schedule/` | Who sent to whom in each round, and the analyses that depend on it. |
 | `models/` | The Belief and Evidence models. |
 | `figures/` | One script per data figure. |
@@ -56,7 +56,7 @@ Each script answers one question. It begins with a comment that states the quest
 | Comparison of the two slider versions (Appendix C) | `exp2/05_slider_version_check.py` |
 | Figures 4 and 5 | `figures/fig4_exp2_design.R`, `figures/fig5_exp2_results.R` |
 
-### Message content (Experiment 2 chat)
+### Message content (Experiment 2, messaging condition)
 
 | Result | Script |
 |---|---|
@@ -102,8 +102,8 @@ Conditions keep their original names in the data and code.
 | In the data | In the paper |
 |---|---|
 | `slider` | slider (numerical estimates) |
-| `unidirectional` | delayed messaging |
-| `interactive` | real-time messaging (Experiment 1), chat (Experiment 2) |
+| `unidirectional` | batched messaging (Experiment 1): messages were delivered together when the messaging period ended |
+| `interactive` | live messaging (Experiment 1), messaging (Experiment 2): each message was delivered as it was sent |
 
 Other names: `gameID` is a network, `playerID` a participant, `idx` the round, `guess` an estimate (0 to 100, percentage of rabbits) and `error` its absolute distance from the percentage of rabbits in the network's combined sample.
 

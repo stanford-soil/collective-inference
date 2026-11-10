@@ -139,7 +139,7 @@ for column, condition, label in lines:
                 yerr=[[mean - low for mean, (low, high) in zip(means, intervals)],
                       [high - mean for mean, (low, high) in zip(means, intervals)]],
                 color=common.CONDITION_COLORS[condition], marker='o', markersize=8, linewidth=2, capsize=3,
-                label=label + common.CONDITION_LABELS[condition])
+                label=label + common.EXP2_CONDITION_LABELS[condition])
 ax.set_xticks([0, 1])
 ax.set_xticklabels(bins, rotation=30, ha='right')
 ax.set_ylabel('Predicted error (final round)')

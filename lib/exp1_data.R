@@ -15,7 +15,7 @@ read_exp1 <- function(path) {
 
 # In the slider condition the round-1 estimate is made before any social information,
 # so slider rounds are shifted down by one. idx_final_centered is 0 in the last
-# round of each condition. Real-time messaging is the reference condition.
+# round of each condition. Live messaging is the reference condition.
 align_rounds <- function(d) {
   d %>% mutate(
     idx_shifted = if_else(condition == "slider", idx - 1, idx),

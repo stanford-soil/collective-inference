@@ -1,4 +1,4 @@
-# Experiment 2 chat: what the messages contained, and whether relaying others'
+# Experiment 2, messaging condition: what the messages contained, and whether relaying others'
 # information was related to accuracy.
 #
 # For each coding (final codes, and the first author's original coding) and each set

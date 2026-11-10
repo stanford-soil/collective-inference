@@ -8,7 +8,7 @@
 #   M5  stabilization: change in estimate between consecutive rounds, by condition
 #
 # Every model has random intercepts for participants and for networks.
-# Condition names: slider, unidirectional (delayed messaging), interactive (real-time messaging).
+# Condition names: slider, unidirectional (batched messaging), interactive (live messaging).
 #
 # Reads   data/derived/exp1_clean_data.csv
 # Prints  the fixed effects of each model and the follow-up tests
@@ -30,7 +30,7 @@ m2 <- fit(error ~ idx * condition + (1 + idx | playerID) + (1 | gameID),
 
 # ---- M3: condition differences in the final round -------------------------------------
 # idx_final_centered is 0 in each condition's last round, so the condition
-# coefficients are differences in the final round. Real-time messaging = reference.
+# coefficients are differences in the final round. Live messaging = reference.
 m3_formula <- error ~ poly(idx_final_centered, 2) * condition_interactive +
   (1 + idx_final_centered | playerID) + (1 | gameID)
 m3 <- fit(m3_formula, exp1$shifted, "M3: condition differences in the final round")

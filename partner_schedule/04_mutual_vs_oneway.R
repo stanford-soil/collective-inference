@@ -33,11 +33,11 @@ exp1 <- read_csv(EXP1_CLEAN, show_col_types = FALSE) %>%
   filter(gameID %in% four_player_networks) %>%
   error_changes() %>%
   mutate(mutual = idx %in% c(4, 7, 10),
-         realtime_mutual = as.integer(condition == "interactive" & mutual),
-         delayed_mutual  = as.integer(condition == "unidirectional" & mutual))
+         live_mutual    = as.integer(condition == "interactive" & mutual),
+         batched_mutual = as.integer(condition == "unidirectional" & mutual))
 
 cat("\n==== Experiment 1:", nrow(exp1), "changes ====\n")
-print_terms(lmer(error_change ~ round + condition + realtime_mutual + delayed_mutual +
+print_terms(lmer(error_change ~ round + condition + live_mutual + batched_mutual +
                    (1 | gameID) + (1 | playerID), data = exp1))
 
 # ---- Experiment 2: the analysed networks -----------------------------------------------

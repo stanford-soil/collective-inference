@@ -1,8 +1,8 @@
 """Did participants relay counts they had just received, within the same round?
 
-Experiment 1, round 2 (a one-way round). In the real-time condition a participant
+Experiment 1, round 2 (a one-way round). In the live messaging condition a participant
 could see an incoming message while still writing, and could pass its counts on to
-their own recipient. In the delayed condition incoming messages appeared only after
+their own recipient. In the batched messaging condition incoming messages appeared only after
 the round, so this was impossible, and that condition gives the rate of chance matches.
 
 For every participant who received a message in round 2 from someone other than

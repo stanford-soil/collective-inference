@@ -1,6 +1,6 @@
 """Did estimates move toward the person the schedule says each participant heard from?
 
-Experiment 2, chat condition, round 2. Round 2 is the first one-way round: each
+Experiment 2, messaging condition, round 2. Round 2 is the first one-way round: each
 participant receives from one new person (the sender) and sends to a different new
 person (the recipient). We regress the change in the participant's estimate from
 round 1 to round 2 on

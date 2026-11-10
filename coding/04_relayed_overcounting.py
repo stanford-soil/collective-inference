@@ -1,4 +1,4 @@
-"""Over-counting in relayed counts (Experiment 2 chat, analysed networks).
+"""Over-counting in relayed counts (Experiment 2 messaging condition, analysed networks).
 
 When participants pass on counts they heard from others, the same animals can be
 counted twice. For every message whose final code includes sn (counts attributed to
