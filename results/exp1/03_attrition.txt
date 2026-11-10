@@ -70,3 +70,10 @@ X-squared = 1.7222, df = 2, p-value = 0.4227
 data:  table(assigned$condition, assigned$responded)
 X-squared = 10.289, df = 2, p-value = 0.005833
 
+
+==== Participants who never entered an estimate: messages sent, by condition ====
+       condition never_entered_an_estimate sent_a_message messages_sent
+1         slider                        31              0             0
+2 unidirectional                        13              6            52
+3    interactive                        39              1             1
+4          Total                        83              7            53

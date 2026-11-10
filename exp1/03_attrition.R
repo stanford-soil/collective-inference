@@ -1,6 +1,7 @@
 # Experiment 1: recruitment, exclusions and attrition by condition (Appendix A).
 #
 # Reads   data/exp1/raw/1_prereg_*/players.csv and games.csv, data/exp1/PreregMergedGuesses.csv,
+#         data/derived/exp1_messages_raw.csv,
 #         data/derived/exp1_clean_data.csv, exp1_responders.csv
 # Prints  the recruitment funnel, the attrition table and the tests of condition differences
 source("../lib/common.R")
@@ -80,3 +81,20 @@ print(chisq.test(table(assigned$condition, assigned$retained)))
 cat("\n==== Assigned participants who entered at least one estimate, by condition ====\n")
 print(table(assigned$condition, assigned$responded))
 print(chisq.test(table(assigned$condition, assigned$responded)))
+
+# ---- Did the participants who never entered an estimate send messages? ------------------
+# In the slider condition a participant sends nothing without entering an estimate, so
+# this is informative only for the two messaging conditions.
+messages_sent <- read_csv(derived("exp1_messages_raw.csv"), show_col_types = FALSE, guess_max = 1e5) %>%
+  filter(src == "messages") %>%
+  count(playerID = sender, name = "n_messages")
+cat("\n==== Participants who never entered an estimate: messages sent, by condition ====\n")
+assigned %>%
+  filter(!responded) %>%
+  left_join(messages_sent, by = "playerID") %>%
+  mutate(n_messages = replace_na(n_messages, 0)) %>%
+  group_by(condition) %>%
+  summarise(never_entered_an_estimate = n(), sent_a_message = sum(n_messages > 0),
+            messages_sent = sum(n_messages), .groups = "drop") %>%
+  bind_rows(summarise(., condition = "Total", across(where(is.numeric), sum))) %>%
+  as.data.frame() %>% print()
