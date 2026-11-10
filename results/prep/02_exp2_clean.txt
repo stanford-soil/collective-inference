@@ -1,0 +1,2 @@
+Wrote exp2_clean_data.csv: 379 networks, 1516 participants
+Analysed networks (SR slider version): 193 

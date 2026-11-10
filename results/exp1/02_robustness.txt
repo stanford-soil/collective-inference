@@ -1,0 +1,41 @@
+
+==== Answered at least 0% of rounds: 886 participants in 236 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           2.7323     0.9187 218.3298  2.9742   0.0033
+condition_interactiveunidirectional   1.1893     0.8962 219.9046  1.3270   0.1859
+
+==== Answered at least 50% of rounds: 811 participants in 221 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           2.9698     0.9341 214.4483  3.1794   0.0017
+condition_interactiveunidirectional   1.4167     0.9165 220.6446  1.5459   0.1236
+
+==== Answered at least 80% of rounds: 733 participants in 219 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           3.4413     0.9617 207.4614  3.5785   0.0004
+condition_interactiveunidirectional   1.6630     0.9428 208.9825  1.7639   0.0792
+
+==== Answered at least 100% of rounds: 406 participants in 198 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           4.3762     1.2636 178.6801  3.4634   0.0007
+condition_interactiveunidirectional   2.7926     1.2227 176.0722  2.2839   0.0236
+
+==== Networks with exactly four retained participants: 448 participants in 112 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           2.7349     1.2736 110.6904  2.1475   0.0339
+condition_interactiveunidirectional   1.7777     1.2561 110.6614  1.4152   0.1598
+
+Analysed networks by number of players at launch:
+# A tibble: 6 × 4
+  nPlayers slider unidirectional interactive
+     <dbl>  <int>          <int>       <int>
+1        2      1              0           0
+2        3      0              1           2
+3        4     61             68          79
+4        5      2              0           1
+5        7      1              0           2
+6        9      0              0           1
+
+==== Networks launched with four players: 710 participants in 208 networks ====
+                                    Estimate Std. Error       df t value Pr(>|t|)
+condition_interactiveslider           3.6510     0.9739 205.7300  3.7487   0.0002
+condition_interactiveunidirectional   1.9127     0.9474 208.0504  2.0190   0.0448

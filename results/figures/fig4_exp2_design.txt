@@ -1,0 +1,14 @@
+Games plotted: 192 
+# A tibble: 2 × 3
+  condition   direction     n
+  <fct>       <chr>     <int>
+1 slider      SR           93
+2 interactive SR           99
+Ranges:
+# A tibble: 2 × 3
+  nCrittersGame_actual entropy_actual representation_actual
+                 <dbl>          <dbl>                 <dbl>
+1                    8          0.284                0.0428
+2                   40          1.38                 0.593 
+Max networks per plotted point: 5 
+Saved fig4_exp2_design.pdf 

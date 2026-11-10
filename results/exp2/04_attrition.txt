@@ -1,0 +1,62 @@
+==== All networks ====
+    condition networks_started participants_assigned networks_retained share_retained participants_retained
+1 interactive              200                   800               180      0.9000000                   720
+2      slider              216                   867               199      0.9212963                   796
+3       Total              416                  1667               379      0.9110577                  1516
+
+Started networks that were retained, by condition:
+
+	Pearson's Chi-squared test with Yates' continuity correction
+
+data:  table(networks$condition, networks$retained)
+X-squared = 0.34812, df = 1, p-value = 0.5552
+
+Assigned participants who were retained, by condition:
+
+	Pearson's Chi-squared test with Yates' continuity correction
+
+data:  table(assigned$condition, assigned$retained)
+X-squared = 1.4437, df = 1, p-value = 0.2295
+
+
+==== Networks with the unaffected slider version (analysed) ====
+    condition networks_started participants_assigned networks_retained share_retained participants_retained
+1 interactive              108                   432               100      0.9259259                   400
+2      slider               97                   388                93      0.9587629                   372
+3       Total              205                   820               193      0.9414634                   772
+
+Started networks that were retained, by condition:
+
+	Pearson's Chi-squared test with Yates' continuity correction
+
+data:  table(networks_sr$condition, networks_sr$retained)
+X-squared = 0.49278, df = 1, p-value = 0.4827
+
+Participants who never entered an estimate (TRUE), by condition:
+             
+              FALSE TRUE
+  interactive   387   13
+  slider        368    4
+
+	Fisher's Exact Test for Count Data
+
+data:  table(participants$condition, participants$rounds_answered == 0)
+p-value = 0.04907
+alternative hypothesis: true odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.07627741 1.06117291
+sample estimates:
+odds ratio 
+ 0.3239785 
+
+Participants who answered at least 80% of the 8 rounds (TRUE), by condition:
+             
+              FALSE TRUE
+  interactive    76  324
+  slider        102  270
+
+	Pearson's Chi-squared test with Yates' continuity correction
+
+data:  table(participants$condition, participants$rounds_answered/8 >=     0.8)
+X-squared = 7.2342, df = 1, p-value = 0.007153
+

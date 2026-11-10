@@ -1,0 +1,14 @@
+
+==== Experiment 1: 7252 changes ====
+boundary (singular) fit: see help('isSingular')
+                        Estimate Std. Error   df t value Pr(>|t|)
+conditioninteractive      0.3445     0.3497 7237  0.9851   0.3246
+conditionunidirectional   0.1802     0.3616 7237  0.4983   0.6183
+live_mutual              -1.3253     0.6604 7237 -2.0070   0.0448
+batched_mutual           -0.1675     0.6822 7237 -0.2455   0.8061
+
+==== Experiment 2: 4377 changes ====
+boundary (singular) fit: see help('isSingular')
+                     Estimate Std. Error   df t value Pr(>|t|)
+conditioninteractive   0.3838     0.5645 4368  0.6798   0.4967
+chat_mutual            0.3100     1.0350 4368  0.2995   0.7646

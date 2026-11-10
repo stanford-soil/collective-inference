@@ -1,0 +1,15 @@
+Saved fig3_adaptive_weighting.pdf 
+
+Mean belief revision by group:
+# A tibble: 6 × 7
+# Groups:   sample_size_cat [3]
+  sample_size_cat                 discrepancy_cat      n empirical_stat ci_lower  mean ci_upper
+  <fct>                           <fct>            <int>          <dbl>    <dbl> <dbl>    <dbl>
+1 "Small sample\n(≤5 critters)"   Low discrepancy   2362           7.53     7.16  7.53     7.88
+2 "Small sample\n(≤5 critters)"   High discrepancy  2381          12.2     11.6  12.2     12.8 
+3 "Medium sample\n(6-8 critters)" Low discrepancy   1021           6.51     6.06  6.51     6.95
+4 "Medium sample\n(6-8 critters)" High discrepancy   923           9.89     9.07  9.88    10.7 
+5 "Large sample\n(≥9 critters)"   Low discrepancy    392           5.95     5.22  5.96     6.77
+6 "Large sample\n(≥9 critters)"   High discrepancy   458           7.42     6.41  7.39     8.40
+Small sample: High vs. Low discrepancy difference = 4.63 points
+Large sample: High vs. Low discrepancy difference = 1.47 points

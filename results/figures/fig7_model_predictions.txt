@@ -1,0 +1,18 @@
+Belief model:   alpha = 0.76, noise SD = 0.117
+Evidence model: delta = 0.57, alpha = 0.58, noise SD = 0.128
+
+Predicted final-round error (mean over 193 networks)
+rep_bin                      Representative  Unrepresentative
+belief_error                           15.3              30.0
+evidence_error                         12.1              12.5
+belief_error_network_mean               6.0              27.9
+evidence_error_network_mean             0.2               0.9
+
+Observed final-round error
+condition    rep_bin         
+interactive  Representative      13.2
+             Unrepresentative    18.3
+slider       Representative      12.8
+             Unrepresentative    26.1
+
+Saved fig7_model_predictions.pdf

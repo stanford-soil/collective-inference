@@ -1,0 +1,50 @@
+
+==== Error over rounds by condition, ALL networks (379) ====
+observations: 9863 | groups: playerID:gameID 1485, gameID 378  
+                    Estimate Std. Error       df    t value      Pr(>|t|)
+(Intercept)       22.6972444 0.54117083 373.8651  41.940998 1.939307e-143
+condition_c        3.9401540 1.08234166 373.8651   3.640398  3.105500e-04
+idx_c             -0.8669296 0.08499552 374.6599 -10.199710  1.014895e-21
+condition_c:idx_c  0.2485892 0.16999103 374.6599   1.462367  1.444790e-01
+
+==== Difficulty model, ALL networks (379) ====
+observations: 9863 | groups: playerID:gameID 1485, gameID 378  
+                         Estimate Std. Error        df      t value      Pr(>|t|)
+(Intercept)            21.7232584 0.60458031  371.2470  35.93113762 6.639804e-123
+idx_c                  -0.8888345 0.05954893 8445.6758 -14.92612154  9.566373e-50
+condition_c             3.2201161 0.86881063  362.8957   3.70634980  2.430679e-04
+critters_c             -2.2548191 2.17757588  385.6641  -1.03547212  3.010973e-01
+entropy_c               3.8197296 1.99055547  365.4416   1.91892651  5.577226e-02
+rep_c                  17.6566966 1.90700078  362.7064   9.25888273  1.844544e-18
+condition_c:critters_c -4.5187879 4.28911812  381.3063  -1.05354710  2.927575e-01
+condition_c:entropy_c  -6.6632796 3.87992926  366.3816  -1.71737142  8.675635e-02
+condition_c:rep_c      10.2467823 3.69567101  368.3862   2.77264460  5.842848e-03
+critters_c:entropy_c    0.4340428 9.38684596  375.9072   0.04623947  9.631439e-01
+critters_c:rep_c       -5.6214093 8.48141662  391.4563  -0.66279132  5.078543e-01
+entropy_c:rep_c        20.6361306 6.29481793  361.9631   3.27827283  1.145633e-03
+boundary (singular) fit: see help('isSingular')
+
+==== Error over rounds by condition, RS networks (186) ====
+observations: 4756 | groups: playerID:gameID 730, gameID 186 | singular fit 
+                    Estimate Std. Error       df   t value     Pr(>|t|)
+(Intercept)       25.5420243  0.7278291 203.7517 35.093437 2.541907e-88
+condition_c        4.3864176  1.4556582 203.7517  3.013357 2.911512e-03
+idx_c             -0.8769212  0.1296874 226.9133 -6.761808 1.141008e-10
+condition_c:idx_c  0.4949033  0.2593748 226.9133  1.908063 5.764538e-02
+boundary (singular) fit: see help('isSingular')
+
+==== Difficulty model, RS networks (186) ====
+observations: 4756 | groups: playerID:gameID 730, gameID 186 | singular fit 
+                         Estimate  Std. Error        df     t value      Pr(>|t|)
+(Intercept)             25.014293  0.94161642  717.0586  26.5652687 8.595186e-109
+idx_c                   -0.898105  0.08837669 4057.6940 -10.1622384  5.647523e-24
+condition_c              3.790620  1.28603804  714.3193   2.9475178  3.307775e-03
+critters_c              -3.708978  3.29148785  719.5249  -1.1268392  2.601861e-01
+entropy_c                3.400464  2.94534378  714.7008   1.1545218  2.486722e-01
+rep_c                   14.962228  2.79339054  715.4934   5.3562965  1.146092e-07
+condition_c:critters_c  -1.787010  6.52668821  716.7406  -0.2738005  7.843168e-01
+condition_c:entropy_c   -4.528423  5.81701085  714.8136  -0.7784794  4.365440e-01
+condition_c:rep_c        6.755454  5.45519792  715.6076   1.2383519  2.159917e-01
+critters_c:entropy_c    10.926287 14.37166765  718.3032   0.7602658  4.473452e-01
+critters_c:rep_c       -14.436897 12.44933036  719.4897  -1.1596525  2.465750e-01
+entropy_c:rep_c         14.644684  9.10679799  714.7746   1.6081046  1.082539e-01

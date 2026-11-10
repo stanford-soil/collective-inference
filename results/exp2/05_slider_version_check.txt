@@ -1,0 +1,17 @@
+1. Mean absolute error, rounds with social information
+                   networks  mean_error
+condition version                      
+chat      RS             80        22.8
+          SR            100        18.1
+slider    RS            106        27.8
+          SR             93        21.2
+
+2. First estimates more than 20 points closer to the complement of the own-sample proportion
+                   participants  reversed  share
+condition version                               
+chat      RS                255        56  0.220
+          SR                305        49  0.161
+slider    RS                334        61  0.183
+          SR                299        32  0.107
+   chat, RS vs SR: chi2(1) = 2.79, p = 0.095
+   slider, RS vs SR: chi2(1) = 6.61, p = 0.010

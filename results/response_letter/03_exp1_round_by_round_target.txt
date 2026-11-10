@@ -1,0 +1,35 @@
+Observations in which the two targets are equal: 0.785 
+Mean absolute difference between the two targets (percentage points): 1.28 
+Analysed networks in which the original target changed across rounds: 196 of 219 
+
+==== Original target, with the network random intercept ====
+observations: 8384 | groups: playerID 733, gameID 219  
+                                                                   Estimate Std. Error        df    t value     Pr(>|t|)
+(Intercept)                                                       12.709851  0.6346040  217.2625 20.0280042 3.003424e-51
+poly(idx_final_centered, 2)1                                     -83.883021 21.0682176  711.0742 -3.9814958 7.552297e-05
+poly(idx_final_centered, 2)2                                      17.277052 12.7376781 7048.7348  1.3563738 1.750237e-01
+condition_interactiveslider                                        3.197596  0.9538614  208.7811  3.3522653 9.515152e-04
+condition_interactiveunidirectional                                1.647542  0.9351370  210.2652  1.7618184 7.955319e-02
+poly(idx_final_centered, 2)1:condition_interactiveslider         -16.743677 31.6607376  719.4960 -0.5288467 5.970749e-01
+poly(idx_final_centered, 2)2:condition_interactiveslider          41.918489 19.2469572 7064.4438  2.1779281 2.944435e-02
+poly(idx_final_centered, 2)1:condition_interactiveunidirectional  29.568582 30.9953768  713.9600  0.9539675 3.404230e-01
+poly(idx_final_centered, 2)2:condition_interactiveunidirectional  14.896246 18.7716406 7039.3509  0.7935505 4.274839e-01
+
+==== Original target, without the network random intercept (original submission) ====
+observations: 8384 | groups: playerID 733  
+                                                                   Estimate Std. Error        df    t value     Pr(>|t|)
+(Intercept)                                                       12.685236  0.5792849  728.8372 21.8980943 4.528098e-82
+poly(idx_final_centered, 2)1                                     -83.917253 21.0668798  711.0866 -3.9833736 7.494130e-05
+poly(idx_final_centered, 2)2                                      17.292900 12.7376267 7048.8522  1.3576234 1.746267e-01
+condition_interactiveslider                                        3.245384  0.8680288  729.4877  3.7387981 1.993824e-04
+condition_interactiveunidirectional                                1.704211  0.8515898  729.3564  2.0012109 4.573972e-02
+poly(idx_final_centered, 2)1:condition_interactiveslider         -16.752687 31.6586520  719.5035 -0.5291662 5.968534e-01
+poly(idx_final_centered, 2)2:condition_interactiveslider          41.948370 19.2467343 7064.6961  2.1795058 2.932703e-02
+poly(idx_final_centered, 2)1:condition_interactiveunidirectional  29.549659 30.9934676  713.9773  0.9534157 3.407021e-01
+poly(idx_final_centered, 2)2:condition_interactiveunidirectional  14.915566 18.7715896 7039.4630  0.7945820 4.268835e-01
+
+Final-round error by condition, original target:
+       condition mean_error   n
+1         slider   15.30137 219
+2 unidirectional   14.00441 227
+3    interactive   11.23162 272

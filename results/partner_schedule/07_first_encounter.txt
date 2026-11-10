@@ -1,0 +1,366 @@
+
+=== Experiment 1 | Slider (numerical estimates) | information: sender's previous estimate | primary ===
+1963 transitions (412 first, 1551 later); 220 participants; 64 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2969     0.0125 1428.383 23.7956   0.0000
+dist:first    -0.0276     0.0315 1775.500 -0.8763   0.3810
+dist:round_c   0.0055     0.0047 1738.845  1.1827   0.2371
+Weight at the mean round: first encounter 0.269 (SE 0.028), later 0.297 (SE 0.012)
+
+=== Experiment 1 | Slider (numerical estimates) | information: sender's previous estimate | first = no earlier contact ===
+1963 transitions (233 first, 1730 later); 220 participants; 64 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2943     0.0116 1263.722 25.4745   0.0000
+dist:first    -0.0265     0.0327 1785.643 -0.8104   0.4178
+dist:round_c   0.0064     0.0042 1772.940  1.5252   0.1274
+Weight at the mean round: first encounter 0.268 (SE 0.031), later 0.294 (SE 0.012)
+
+=== Experiment 1 | Slider (numerical estimates) | information: sender's previous estimate | + dist x mutual round ===
+1963 transitions (412 first, 1551 later); 220 participants; 64 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.3347     0.0163 1874.410 20.5932   0.0000
+dist:first    -0.0662     0.0331 1727.905 -1.9970   0.0460
+dist:round_c   0.0005     0.0049 1709.725  0.1001   0.9203
+dist:recip    -0.0769     0.0212 1934.234 -3.6339   0.0003
+Weight at the mean round: first encounter 0.269 (SE 0.028), later 0.335 (SE 0.016)
+
+=== Experiment 1 | Slider (numerical estimates) | information: sender's previous estimate | + dist x round squared ===
+1963 transitions (412 first, 1551 later); 220 participants; 64 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error       df t value Pr(>|t|)
+dist            0.3108     0.0148 1778.814 20.9993   0.0000
+dist:first      0.0270     0.0436 1865.217  0.6206   0.5350
+dist:round_c    0.0088     0.0050 1794.357  1.7550   0.0794
+dist:round_c2  -0.0028     0.0016 1843.642 -1.8124   0.0701
+Weight at the mean round: first encounter 0.338 (SE 0.047), later 0.311 (SE 0.015)
+
+=== Experiment 1 | Slider (numerical estimates) | information: sender's previous estimate | without the first transition ===
+1886 transitions (335 first, 1551 later); 220 participants; 64 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2904     0.0121 1209.437 24.0067   0.0000
+dist:first    -0.0271     0.0320 1726.015 -0.8474   0.3969
+dist:round_c   0.0057     0.0047 1647.549  1.2143   0.2248
+Weight at the mean round: first encounter 0.263 (SE 0.029), later 0.290 (SE 0.012)
+
+=== Experiment 1 | Batched messaging | information: sender's previous estimate | primary ===
+2082 transitions (293 first, 1789 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error        df t value Pr(>|t|)
+dist           0.2514     0.0140  835.1636 17.9095   0.0000
+dist:first    -0.0878     0.0425 2038.2857 -2.0665   0.0389
+dist:round_c  -0.0080     0.0051 1942.2936 -1.5491   0.1215
+Weight at the mean round: first encounter 0.164 (SE 0.038), later 0.251 (SE 0.014)
+
+=== Experiment 1 | Batched messaging | information: sender's previous estimate | first = no earlier contact ===
+2082 transitions (114 first, 1968 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error        df t value Pr(>|t|)
+dist           0.2453     0.0130  712.3584 18.9108   0.0000
+dist:first    -0.1547     0.0518 1994.3169 -2.9872   0.0028
+dist:round_c  -0.0075     0.0045 1966.5182 -1.6826   0.0926
+Weight at the mean round: first encounter 0.091 (SE 0.050), later 0.245 (SE 0.013)
+
+=== Experiment 1 | Batched messaging | information: sender's previous estimate | + dist x mutual round ===
+2082 transitions (293 first, 1789 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2689     0.0186 1204.691 14.4871   0.0000
+dist:first    -0.1183     0.0472 1951.208 -2.5091   0.0122
+dist:round_c  -0.0107     0.0054 1875.524 -1.9619   0.0499
+dist:recip    -0.0450     0.0298 1872.174 -1.5080   0.1317
+Weight at the mean round: first encounter 0.151 (SE 0.039), later 0.269 (SE 0.019)
+
+=== Experiment 1 | Batched messaging | information: sender's previous estimate | + dist x round squared ===
+2082 transitions (293 first, 1789 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error       df t value Pr(>|t|)
+dist            0.2828     0.0197 1789.876 14.3517   0.0000
+dist:first      0.0125     0.0616 1961.871  0.2034   0.8389
+dist:round_c   -0.0026     0.0057 1939.321 -0.4583   0.6468
+dist:round_c2  -0.0047     0.0021 1868.339 -2.2579   0.0241
+Weight at the mean round: first encounter 0.295 (SE 0.070), later 0.283 (SE 0.020)
+
+=== Experiment 1 | Batched messaging | information: sender's previous estimate | without the first transition ===
+1967 transitions (178 first, 1789 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2407     0.0136 1961 17.7132   0.0000
+dist:first    -0.0275     0.0491 1961 -0.5610   0.5749
+dist:round_c  -0.0093     0.0051 1961 -1.8011   0.0718
+Weight at the mean round: first encounter 0.213 (SE 0.047), later 0.241 (SE 0.014)
+
+=== Experiment 1 | Batched messaging | information: sender's sample proportion | primary ===
+2302 transitions (360 first, 1942 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.3346     0.0118 2087.039 28.4118   0.0000
+dist:first    -0.0553     0.0333 2129.498 -1.6595   0.0972
+dist:round_c  -0.0075     0.0040 2076.582 -1.8669   0.0621
+Weight at the mean round: first encounter 0.279 (SE 0.030), later 0.335 (SE 0.012)
+
+=== Experiment 1 | Batched messaging | information: sender's sample proportion | first = no earlier contact ===
+2302 transitions (157 first, 2145 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.3295     0.0108 1912.742 30.3979   0.0000
+dist:first    -0.0611     0.0404 2116.324 -1.5119   0.1307
+dist:round_c  -0.0055     0.0034 2032.419 -1.5988   0.1100
+Weight at the mean round: first encounter 0.268 (SE 0.039), later 0.329 (SE 0.011)
+
+=== Experiment 1 | Batched messaging | information: sender's sample proportion | + dist x mutual round ===
+2302 transitions (360 first, 1942 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.3198     0.0151 2101.340 21.1862   0.0000
+dist:first    -0.0343     0.0362 2044.512 -0.9463   0.3441
+dist:round_c  -0.0057     0.0042 2023.401 -1.3675   0.1716
+dist:recip     0.0361     0.0245 2113.059  1.4735   0.1408
+Weight at the mean round: first encounter 0.286 (SE 0.030), later 0.320 (SE 0.015)
+
+=== Experiment 1 | Batched messaging | information: sender's sample proportion | + dist x round squared ===
+2302 transitions (360 first, 1942 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error       df t value Pr(>|t|)
+dist            0.3427     0.0155 2293.589 22.1352   0.0000
+dist:first     -0.0268     0.0488 2069.192 -0.5489   0.5831
+dist:round_c   -0.0056     0.0047 2075.760 -1.1881   0.2349
+dist:round_c2  -0.0013     0.0016 1989.516 -0.8119   0.4170
+Weight at the mean round: first encounter 0.316 (SE 0.055), later 0.343 (SE 0.015)
+
+=== Experiment 1 | Batched messaging | information: sender's sample proportion | without the first transition ===
+2143 transitions (201 first, 1942 later); 237 participants; 69 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.3284     0.0114 1817.817 28.6938   0.0000
+dist:first    -0.0390     0.0382 2004.411 -1.0210   0.3074
+dist:round_c  -0.0077     0.0040 1905.662 -1.9154   0.0556
+Weight at the mean round: first encounter 0.289 (SE 0.036), later 0.328 (SE 0.011)
+
+=== Experiment 1 | Live messaging | information: sender's previous estimate | primary ===
+2429 transitions (333 first, 2096 later); 273 participants; 83 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1995     0.0121 2423 16.5142   0.0000
+dist:first     0.0856     0.0381 2423  2.2466   0.0248
+dist:round_c  -0.0088     0.0045 2423 -1.9710   0.0488
+Weight at the mean round: first encounter 0.285 (SE 0.034), later 0.199 (SE 0.012)
+
+=== Experiment 1 | Live messaging | information: sender's previous estimate | first = no earlier contact ===
+2429 transitions (130 first, 2299 later); 273 participants; 83 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2096     0.0112 2423 18.6715   0.0000
+dist:first     0.0302     0.0472 2423  0.6391   0.5228
+dist:round_c  -0.0139     0.0039 2423 -3.5888   0.0003
+Weight at the mean round: first encounter 0.240 (SE 0.046), later 0.210 (SE 0.011)
+
+=== Experiment 1 | Live messaging | information: sender's previous estimate | + dist x mutual round ===
+2429 transitions (333 first, 2096 later); 273 participants; 83 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1864     0.0153 2421 12.1825   0.0000
+dist:first     0.1084     0.0415 2421  2.6120   0.0091
+dist:round_c  -0.0067     0.0047 2421 -1.4338   0.1518
+dist:recip     0.0369     0.0266 2421  1.3864   0.1658
+Weight at the mean round: first encounter 0.295 (SE 0.035), later 0.186 (SE 0.015)
+
+=== Experiment 1 | Live messaging | information: sender's previous estimate | + dist x round squared ===
+2429 transitions (333 first, 2096 later); 273 participants; 83 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error   df t value Pr(>|t|)
+dist            0.2018     0.0169 2421 11.9483   0.0000
+dist:first      0.0937     0.0551 2421  1.7011   0.0891
+dist:round_c   -0.0084     0.0049 2421 -1.6946   0.0903
+dist:round_c2  -0.0004     0.0018 2421 -0.1973   0.8436
+Weight at the mean round: first encounter 0.295 (SE 0.062), later 0.202 (SE 0.017)
+
+=== Experiment 1 | Live messaging | information: sender's previous estimate | without the first transition ===
+2299 transitions (203 first, 2096 later); 273 participants; 83 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1969     0.0116 2293 17.0032   0.0000
+dist:first     0.1031     0.0434 2293  2.3736   0.0177
+dist:round_c  -0.0091     0.0044 2293 -2.0751   0.0381
+Weight at the mean round: first encounter 0.300 (SE 0.041), later 0.197 (SE 0.012)
+
+=== Experiment 1 | Live messaging | information: sender's sample proportion | primary ===
+2717 transitions (427 first, 2290 later); 275 participants; 85 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2113     0.0098 1438.099 21.4950   0.0000
+dist:first     0.1061     0.0289 2607.937  3.6668   0.0003
+dist:round_c  -0.0060     0.0035 2511.615 -1.7062   0.0881
+Weight at the mean round: first encounter 0.317 (SE 0.026), later 0.211 (SE 0.010)
+
+=== Experiment 1 | Live messaging | information: sender's sample proportion | first = no earlier contact ===
+2717 transitions (187 first, 2530 later); 275 participants; 85 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2239     0.0090 1254.648 24.8909    0e+00
+dist:first     0.0974     0.0361 2639.884  2.6971    7e-03
+dist:round_c  -0.0107     0.0030 2405.522 -3.5809    3e-04
+Weight at the mean round: first encounter 0.321 (SE 0.035), later 0.224 (SE 0.009)
+
+=== Experiment 1 | Live messaging | information: sender's sample proportion | + dist x mutual round ===
+2717 transitions (427 first, 2290 later); 275 participants; 85 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2227     0.0125 1953.067 17.8828   0.0000
+dist:first     0.0881     0.0313 2429.924  2.8093   0.0050
+dist:round_c  -0.0075     0.0037 2434.208 -2.0518   0.0403
+dist:recip    -0.0307     0.0206 2380.878 -1.4885   0.1368
+Weight at the mean round: first encounter 0.311 (SE 0.026), later 0.223 (SE 0.012)
+
+=== Experiment 1 | Live messaging | information: sender's sample proportion | + dist x round squared ===
+2717 transitions (427 first, 2290 later); 275 participants; 85 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error       df t value Pr(>|t|)
+dist            0.2128     0.0132 2396.499 16.1132   0.0000
+dist:first      0.1114     0.0421 2497.691  2.6485   0.0081
+dist:round_c   -0.0057     0.0041 2536.155 -1.4019   0.1611
+dist:round_c2  -0.0002     0.0014 2335.334 -0.1734   0.8624
+Weight at the mean round: first encounter 0.324 (SE 0.047), later 0.213 (SE 0.013)
+
+=== Experiment 1 | Live messaging | information: sender's sample proportion | without the first transition ===
+2530 transitions (240 first, 2290 later); 275 participants; 85 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1929     0.0091 2524 21.1760   0.0000
+dist:first     0.0922     0.0321 2524  2.8739   0.0041
+dist:round_c  -0.0059     0.0035 2524 -1.6949   0.0902
+Weight at the mean round: first encounter 0.285 (SE 0.030), later 0.193 (SE 0.009)
+
+=== Experiment 2 | Slider (numerical estimates) | information: sender's previous estimate | primary ===
+1754 transitions (587 first, 1167 later); 353 participants; 93 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2193     0.0179 1748 12.2717   0.0000
+dist:first     0.1585     0.0420 1748  3.7783   0.0002
+dist:round_c   0.0129     0.0104 1748  1.2330   0.2177
+Weight at the mean round: first encounter 0.378 (SE 0.030), later 0.219 (SE 0.018)
+
+=== Experiment 2 | Slider (numerical estimates) | information: sender's previous estimate | first = no earlier contact ===
+1754 transitions (347 first, 1407 later); 353 participants; 93 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error       df t value Pr(>|t|)
+dist           0.2753     0.0135 1398.189 20.4666   0.0000
+dist:first    -0.0075     0.0377 1659.467 -0.1989   0.8423
+dist:round_c  -0.0223     0.0087 1670.208 -2.5742   0.0101
+Weight at the mean round: first encounter 0.268 (SE 0.032), later 0.275 (SE 0.013)
+
+=== Experiment 2 | Slider (numerical estimates) | information: sender's previous estimate | + dist x mutual round ===
+1754 transitions (587 first, 1167 later); 353 participants; 93 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2399     0.0238 1746 10.0723   0.0000
+dist:first     0.1370     0.0451 1746  3.0382   0.0024
+dist:round_c   0.0083     0.0110 1746  0.7500   0.4534
+dist:recip    -0.0299     0.0228 1746 -1.3084   0.1909
+Weight at the mean round: first encounter 0.377 (SE 0.030), later 0.240 (SE 0.024)
+
+=== Experiment 2 | Slider (numerical estimates) | information: sender's previous estimate | + dist x round squared ===
+1754 transitions (587 first, 1167 later); 353 participants; 93 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error   df t value Pr(>|t|)
+dist            0.2232     0.0193 1746 11.5539   0.0000
+dist:first      0.1666     0.0443 1746  3.7630   0.0002
+dist:round_c    0.0131     0.0105 1746  1.2537   0.2101
+dist:round_c2  -0.0017     0.0032 1746 -0.5405   0.5889
+Weight at the mean round: first encounter 0.390 (SE 0.037), later 0.223 (SE 0.019)
+
+=== Experiment 2 | Slider (numerical estimates) | information: sender's previous estimate | without the first transition ===
+1600 transitions (433 first, 1167 later); 352 participants; 93 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2218     0.0157 1594 14.1109   0.0000
+dist:first     0.1617     0.0404 1594  4.0002   0.0001
+dist:round_c   0.0155     0.0113 1594  1.3722   0.1702
+Weight at the mean round: first encounter 0.383 (SE 0.031), later 0.222 (SE 0.016)
+
+=== Experiment 2 | Live messaging | information: sender's previous estimate | primary ===
+2089 transitions (469 first, 1620 later); 382 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2573     0.0157 2083 16.3806   0.0000
+dist:first     0.0060     0.0434 2083  0.1382   0.8901
+dist:round_c  -0.0236     0.0096 2083 -2.4632   0.0139
+Weight at the mean round: first encounter 0.263 (SE 0.036), later 0.257 (SE 0.016)
+
+=== Experiment 2 | Live messaging | information: sender's previous estimate | first = no earlier contact ===
+2089 transitions (210 first, 1879 later); 382 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2633     0.0135 2083 19.5626   0.0000
+dist:first    -0.0427     0.0447 2083 -0.9557   0.3393
+dist:round_c  -0.0291     0.0078 2083 -3.7195   0.0002
+Weight at the mean round: first encounter 0.221 (SE 0.041), later 0.263 (SE 0.013)
+
+=== Experiment 2 | Live messaging | information: sender's previous estimate | + dist x mutual round ===
+2089 transitions (469 first, 1620 later); 382 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2524     0.0220 2081 11.4642   0.0000
+dist:first     0.0138     0.0503 2081  0.2747   0.7836
+dist:round_c  -0.0226     0.0102 2081 -2.2065   0.0275
+dist:recip     0.0095     0.0311 2081  0.3070   0.7588
+Weight at the mean round: first encounter 0.266 (SE 0.037), later 0.252 (SE 0.022)
+
+=== Experiment 2 | Live messaging | information: sender's previous estimate | + dist x round squared ===
+2089 transitions (469 first, 1620 later); 382 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error   df t value Pr(>|t|)
+dist            0.2724     0.0186 2081 14.6326   0.0000
+dist:first      0.0844     0.0677 2081  1.2479   0.2122
+dist:round_c   -0.0142     0.0115 2081 -1.2376   0.2160
+dist:round_c2  -0.0083     0.0054 2081 -1.5165   0.1295
+Weight at the mean round: first encounter 0.357 (SE 0.072), later 0.272 (SE 0.019)
+
+=== Experiment 2 | Live messaging | information: sender's previous estimate | without the first transition ===
+1879 transitions (259 first, 1620 later); 382 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.2493     0.0144 1873 17.3487   0.0000
+dist:first     0.0278     0.0468 1873  0.5945   0.5523
+dist:round_c  -0.0258     0.0096 1873 -2.6925   0.0072
+Weight at the mean round: first encounter 0.277 (SE 0.043), later 0.249 (SE 0.014)
+
+=== Experiment 2 | Live messaging | information: sender's sample proportion | primary ===
+2342 transitions (584 first, 1758 later); 385 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1918     0.0123 2336 15.5528   0.0000
+dist:first     0.0209     0.0325 2336  0.6433   0.5201
+dist:round_c  -0.0227     0.0074 2336 -3.0806   0.0021
+Weight at the mean round: first encounter 0.213 (SE 0.026), later 0.192 (SE 0.012)
+
+=== Experiment 2 | Live messaging | information: sender's sample proportion | first = no earlier contact ===
+2342 transitions (271 first, 2071 later); 385 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1990     0.0099 2336 20.1003   0.0000
+dist:first    -0.0151     0.0331 2336 -0.4557   0.6486
+dist:round_c  -0.0280     0.0057 2336 -4.9293   0.0000
+Weight at the mean round: first encounter 0.184 (SE 0.030), later 0.199 (SE 0.010)
+
+=== Experiment 2 | Live messaging | information: sender's sample proportion | + dist x mutual round ===
+2342 transitions (584 first, 1758 later); 385 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1923     0.0162 2334 11.8837   0.0000
+dist:first     0.0200     0.0364 2334  0.5488   0.5832
+dist:round_c  -0.0228     0.0077 2334 -2.9677   0.0030
+dist:recip    -0.0012     0.0230 2334 -0.0504   0.9598
+Weight at the mean round: first encounter 0.212 (SE 0.026), later 0.192 (SE 0.016)
+
+=== Experiment 2 | Live messaging | information: sender's sample proportion | + dist x round squared ===
+2342 transitions (584 first, 1758 later); 385 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+              Estimate Std. Error   df t value Pr(>|t|)
+dist            0.1985     0.0137 2334 14.4989   0.0000
+dist:first      0.0627     0.0491 2334  1.2777   0.2015
+dist:round_c   -0.0164     0.0092 2334 -1.7885   0.0738
+dist:round_c2  -0.0044     0.0039 2334 -1.1374   0.2555
+Weight at the mean round: first encounter 0.261 (SE 0.050), later 0.199 (SE 0.014)
+
+=== Experiment 2 | Live messaging | information: sender's sample proportion | without the first transition ===
+2071 transitions (313 first, 1758 later); 384 participants; 99 networks; random effects: (1 | participant) + (1 | network)
+             Estimate Std. Error   df t value Pr(>|t|)
+dist           0.1829     0.0109 2065 16.7735   0.0000
+dist:first     0.0288     0.0337 2065  0.8552   0.3926
+dist:round_c  -0.0238     0.0074 2065 -3.2287   0.0013
+Weight at the mean round: first encounter 0.212 (SE 0.030), later 0.183 (SE 0.011)
+boundary (singular) fit: see help('isSingular')
+
+=== Experiment 1, all conditions: dist x first x condition (slider = reference) ===
+                                   Estimate Std. Error       df t value Pr(>|t|)
+dist:first                          -0.0180     0.0375 6064.606 -0.4807   0.6307
+dist:first:conditionunidirectional  -0.0689     0.0524 6221.195 -1.3158   0.1883
+dist:first:conditioninteractive      0.1020     0.0546 6210.575  1.8677   0.0618
+
+F test of dist x first x condition:
+Type III Analysis of Variance Table with Satterthwaite's method
+                     Sum Sq Mean Sq NumDF  DenDF F value   Pr(>F)   
+dist:first:condition 1872.5  936.25     2 6248.7  5.0237 0.006607 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Experiment 1 transitions by number of players at launch and first encounter:
+# A tibble: 11 × 4
+   condition      nPlayers first_0 first_1
+   <chr>             <dbl>   <int>   <int>
+ 1 interactive           3      37       3
+ 2 interactive           4    2305     429
+ 3 interactive           5      24       7
+ 4 interactive           7      18      14
+ 5 interactive           9       4       4
+ 6 slider                2      10       1
+ 7 slider                4    1648     504
+ 8 slider                5      21      12
+ 9 slider                7      24      24
+10 unidirectional        3      26       2
+11 unidirectional        4    1993     373

@@ -1,0 +1,19 @@
+messages: 5922 | networks: 192
+        questions  message_within_20s  answer_like_message
+mutual                                                    
+False          74               0.581                0.486
+True           51               0.627                0.510
+
+Examples from one-way rounds (the incoming message is from someone who never saw the question):
+round 2 | asked: 'I see one rabbit and no squirrels. What do you see?' | 11.3s later received: '4s 17r'
+round 2 | asked: 'i saw 4 rabbits and 1 squirrel, what did you see?' | 1.9s later received: 'I see 5 rabbits and 1 squirrel'
+round 2 | asked: 'Hi! I had 3 squirrels and 3 rabbits, and the last person I talked to had 4 rabbits and 1 squirrel. What did you get?' | 0.7s later received: '5 rabbits and 1 squirrel'
+round 8 | asked: 'how many rabbits do you have' | 5.9s later received: 'majority rabbits, 6 squirrels'
+round 2 | asked: 'How many rabbits are in your yard?' | 13.8s later received: 'I saw some rabbits in my yard'
+round 3 | asked: 'What about you?' | 8.6s later received: '17 rabbits 5 squirrels'
+round 8 | asked: 'i think we have about 33% squirrel, what doyou think?' | 0.7s later received: '17 rabbits 5 squirrels'
+round 5 | asked: 'how many squirrels do you see?' | 1.6s later received: 'Two rabbits, one squirrel.'
+round 8 | asked: 'how many rabbit and squirrel' | 2.3s later received: '73.6 percent rabbits'
+round 3 | asked: '?' | 12.9s later received: '1 squirrel , 15 rabbits in mine.'
+round 3 | asked: '?' | 8.5s later received: '1 squirrel , 15 rabbits in mine.'
+round 2 | asked: 'I see one squirrel how many do you see?' | 14.8s later received: '8:1 rabbits:squirrels'

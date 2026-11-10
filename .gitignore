@@ -17,15 +17,12 @@ Rplots.pdf
 # Quarto rendered outputs
 **/*_files/
 **/*_cache/
-analysis/**/*.html
 
-# Intermediate / generated data
-analysis/exp1/exp1_clean_data.csv
-analysis/exp2/exp2_clean_data.csv
-analysis/exp2/exp2_messages.csv
-analysis/exp2/game_metrics_actual_network.csv
-analysis/exp2/results_draft.md
+# Intermediate data written by prep/ (rebuilt by run_all.sh)
+data/derived/
+data/exp1/PreregMergedGuesses_UNFILTERED.csv
+logs/
+__pycache__/
 
-# Generated figures (reproducible from analysis scripts)
-figures/*.pdf
+# Figures: only the PDFs written by figures/ are committed
 figures/*.png

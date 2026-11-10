@@ -1,0 +1,13 @@
+Merged estimates: 890 participants in 237 networks
+Participants with at least one estimate: 886 
+Excluded (fewer than 80% of rounds answered): 153 
+Analysed sample: 733 participants in 219 networks
+# A tibble: 6 × 4
+  condition      treatment networks participants
+  <fct>          <chr>        <int>        <int>
+1 slider         0.3             32          111
+2 slider         0.7             33          110
+3 unidirectional 0.3             34          113
+4 unidirectional 0.7             35          124
+5 interactive    0.3             45          143
+6 interactive    0.7             40          132

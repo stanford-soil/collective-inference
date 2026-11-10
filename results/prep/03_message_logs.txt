@@ -1,0 +1,2 @@
+Experiment 1 messages by column: {'chat': 301, 'messages': 13720} | networks: 237
+Experiment 2 chat messages: 15233 {'interactive': 9619, 'slider': 5614} | networks: 417
