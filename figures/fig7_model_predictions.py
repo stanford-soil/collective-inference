@@ -2,7 +2,7 @@
 
 Each analysed Experiment 2 network is simulated 1,000 times with each model, using
 the parameters fitted to Experiment 1 (models/fit_results.csv) and the partner
-schedule that actually ran (partner_schedule/exp2_partners.csv).
+schedule that actually ran (data/derived/exp2_partners.csv).
 
     Belief model (slider timing): the first estimate is the participant's own
     sample proportion; each of the 7 later estimates averages the participant's
@@ -16,7 +16,7 @@ Gaussian noise with the fitted residual SD is added at every update. The predict
 error is the mean absolute error of the individual final estimates, the same
 measure as for the data.
 
-Reads   models/fit_results.csv, data/derived/exp2_clean_data.csv, partner_schedule/exp2_partners.csv
+Reads   models/fit_results.csv, data/derived/exp2_clean_data.csv, exp2_partners.csv
 Writes  figures/fig7_model_predictions.pdf
 Prints  predicted and observed final-round error by representativeness
 """

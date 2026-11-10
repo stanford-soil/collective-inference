@@ -28,7 +28,7 @@ does not depend on the details (see TIMINGS below).
 
 Reads   data/derived/exp1_clean_data.csv
         data/exp1/raw/1_extracted_msgs_prereg/extracted_messages.csv   who sent to whom
-        partner_schedule/exp1_partners.csv                             (one variant only)
+        data/derived/exp1_partners.csv                                 (one variant only)
 Writes  fit_results.csv   every fit: parameters, error and AIC
 Prints  the AIC table, the fitted parameters and the AIC differences for every variant
 """

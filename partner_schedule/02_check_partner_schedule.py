@@ -7,7 +7,7 @@
    pairs exchanged messages in both directions only in the mutual rounds.
 3. Experiment 2: the same agreement for the coded messages and the raw chat log.
 
-Reads   exp1_partners.csv, exp2_partners.csv (01_build_partner_tables.py),
+Reads   data/derived/exp1_partners.csv, exp2_partners.csv (01_build_partner_tables.py),
         data/derived/exp1_messages_raw.csv, exp2_chat_raw.csv (prep/03_message_logs.py),
         data/exp1/PreregMergedGuesses.csv, data/exp1/raw/1_extracted_msgs_prereg/,
         data/exp2/coded_messages.csv

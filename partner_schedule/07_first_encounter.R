@@ -19,7 +19,7 @@
 # messaging conditions also the proportion of rabbits in the sender's own sample.
 #
 # Reads   data/derived/exp1_clean_data.csv, exp2_clean_data.csv,
-#         data/exp1/PreregMergedGuesses.csv, exp1_partners.csv, exp2_partners.csv
+#         data/exp1/PreregMergedGuesses.csv, data/derived/exp1_partners.csv, exp2_partners.csv
 # Prints  the weights and coefficients for every condition and specification
 source("../lib/common.R")
 

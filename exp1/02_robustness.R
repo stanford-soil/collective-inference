@@ -4,7 +4,7 @@
 #   2. Complete networks only: networks that kept exactly four participants
 #   3. Networks launched with exactly four players (17 of 236 were launched with 2 to 9)
 #
-# Reads   data/derived/exp1_clean_data.csv, exp1_responders.csv, partner_schedule/exp1_partners.csv
+# Reads   data/derived/exp1_clean_data.csv, exp1_responders.csv, exp1_partners.csv
 # Prints  the condition coefficients for each subset (Appendix A)
 source("../lib/common.R")
 source("../lib/exp1_data.R")

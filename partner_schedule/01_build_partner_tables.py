@@ -17,7 +17,7 @@ With four players the rule gives mutual pairs in rounds 1, 4, 7 and 10 and a
 one-way cycle in the other rounds.
 
 Reads   data/derived/exp1_players_raw.csv, exp2_players_raw.csv (prep/03_message_logs.py)
-Writes  exp1_partners.csv (12 rounds), exp2_partners.csv (8 rounds)
+Writes  data/derived/exp1_partners.csv (12 rounds), exp2_partners.csv (8 rounds)
 """
 import sys
 import pandas as pd

@@ -10,16 +10,16 @@ options(width = 200)
 
 # ---- File paths ---------------------------------------------------------------
 repo_path <- function(...) file.path(normalizePath(".."), ...)
-derived   <- function(file) repo_path("data", "derived", file)   # written by prep/, not committed
+derived   <- function(file) repo_path("data", "derived", file)   # rebuilt by the pipeline, not committed
 
 EXP1_MERGED     <- repo_path("data", "exp1", "PreregMergedGuesses.csv")
 EXP1_CLEAN      <- derived("exp1_clean_data.csv")
 EXP1_RESPONDERS <- derived("exp1_responders.csv")
-EXP1_PARTNERS   <- repo_path("partner_schedule", "exp1_partners.csv")
+EXP1_PARTNERS   <- derived("exp1_partners.csv")
 
 EXP2_CLEAN      <- derived("exp2_clean_data.csv")
 EXP2_SR_GAMES   <- repo_path("lib", "exp2_sr_games.csv")   # the analysed Experiment 2 networks
-EXP2_PARTNERS   <- repo_path("partner_schedule", "exp2_partners.csv")
+EXP2_PARTNERS   <- derived("exp2_partners.csv")
 EXP2_CODED_MSGS <- repo_path("data", "exp2", "coded_messages.csv")
 
 # ---- Conditions ---------------------------------------------------------------

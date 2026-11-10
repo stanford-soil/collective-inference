@@ -6,7 +6,7 @@
 # shared by all conditions, so the mutual-round terms test whether the messaging
 # conditions gained more than the slider condition in mutual rounds.
 #
-# Reads   data/derived/exp1_clean_data.csv, exp2_clean_data.csv, exp1_partners.csv
+# Reads   data/derived/exp1_clean_data.csv, exp2_clean_data.csv, exp1_partners.csv (all in data/derived)
 # Prints  the condition and mutual-round coefficients (Appendix D)
 source("../lib/common.R")
 

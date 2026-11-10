@@ -20,7 +20,7 @@ Each script answers one question. It begins with a comment that states the quest
 
 | Folder | Contents |
 |---|---|
-| `data/` | Raw exports of both experiments and the first author's coding of the Experiment 2 messages. `data/derived/` is rebuilt by `prep/` and is not committed. |
+| `data/` | Raw exports of both experiments and the first author's coding of the Experiment 2 messages. `data/derived/` holds the cleaned data and the partner tables. It is rebuilt by `prep/` and `partner_schedule/01_build_partner_tables.py` and is not committed. |
 | `lib/` | The few things shared between scripts: file paths and condition names (`common.R`, `common.py`), and the functions that load the analysis data of each experiment (`exp1_data.R`, `exp2_data.R`). |
 | `prep/` | From the raw exports to the clean data. |
 | `exp1/`, `exp2/` | The analyses of each experiment. |
@@ -76,7 +76,7 @@ Each script answers one question. It begins with a comment that states the quest
 
 | Result | Script |
 |---|---|
-| Who sent to whom in every round | `partner_schedule/01_build_partner_tables.py` |
+| Who sent to whom in every round (tables written to `data/derived/`) | `partner_schedule/01_build_partner_tables.py` |
 | The logged recipient of every message agrees with the schedule (response letter) | `partner_schedule/02_check_partner_schedule.py` |
 | Estimates moved toward the sender's sample, not the recipient's (response letter) | `partner_schedule/03_influence_test.py` |
 | Mutual versus one-way rounds (Appendix D) | `partner_schedule/04_mutual_vs_oneway.R` |
