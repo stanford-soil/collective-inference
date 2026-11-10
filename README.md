@@ -72,14 +72,14 @@ Each script answers one question. It begins with a comment that states the quest
 
 `exp2_message_codes_final.csv` gives the first, second and final code of every message in both batches.
 
-### Partner schedule (Appendix D)
+### Partner schedule
 
 | Result | Script |
 |---|---|
 | Who sent to whom in every round | `partner_schedule/01_build_partner_tables.py` |
-| The logged recipient of every message agrees with the schedule | `partner_schedule/02_check_partner_schedule.py` |
-| Estimates moved toward the sender's sample, not the recipient's | `partner_schedule/03_influence_test.py` |
-| Mutual versus one-way rounds | `partner_schedule/04_mutual_vs_oneway.R` |
+| The logged recipient of every message agrees with the schedule (response letter) | `partner_schedule/02_check_partner_schedule.py` |
+| Estimates moved toward the sender's sample, not the recipient's (response letter) | `partner_schedule/03_influence_test.py` |
+| Mutual versus one-way rounds (Appendix D) | `partner_schedule/04_mutual_vs_oneway.R` |
 | Relaying within a round | `partner_schedule/05_same_round_relay.py` |
 | Questions and answer-like replies in one-way rounds | `partner_schedule/06_question_answer_coherence.py` |
 | First versus later encounters with a sender (response letter) | `partner_schedule/07_first_encounter.R` |
