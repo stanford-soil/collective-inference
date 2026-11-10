@@ -2,10 +2,10 @@
 ==== Experiment 1: 7252 changes ====
 boundary (singular) fit: see help('isSingular')
                         Estimate Std. Error   df t value Pr(>|t|)
-conditioninteractive      0.1693     0.3601 7237  0.4701   0.6383
-conditionunidirectional   0.1299     0.3723 7237  0.3490   0.7271
-live_mutual              -1.1329     0.6799 7237 -1.6662   0.0957
-batched_mutual           -0.1962     0.7024 7237 -0.2793   0.7800
+conditioninteractive      0.3445     0.3497 7237  0.9851   0.3246
+conditionunidirectional   0.1802     0.3616 7237  0.4983   0.6183
+live_mutual              -1.3253     0.6604 7237 -2.0070   0.0448
+batched_mutual           -0.1675     0.6822 7237 -0.2455   0.8061
 
 ==== Experiment 2: 4377 changes ====
 boundary (singular) fit: see help('isSingular')

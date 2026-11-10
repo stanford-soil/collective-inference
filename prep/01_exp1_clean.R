@@ -46,13 +46,17 @@ estimates <- bind_rows(
   estimates %>% filter(treatmentName %in% batched) %>%
     distinct(playerID, gameID, guess, roundID, .keep_all = TRUE))
 
-# The target of each estimate: the percentage of rabbits in the network's combined
-# sample (mleEstimateGame). mleEstimateIndiv is the same for the participant's own sample.
+# The target of each estimate (mleEstimateGame): the percentage of rabbits in the combined
+# sample of the network members who entered at least one estimate. It is one value per
+# network, the same definition as in Experiment 2. mleEstimateIndiv is the same for the
+# participant's own sample.
+network_samples <- estimates %>%
+  distinct(gameID, playerID, nRabbits, nSquirrels) %>%
+  group_by(gameID) %>%
+  summarise(nRabbitsGame = sum(nRabbits, na.rm = TRUE),
+            nSquirrelsGame = sum(nSquirrels, na.rm = TRUE), .groups = "drop")
 merged <- estimates %>%
-  group_by(idx, gameID) %>%
-  mutate(nRabbitsGame = sum(nRabbits, na.rm = TRUE),
-         nSquirrelsGame = sum(nSquirrels, na.rm = TRUE)) %>%
-  ungroup() %>%
+  left_join(network_samples, by = "gameID") %>%
   mutate(mleEstimateIndiv = floor((nRabbits / (nRabbits + nSquirrels)) * 100),
          mleEstimateIndiv = ifelse(is.na(mleEstimateIndiv), 50, mleEstimateIndiv),
          mleEstimateGame = floor((nRabbitsGame / (nRabbitsGame + nSquirrelsGame)) * 100))

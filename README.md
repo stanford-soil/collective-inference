@@ -97,6 +97,7 @@ Each script answers one question. It begins with a comment that states the quest
 |---|---|
 | Experiment 1 models without the network random intercept | `response_letter/01_exp1_without_network_intercept.R` |
 | Experiment 2 models on all networks and on the excluded networks | `response_letter/02_exp2_all_and_excluded_networks.R` |
+| Experiment 1 with the scoring target of the original submission (the members who entered an estimate in the same round) | `response_letter/03_exp1_round_by_round_target.R` |
 | Models with the original timing | `models/01_fit.py` (timing `original`) |
 | Message content with the first author's original coding | `coding/02_content_analysis.R` |
 
@@ -110,10 +111,11 @@ Conditions keep their original names in the data and code.
 | `unidirectional` | batched messaging (Experiment 1): messages were delivered together when the messaging period ended |
 | `interactive` | live messaging (Experiment 1), messaging (Experiment 2): each message was delivered as it was sent |
 
-Other names: `gameID` is a network, `playerID` a participant, `idx` the round, `guess` an estimate (0 to 100, percentage of rabbits) and `error` its absolute distance from the percentage of rabbits in the network's combined sample.
+Other names: `gameID` is a network, `playerID` a participant, `idx` the round, `guess` an estimate (0 to 100, percentage of rabbits) and `error` its absolute distance from the percentage of rabbits in the combined sample of the network members who entered at least one estimate (one value per network, in both experiments).
 
 ## Corrections made in the revision
 
 1. **Partner assignment.** The experiments were designed to pair participants in every round. The rule in the experiment code (`experiments/server/src/callbacks.js`) instead produced mutual pairs only in rounds 1, 4, 7 and 10 in four-player networks. In the other rounds each participant sent to one network member and received from another. `partner_schedule/` reconstructs the schedule and checks it against the message logs.
 2. **Slider messages in Experiment 2.** The direction of the slider was counterbalanced. In one version (`RS`) the slider measured the proportion of squirrels, but the message generated from it reported the value as a proportion of rabbits (`experiments/client/src/components/Opinion.jsx`), so recipients read the complement of the sender's estimate. All Experiment 2 analyses therefore use only the networks with the other version (`SR`), in both conditions. These 193 networks are listed in `lib/exp2_sr_games.csv`, and the restriction is applied where the data are loaded (`load_exp2()` in `lib/exp2_data.R`, `keep_sr()` in `lib/common.py`).
 3. **Model timing.** In the messaging conditions the messages come before the estimate within a round, so an update is paired with the sender of the same round. The original code used the sender of the previous round. `models/01_fit.py` fits both.
+4. **Scoring of Experiment 1.** In the original submission each Experiment 1 estimate was scored against the combined sample of the members who entered an estimate in the same round, so a network's target could change from round to round. The revision uses one target per network, the combined sample of the members who entered at least one estimate, as Experiment 2 always did (`prep/01_exp1_clean.R`). `response_letter/03_exp1_round_by_round_target.R` reproduces the original scoring.

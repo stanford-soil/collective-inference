@@ -55,6 +55,7 @@ scripts=(
   # 8. Superseded analyses cited in the response to reviewers
   response_letter/01_exp1_without_network_intercept.R
   response_letter/02_exp2_all_and_excluded_networks.R
+  response_letter/03_exp1_round_by_round_target.R
 )
 
 for script in "${scripts[@]}"; do

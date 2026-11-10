@@ -1,7 +1,8 @@
-# Response letter: the Experiment 1 models as in the original submission, without
-# the network random intercept. The revised paper reports the versions with the
-# network intercept (exp1/01_models.R and exp1/02_robustness.R); compare the two
-# outputs to see what the intercept changes.
+# Response letter: the Experiment 1 models without the network random intercept, as
+# specified in the original analysis plan. The revised paper reports the versions with
+# the network intercept (exp1/01_models.R and exp1/02_robustness.R); compare the two
+# outputs to see what the intercept changes. Estimates are scored with the revised
+# target; 03_exp1_round_by_round_target.R reproduces the scoring of the original submission.
 #
 # Reads   data/derived/exp1_clean_data.csv, exp1_responders.csv
 # Prints  the fixed effects of each model

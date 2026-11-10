@@ -1,28 +1,28 @@
 
 ==== Answered at least 0% of rounds: 886 participants in 236 networks ====
                                     Estimate Std. Error       df t value Pr(>|t|)
-condition_interactiveslider           2.5778     0.8996 217.1568  2.8654   0.0046
-condition_interactiveunidirectional   1.3022     0.8778 218.9920  1.4836   0.1394
+condition_interactiveslider           2.7323     0.9187 218.3298  2.9742   0.0033
+condition_interactiveunidirectional   1.1893     0.8962 219.9046  1.3270   0.1859
 
 ==== Answered at least 50% of rounds: 811 participants in 221 networks ====
                                     Estimate Std. Error       df t value Pr(>|t|)
-condition_interactiveslider           2.7009     0.9250 214.1642  2.9199   0.0039
-condition_interactiveunidirectional   1.3848     0.9075 220.3134  1.5259   0.1285
+condition_interactiveslider           2.9698     0.9341 214.4483  3.1794   0.0017
+condition_interactiveunidirectional   1.4167     0.9165 220.6446  1.5459   0.1236
 
 ==== Answered at least 80% of rounds: 733 participants in 219 networks ====
                                     Estimate Std. Error       df t value Pr(>|t|)
-condition_interactiveslider           3.1976     0.9539 208.7811  3.3523   0.0010
-condition_interactiveunidirectional   1.6475     0.9351 210.2652  1.7618   0.0796
+condition_interactiveslider           3.4413     0.9617 207.4614  3.5785   0.0004
+condition_interactiveunidirectional   1.6630     0.9428 208.9825  1.7639   0.0792
 
 ==== Answered at least 100% of rounds: 406 participants in 198 networks ====
                                     Estimate Std. Error       df t value Pr(>|t|)
-condition_interactiveslider           3.9883     1.2582 185.1089  3.1697   0.0018
-condition_interactiveunidirectional   2.6414     1.2178 183.0573  2.1690   0.0314
+condition_interactiveslider           4.3762     1.2636 178.6801  3.4634   0.0007
+condition_interactiveunidirectional   2.7926     1.2227 176.0722  2.2839   0.0236
 
 ==== Networks with exactly four retained participants: 448 participants in 112 networks ====
                                     Estimate Std. Error       df t value Pr(>|t|)
-condition_interactiveslider           2.6436     1.2772 111.7759  2.0698   0.0408
-condition_interactiveunidirectional   1.7097     1.2598 111.7461  1.3571   0.1775
+condition_interactiveslider           2.7349     1.2736 110.6904  2.1475   0.0339
+condition_interactiveunidirectional   1.7777     1.2561 110.6614  1.4152   0.1598
 
 Analysed networks by number of players at launch:
 # A tibble: 6 × 4
@@ -37,5 +37,5 @@ Analysed networks by number of players at launch:
 
 ==== Networks launched with four players: 710 participants in 208 networks ====
                                     Estimate Std. Error       df t value Pr(>|t|)
-condition_interactiveslider           3.3843     0.9680 206.4639  3.4963   0.0006
-condition_interactiveunidirectional   1.8814     0.9415 208.7702  1.9983   0.0470
+condition_interactiveslider           3.6510     0.9739 205.7300  3.7487   0.0002
+condition_interactiveunidirectional   1.9127     0.9474 208.0504  2.0190   0.0448
