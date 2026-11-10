@@ -1,12 +1,12 @@
 1. Validation against the final hand codes of Experiment 2
-   analysed networks:  3010 messages | sensitivity 0.962 | specificity 0.907 | kappa 0.835 | share by hand 0.836 | share detected 0.820
-   all coded networks: 5453 messages | sensitivity 0.948 | specificity 0.923 | kappa 0.815 | share by hand 0.828 | share detected 0.798
+   analysed networks:  3336 messages | sensitivity 0.963 | specificity 0.911 | kappa 0.841 | share by hand 0.835 | share detected 0.819
+   all coded networks: 5779 messages | sensitivity 0.949 | specificity 0.925 | kappa 0.819 | share by hand 0.828 | share detected 0.799
 
-2. Analysed messaging networks, by whether the original coding file includes them
-                    networks  messages  share_reporting_counts
-hand_coded_network                                            
-False                     11       326                   0.816
-True                      88      3024                   0.819
+2. Analysed networks by coding batch
+       networks  messages  share_by_hand  share_detected
+batch                                                   
+1            88      3010          0.836           0.820
+2            11       326          0.828           0.816
 
 3. Experiment 1 messaging conditions, senders in the analysed sample
                 networks  senders  messages  share_reporting_counts

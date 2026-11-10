@@ -1,31 +1,31 @@
 
-==== Final codes, analysed networks: 3010 messages in 88 networks ====
+==== Final codes, analysed networks: 3336 messages in 99 networks ====
 Share of messages containing
-  own counts (pn):                0.804 
-  own counts and nothing else:    0.755 
+  own counts (pn):                0.801 
+  own counts and nothing else:    0.753 
   own belief (pb):                0.065 
-  others' information (sn or sb): 0.087 
-  a question (q):                 0.042 
-Networks in which others' information was relayed: 46 of 88 
+  others' information (sn or sb): 0.088 
+  a question (q):                 0.041 
+Networks in which others' information was relayed: 53 of 99 
 log(final-round error + 1) ~ p_social + p_personal:
             Estimate Std. Error t value Pr(>|t|)
-(Intercept)    2.590      0.649   3.993    0.000
-p_social      -1.597      0.728  -2.193    0.031
-p_personal     0.129      0.690   0.186    0.853
+(Intercept)    2.840       0.59   4.814    0.000
+p_social      -1.592       0.69  -2.307    0.023
+p_personal    -0.094       0.63  -0.150    0.881
 
-==== Final codes, all coded networks: 5453 messages in 158 networks ====
+==== Final codes, all coded networks: 5779 messages in 169 networks ====
 Share of messages containing
-  own counts (pn):                0.795 
+  own counts (pn):                0.794 
   own counts and nothing else:    0.739 
   own belief (pb):                0.06 
   others' information (sn or sb): 0.089 
-  a question (q):                 0.063 
-Networks in which others' information was relayed: 89 of 158 
+  a question (q):                 0.061 
+Networks in which others' information was relayed: 96 of 169 
 log(final-round error + 1) ~ p_social + p_personal:
             Estimate Std. Error t value Pr(>|t|)
-(Intercept)    2.941      0.415   7.094    0.000
-p_social      -0.764      0.453  -1.687    0.094
-p_personal    -0.177      0.447  -0.395    0.693
+(Intercept)    3.015      0.394   7.645    0.000
+p_social      -0.785      0.440  -1.783    0.076
+p_personal    -0.235      0.425  -0.553    0.581
 
 ==== First author's original coding, analysed networks: 3010 messages in 88 networks ====
 Share of messages containing

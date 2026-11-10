@@ -13,12 +13,20 @@ Steps
 4. The remaining disagreements were decided one by one by the senior author
    (adjudication/items.json shows what he saw, adjudication/decisions.json what he decided).
 
-Reads   data/exp2/coded_messages.csv     first coding (column `coding`)
-        unique_texts.csv                 every distinct message text, with an id
-        second_coder_labels.csv          second coding of each distinct text
+The messages were coded in two batches.
+  Batch 1: the 5,453 messages in the first author's coding file (158 networks).
+  Batch 2: 326 messages from the 11 analysed networks that the file omits. The first
+           coder of these is the senior author, who also resolved their remaining
+           disagreements. The second coding is again a language model.
+
+Reads   data/exp2/coded_messages.csv     batch 1, first coding (column `coding`)
+        unique_texts.csv                 batch 1, every distinct message text, with an id
+        second_coder_labels.csv          batch 1, second coding of each distinct text
         adjudication/items.json, adjudication/decisions.json
+        batch2_first_coding.csv, batch2_unique_texts.csv, batch2_second_coder_labels.csv,
+        adjudication/batch2_decisions.json
 Writes  exp2_message_codes_final.csv     first, second and final code of every message
-Prints  agreement statistics and how the disagreements were resolved
+Prints  agreement statistics and how the disagreements were resolved, for each batch
 """
 import json
 import re
@@ -66,39 +74,53 @@ messages['first'] = messages.coding.map(first_coder_set)
 messages['second'] = messages.codes.map(second_coder_set)
 messages['agree'] = messages['first'] == messages['second']
 
-# ---- 1. Agreement --------------------------------------------------------------------------
-print('1. Agreement between the two codings,', len(messages), 'messages')
-rows = []
-for code in CODES:
-    in_first = messages['first'].map(lambda codes: code in codes)
-    in_second = messages['second'].map(lambda codes: code in codes)
-    rows.append(dict(code=code, share_first=round(in_first.mean(), 3), share_second=round(in_second.mean(), 3),
-                     percent_agreement=round((in_first == in_second).mean(), 3),
-                     kappa=round(cohen_kappa_score(in_first, in_second), 3)))
-print(pd.DataFrame(rows).to_string(index=False))
-print('messages with identical code sets:', round(messages.agree.mean(), 3),
-      '| disagreements:', int((~messages.agree).sum()))
-
-# ---- 2. Agreed codes -----------------------------------------------------------------------
-messages['final'] = None
-messages['resolution'] = None
-messages.loc[messages.agree, 'final'] = messages.loc[messages.agree, 'first']
-messages.loc[messages.agree, 'resolution'] = 'agree'
-
-# ---- 3. Rules A and B ------------------------------------------------------------------------
+# ---- Steps 1 to 3, used for both batches ---------------------------------------------------
 REFERS_TO_OTHERS = re.compile(
     r"\b(other|others|neighbou?r|neighbou?rs|everyone|everybody|we|they|people|partner|partners|total|"
     r"all of us|combined|someone|anyone|he|she|their|group|overall)\b", re.I)
 ENDS_WITH_YOU = re.compile(r"\b(you|u)\W*$", re.I)
 
-for index, message in messages[~messages.agree].iterrows():
-    difference = message['first'] ^ message['second']      # codes given by only one coder
-    if difference == {'pb', 'sb'} and not REFERS_TO_OTHERS.search(message.text_norm):
-        messages.at[index, 'final'] = (message['first'] - {'sb'}) | {'pb'}
-        messages.at[index, 'resolution'] = 'ruleA'
-    elif difference == {'q'} and ('?' in message.text_norm or ENDS_WITH_YOU.search(message.text_norm)):
-        messages.at[index, 'final'] = message['first'] | message['second']
-        messages.at[index, 'resolution'] = 'ruleB'
+
+def print_agreement(messages):
+    rows = []
+    for code in CODES:
+        in_first = messages['first'].map(lambda codes: code in codes)
+        in_second = messages['second'].map(lambda codes: code in codes)
+        rows.append(dict(code=code, share_first=round(in_first.mean(), 3), share_second=round(in_second.mean(), 3),
+                         percent_agreement=round((in_first == in_second).mean(), 3),
+                         kappa=round(cohen_kappa_score(in_first, in_second), 3)))
+    print(pd.DataFrame(rows).to_string(index=False))
+    print('messages with identical code sets:', round(messages.agree.mean(), 3),
+          '| disagreements:', int((~messages.agree).sum()))
+
+
+def apply_agreement_and_rules(messages):
+    """Final code where the codings agree or where rule A or B settles the disagreement."""
+    messages['final'] = None
+    messages['resolution'] = None
+    messages.loc[messages.agree, 'final'] = messages.loc[messages.agree, 'first']
+    messages.loc[messages.agree, 'resolution'] = 'agree'
+    for index, message in messages[~messages.agree].iterrows():
+        difference = message['first'] ^ message['second']      # codes given by only one coder
+        if difference == {'pb', 'sb'} and not REFERS_TO_OTHERS.search(message.text_norm):
+            messages.at[index, 'final'] = (message['first'] - {'sb'}) | {'pb'}
+            messages.at[index, 'resolution'] = 'ruleA'
+        elif difference == {'q'} and ('?' in message.text_norm or ENDS_WITH_YOU.search(message.text_norm)):
+            messages.at[index, 'final'] = message['first'] | message['second']
+            messages.at[index, 'resolution'] = 'ruleB'
+
+
+def print_resolution(messages):
+    print(messages.resolution.value_counts().to_string())
+    print('first coding identical to the final code:',
+          round((messages['first'] == messages.final).mean(), 3),
+          '| second coding:', round((messages['second'] == messages.final).mean(), 3))
+
+
+# ---- Batch 1 ---------------------------------------------------------------------------------
+print('Batch 1: agreement between the two codings,', len(messages), 'messages')
+print_agreement(messages)
+apply_agreement_and_rules(messages)
 
 # ---- 4. Adjudicated decisions ----------------------------------------------------------------
 # An item is one disputed message text. Its decision applies to one message (`row`)
@@ -119,16 +141,39 @@ for item in items:
         messages.at[row, 'resolution'] = 'adjudicated:' + decision['src']
 assert messages.final.notna().all()
 
-print('\n2. How each message got its final code')
-print(messages.resolution.value_counts().to_string())
-print('first coding identical to the final code:',
-      round((messages['first'] == messages.final).mean(), 3),
-      '| second coding:', round((messages['second'] == messages.final).mean(), 3))
+print('\nBatch 1: how each message got its final code')
+print_resolution(messages)
+
+# ---- Batch 2 ---------------------------------------------------------------------------------
+batch2 = pd.read_csv('batch2_first_coding.csv', keep_default_na=False)
+batch2['text_norm'] = batch2.text.str.strip()
+second = pd.read_csv('batch2_unique_texts.csv', keep_default_na=False).merge(
+    pd.read_csv('batch2_second_coder_labels.csv'), on='uid')
+batch2 = batch2.merge(second[['text_norm', 'codes']], on='text_norm', how='left')
+batch2['first'] = batch2.coding.map(second_coder_set)        # both codings of batch 2 use '+'
+batch2['second'] = batch2.codes.map(second_coder_set)
+batch2['agree'] = batch2['first'] == batch2['second']
+
+print('\nBatch 2: agreement between the two codings,', len(batch2), 'messages')
+print_agreement(batch2)
+apply_agreement_and_rules(batch2)
+decisions = json.load(open('adjudication/batch2_decisions.json'))
+for index, message in batch2[batch2.final.isna()].iterrows():
+    batch2.at[index, 'final'] = set(decisions[message.message_id].split('+'))
+    batch2.at[index, 'resolution'] = 'adjudicated'
+assert batch2.final.notna().all()
+print('\nBatch 2: how each message got its final code')
+print_resolution(batch2)
 
 # ---- Write -----------------------------------------------------------------------------------
-output = messages[['gameID', 'round', 'sender.id', 'recipient', 'text']].copy()
-output['code_coder1'] = messages['first'].map(as_text)
-output['code_coder2'] = messages['second'].map(as_text)
-output['code_final'] = messages.final.map(as_text)
-output['resolution'] = messages.resolution
+messages['batch'] = 1
+batch2['batch'] = 2
+both = pd.concat([messages, batch2], ignore_index=True)
+output = both[['gameID', 'round', 'sender.id', 'recipient', 'text']].copy()
+output['code_coder1'] = both['first'].map(as_text)
+output['code_coder2'] = both['second'].map(as_text)
+output['code_final'] = both.final.map(as_text)
+output['resolution'] = both.resolution
+output['batch'] = both.batch
 output.to_csv(common.EXP2_FINAL_CODES, index=False)
+print('\nWrote', len(output), 'messages from', output.gameID.nunique(), 'networks')

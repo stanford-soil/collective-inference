@@ -1,4 +1,4 @@
-1. Agreement between the two codings, 5453 messages
+Batch 1: agreement between the two codings, 5453 messages
 code  share_first  share_second  percent_agreement  kappa
   pn        0.792         0.792              0.970  0.908
   pb        0.038         0.059              0.942  0.375
@@ -8,7 +8,7 @@ code  share_first  share_second  percent_agreement  kappa
    o        0.048         0.061              0.974  0.750
 messages with identical code sets: 0.878 | disagreements: 666
 
-2. How each message got its final code
+Batch 1: how each message got its final code
 resolution
 agree                    4787
 adjudicated:c2            213
@@ -18,3 +18,23 @@ ruleB                      79
 adjudicated:own            30
 adjudicated:rule_same      16
 first coding identical to the final code: 0.92 | second coding: 0.953
+
+Batch 2: agreement between the two codings, 326 messages
+code  share_first  share_second  percent_agreement  kappa
+  pn        0.770         0.776              0.975  0.930
+  pb        0.058         0.046              0.963  0.628
+  sn        0.074         0.074              1.000  1.000
+  sb        0.031         0.046              0.966  0.543
+   q        0.040         0.037              0.991  0.875
+   o        0.074         0.077              0.991  0.934
+messages with identical code sets: 0.933 | disagreements: 22
+
+Batch 2: how each message got its final code
+resolution
+agree          304
+adjudicated     14
+ruleA            6
+ruleB            2
+first coding identical to the final code: 0.975 | second coding: 0.957
+
+Wrote 5779 messages from 169 networks

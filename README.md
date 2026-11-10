@@ -65,7 +65,12 @@ Each script answers one question. It begins with a comment that states the quest
 | Automated detection of count reports, including Experiment 1 | `coding/03_count_reports_auto.py` |
 | Over-counting in relayed counts | `coding/04_relayed_overcounting.py` |
 
-`coding/codebook.md` is the codebook. `unique_texts.csv` lists every distinct message text and `second_coder_labels.csv` holds the second coding of each. `adjudication/` holds the rules (`RULES.md`), the disputed messages as shown to the adjudicator (`items.json`) and his decisions (`decisions.json`). `exp2_message_codes_final.csv` gives the first, second and final code of every message.
+`coding/codebook.md` is the codebook. The messages were coded in two batches.
+
+- **Batch 1** is the first author's coding of 5,453 messages (`data/exp2/coded_messages.csv`). `unique_texts.csv` lists every distinct message text and `second_coder_labels.csv` holds the second coding of each. `adjudication/` holds the rules (`RULES.md`), the disputed messages as shown to the adjudicator (`items.json`) and his decisions (`decisions.json`).
+- **Batch 2** is 326 messages from 11 analysed networks that the first author's file omits, coded by the senior author for the revision (`batch2_first_coding.csv`). `batch2_unique_texts.csv` and `batch2_second_coder_labels.csv` hold the second coding, and `adjudication/batch2_decisions.json` the senior author's decisions on the disagreements that the rules did not settle.
+
+`exp2_message_codes_final.csv` gives the first, second and final code of every message in both batches.
 
 ### Partner schedule (Appendix D)
 
